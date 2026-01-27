@@ -24,7 +24,7 @@ export function useUserProfile() {
       return data;
     },
     enabled: !!user,
-    retry: (failureCount, error: any) => {
+    retry: (failureCount) => {
       // 프로필이 아직 생성되지 않은 경우(406 또는 null) 최대 5번 재시도
       if (failureCount < 5) return true;
       return false;

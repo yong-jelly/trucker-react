@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { ProfileHeader } from "../features/profile/ui/ProfileHeader";
 import { AchievementsTab } from "../features/profile/ui/AchievementsTab";
 import { useUserProfile } from "../entities/user/queries";
@@ -10,7 +10,7 @@ import { PageHeader } from "../shared/ui/PageHeader";
 export function ProfilePage() {
   const navigate = useNavigate();
   const { tab } = useParams();
-  const { data: profile, isLoading: isProfileLoading } = useUserProfile();
+  const { data: _profile, isLoading: isProfileLoading } = useUserProfile();
   const { isAuthenticated, isSyncing } = useUserStore();
   
   const activeTab = tab || "profile";

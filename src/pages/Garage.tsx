@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { Package, Wrench, Shield, FileText, ArrowLeft, Lock, Info, ChevronRight, PlayCircle, Clock, Bike, Loader2, History, DollarSign, MapPin } from 'lucide-react';
-import { useGameStore } from '../app/store';
+import { Package, Wrench, Shield, FileText, ArrowLeft, Info, ChevronRight, PlayCircle, Clock, Bike, Loader2, History } from 'lucide-react';
 import { COMING_SOON_ITEMS } from '../shared/lib/constants';
 import { Assets } from '../shared/assets';
 import { useUserStore, useUserProfile } from '../entities/user';

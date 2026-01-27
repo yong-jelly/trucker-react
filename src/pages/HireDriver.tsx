@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Users, UserPlus, UserMinus, DollarSign, Info, ChevronRight, Check, X, AlertCircle } from 'lucide-react';
-import { useGameStore } from '../app/store';
+import { ArrowLeft, Users, UserPlus, DollarSign, Info, AlertCircle } from 'lucide-react';
 import { Assets } from '../shared/assets';
 import { useUserProfile } from '../entities/user';
 
@@ -29,7 +28,7 @@ export const HireDriverPage = () => {
     attempts: 0,
   });
 
-  const [isHired, setIsHired] = useState(false);
+  const [, setIsHired] = useState(false);
 
   const handleNegotiate = () => {
     if (offer.attempts < 2) {

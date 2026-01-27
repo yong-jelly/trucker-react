@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Truck, Plane, Anchor } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
@@ -25,7 +25,7 @@ export const OrderDetailPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { slots } = useGameStore();
-  const { data: profile } = useUserProfile();
+  const { data: _profile } = useUserProfile();
   const { user } = useUserStore();
   const [isContractOpen, setIsContractOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);

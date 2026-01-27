@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Truck, Bike, Plane, ChevronRight, ArrowRight } from 'lucide-react';
+import { Truck, Bike, Plane, ArrowRight } from 'lucide-react';
 import { Assets } from '../shared/assets';
 
 export const OnboardingPage = () => {

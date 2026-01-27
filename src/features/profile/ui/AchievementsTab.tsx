@@ -1,4 +1,4 @@
-import { Trophy, Medal, Star, Target, Zap, ShieldCheck, DollarSign } from "lucide-react";
+import { Target, Zap, ShieldCheck, DollarSign } from "lucide-react";
 import { cn } from "../../../shared/lib/utils";
 
 const ACHIEVEMENTS = [

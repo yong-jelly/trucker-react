@@ -17,7 +17,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
   const fullMapRef = useRef<MapRef>(null);
 
   // 경로에 맞춰 지도 영역 조정 함수
-  const fitToRoute = (mapRef: React.RefObject<MapRef>, padding = 40) => {
+  const fitToRoute = (mapRef: React.RefObject<MapRef | null>, padding = 40) => {
     if (!mapRef.current || !routeData) return;
     
     const coordinates = routeData.coordinates;

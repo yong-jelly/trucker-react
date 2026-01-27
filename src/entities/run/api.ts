@@ -63,12 +63,13 @@ export async function getActiveRuns(userId: string): Promise<ActiveRun[]> {
  */
 export interface RunDetail {
   run: Run;
-  order: {
+    order: {
     title: string;
     category: string;
     cargoName: string;
     distance: number;
     baseReward: number;
+    weight: number;
     limitTimeMinutes: number;
     startPoint: [number, number];
     endPoint: [number, number];
@@ -119,6 +120,7 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       cargoName: row.order_cargo_name,
       distance: row.order_distance,
       baseReward: row.order_base_reward,
+      weight: row.order_weight,
       limitTimeMinutes: row.order_limit_time_minutes,
       startPoint: [row.order_start_lat, row.order_start_lng],
       endPoint: [row.order_end_lat, row.order_end_lng],

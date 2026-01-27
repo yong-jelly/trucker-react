@@ -7,12 +7,16 @@ interface OrderInfo {
   cargoName: string;
   distance: number;
   baseReward: number;
+  weight: number;
+  endPoint: [number, number];
+  limitTimeMinutes: number;
 }
 
 interface OverviewTabProps {
   order: OrderInfo;
   elapsedSeconds: number;
   etaSeconds: number;
+  remainingSeconds: number;
 }
 
 export const OverviewTab = ({ order, elapsedSeconds, etaSeconds }: OverviewTabProps) => {

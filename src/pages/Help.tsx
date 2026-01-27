@@ -1,7 +1,7 @@
-import { useParams, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
-import { ArrowLeft, ShieldAlert, Zap, FileText, Map, FastForward, Info, DollarSign, Wrench, TrendingUp, Users, History } from 'lucide-react';
-import { cn } from '../shared/lib/utils';
+
+import { ArrowLeft, ShieldAlert, Zap, FileText, FastForward, Info, DollarSign, TrendingUp, Users, History } from 'lucide-react';
 
 export const HelpPage = () => {
   const navigate = useNavigate();

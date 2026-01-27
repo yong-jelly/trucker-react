@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import { LogOut, ChevronRight, Trophy } from "lucide-react";
+import { LogOut, ChevronRight } from "lucide-react";
 import { useUserProfile, useLogout } from "../../../entities/user/queries";
 import { Button } from "../../../shared/ui/Button";
 

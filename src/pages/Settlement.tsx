@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router';
-import { CheckCircle2, Clock, DollarSign, MapPin, ChevronRight, Share2, Home, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, ChevronRight, Share2, Home, TrendingUp } from 'lucide-react';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { useEffect } from 'react';
 import { useUserStore, useUserProfile } from '../entities/user';

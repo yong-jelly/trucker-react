@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
 import { useNavigate } from "react-router";
-import { Camera, X, Loader2, RefreshCw, Bell, BellOff, Send, MessageSquare } from "lucide-react";
+import { Loader2, RefreshCw, Bell, BellOff, Send, MessageSquare } from "lucide-react";
 import { useUserProfile, useUpsertProfile } from "../../../entities/user/queries";
 import { Input } from "../../../shared/ui/Input";
 import { useUserStore } from "../../../entities/user";
 
-export const ProfileEditForm = forwardRef((props, ref) => {
+export const ProfileEditForm = forwardRef((_, ref) => {
   const navigate = useNavigate();
   const { data: profile } = useUserProfile();
   const { mutate: upsertProfile, isPending: isSaving } = useUpsertProfile();

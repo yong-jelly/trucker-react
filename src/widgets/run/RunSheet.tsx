@@ -16,6 +16,8 @@ interface OrderInfo {
   distance: number;
   baseReward: number;
   limitTimeMinutes: number;
+  weight: number;
+  endPoint: [number, number];
 }
 
 interface RunSheetProps {
@@ -100,7 +102,12 @@ export const RunSheet = ({ order, elapsedSeconds, etaSeconds, runId }: RunSheetP
               <SettlementTab order={order} elapsedSeconds={elapsedSeconds} etaSeconds={etaSeconds} runId={runId} />
             )}
             {activeTab === 'overview' && (
-              <OverviewTab order={order} elapsedSeconds={elapsedSeconds} etaSeconds={etaSeconds} />
+              <OverviewTab 
+                order={order} 
+                elapsedSeconds={elapsedSeconds} 
+                etaSeconds={etaSeconds} 
+                remainingSeconds={Math.max(etaSeconds - elapsedSeconds, 0)} 
+              />
             )}
             {activeTab === 'events' && (
               <EventsTab />

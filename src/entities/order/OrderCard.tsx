@@ -1,4 +1,4 @@
-import { MapPin, Clock, Package, DollarSign, ChevronRight, Bike, Truck, Plane, Anchor, Info } from 'lucide-react';
+import { MapPin, Clock, Package, DollarSign, ChevronRight, Bike, Truck, Plane, Anchor } from 'lucide-react';
 import type { Order } from '../../shared/api/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../../shared/lib/mockData';
 

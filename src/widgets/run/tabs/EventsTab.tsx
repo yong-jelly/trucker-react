@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Shield, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { AlertTriangle, Shield, CheckCircle, XCircle } from 'lucide-react';
 
 interface GameEvent {
   id: string;
