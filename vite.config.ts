@@ -10,11 +10,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  build: {
-    target: 'es2015',
-    minify: 'terser',
-  },
   server: {
     port: 5177
+  },
+  build: {
+    // iOS Safari 호환성을 위한 타겟 설정
+    target: ['es2020', 'safari14', 'chrome87', 'firefox78'],
+  },
+  esbuild: {
+    // esbuild 타겟도 동일하게 설정
+    target: 'es2020',
   },
 })

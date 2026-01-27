@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Map, { Source, Layer, Marker as MapboxMarker, NavigationControl } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
-import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useParams, useNavigate } from 'react-router';
 import { Map as MapIcon, List, ArrowLeft, MapPin, TrendingUp, Zap, Loader2 } from 'lucide-react';
@@ -26,16 +25,7 @@ export const ActiveRunPage = () => {
   const [currentSpeedKmh, setCurrentSpeedKmh] = useState(0);
   const [fuel, setFuel] = useState(100);
   const [tick, setTick] = useState(0); // 실시간 갱신용
-  const [isMapSupported, setIsMapSupported] = useState(true);
   const mapRef = useRef<MapRef>(null);
-
-  // Mapbox 지원 여부 체크
-  useEffect(() => {
-    if (!mapboxgl.supported()) {
-      console.error('Mapbox GL is not supported');
-      setIsMapSupported(false);
-    }
-  }, []);
 
   // DB에서 운행 데이터 로드
   const fetchRunDetail = useCallback(async () => {
@@ -528,75 +518,65 @@ export const ActiveRunPage = () => {
       {/* 메인 콘텐츠 영역 */}
       {viewMode === 'map' ? (
         <div className="h-full w-full pt-[130px]">
-          {!isMapSupported ? (
-            <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-surface-100">
-              <MapPin className="h-12 w-12 text-surface-300 mb-4" />
-              <h3 className="text-lg font-medium text-surface-900">지도를 표시할 수 없습니다</h3>
-              <p className="mt-2 text-sm text-surface-500">
-                사용 중인 브라우저가 WebGL을 지원하지 않거나 설정이 꺼져 있습니다.
-              </p>
-            </div>
-          ) : (
-            <Map
-              ref={mapRef}
-              initialViewState={{
-                longitude: (order.startPoint[1] + order.endPoint[1]) / 2,
-                latitude: (order.startPoint[0] + order.endPoint[0]) / 2,
-                zoom: 15
-              }}
-              style={{ width: '100%', height: '100%' }}
-              mapStyle="mapbox://styles/mapbox/light-v11"
-              mapboxAccessToken={MAPBOX_TOKEN}
-            >
-              <NavigationControl position="top-left" />
-              
-              {routeData && (
-                <Source id="route" type="geojson" data={geojson as any}>
-                  <Layer
-                    id="route"
-                    type="line"
-                    layout={{
-                      'line-join': 'round',
-                      'line-cap': 'round'
-                    }}
-                    paint={{
-                      'line-color': '#6366f1',
-                      'line-width': 4,
-                      'line-opacity': 0.3 // 라우트 라인 연하게
-                    }}
-                  />
-                </Source>
-              )}
+          <Map
+            ref={mapRef}
+            initialViewState={{
+              longitude: (order.startPoint[1] + order.endPoint[1]) / 2,
+              latitude: (order.startPoint[0] + order.endPoint[0]) / 2,
+              zoom: 15
+            }}
+            style={{ width: '100%', height: '100%' }}
+            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapboxAccessToken={MAPBOX_TOKEN}
+          >
+            <NavigationControl position="top-left" />
+            
+            {routeData && (
+              <Source id="route" type="geojson" data={geojson as any}>
+                <Layer
+                  id="route"
+                  type="line"
+                  layout={{
+                    'line-join': 'round',
+                    'line-cap': 'round'
+                  }}
+                  paint={{
+                    'line-color': '#6366f1',
+                    'line-width': 4,
+                    'line-opacity': 0.3 // 라우트 라인 연하게
+                  }}
+                />
+              </Source>
+            )}
 
-              {/* 현재 위치 (반짝이는 점) */}
-              {currentPos && (
-                <MapboxMarker longitude={currentPos[1]} latitude={currentPos[0]}>
-                  <div className="relative flex h-6 w-6 items-center justify-center">
-                    <div className="absolute h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></div>
-                    <div className="relative h-3 w-3 rounded-full border-2 border-white bg-primary-600 shadow-sm"></div>
-                  </div>
-                </MapboxMarker>
-              )}
-
-              <MapboxMarker longitude={order.startPoint[1]} latitude={order.startPoint[0]}>
-                <div className="flex flex-col items-center">
-                  <div className="rounded-full bg-white p-1 shadow-md">
-                    <MapPin className="h-5 w-5 text-primary-500" />
-                  </div>
-                  <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">출발</span>
+            {/* 현재 위치 (반짝이는 점) */}
+            {currentPos && (
+              <MapboxMarker longitude={currentPos[1]} latitude={currentPos[0]}>
+                <div className="relative flex h-6 w-6 items-center justify-center">
+                  <div className="absolute h-full w-full animate-ping rounded-full bg-primary-400 opacity-75"></div>
+                  <div className="relative h-3 w-3 rounded-full border-2 border-white bg-primary-600 shadow-sm"></div>
                 </div>
               </MapboxMarker>
+            )}
 
-              <MapboxMarker longitude={order.endPoint[1]} latitude={order.endPoint[0]}>
-                <div className="flex flex-col items-center">
-                  <div className="rounded-full bg-white p-1 shadow-md">
-                    <MapPin className="h-5 w-5 text-accent-emerald" />
-                  </div>
-                  <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">도착</span>
+            <MapboxMarker longitude={order.startPoint[1]} latitude={order.startPoint[0]}>
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-white p-1 shadow-md">
+                  <MapPin className="h-5 w-5 text-primary-500" />
                 </div>
-              </MapboxMarker>
-            </Map>
-          )}
+                <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">출발</span>
+              </div>
+            </MapboxMarker>
+
+            <MapboxMarker longitude={order.endPoint[1]} latitude={order.endPoint[0]}>
+              <div className="flex flex-col items-center">
+                <div className="rounded-full bg-white p-1 shadow-md">
+                  <MapPin className="h-5 w-5 text-accent-emerald" />
+                </div>
+                <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">도착</span>
+              </div>
+            </MapboxMarker>
+          </Map>
         </div>
       ) : (
         <div className="h-full overflow-y-auto pt-40 pb-72 px-4">
