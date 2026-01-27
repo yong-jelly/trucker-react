@@ -1,7 +1,7 @@
 -- =====================================================
 -- 서버사이드 이벤트 처리 로직 (pg_cron 연동)
 -- 실행 방법:
---   psql ... -f doc/sql/cron_events.sql
+--   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/cron_events.sql
 -- 전제 조건:
 --   pg_cron 확장이 활성화되어 있어야 합니다.
 --   trucker 스키마와 테이블들이 생성되어 있어야 합니다.

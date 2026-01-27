@@ -33,6 +33,13 @@ export const OrderDetailPage = () => {
   const order = MOCK_ORDERS.find(o => o.id === orderId);
   const availableSlot = slots.find(s => !s.isLocked && !s.activeRunId);
 
+  const formatDuration = (minutes: number) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0) return `${h}시간 ${m}분`;
+    return `${m}분`;
+  };
+
   if (!order) {
     // ...
     return <div>Order not found</div>;
