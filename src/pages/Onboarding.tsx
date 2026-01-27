@@ -39,9 +39,9 @@ export const OnboardingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-8">
-        <div className="relative w-64 h-64 mx-auto rounded-full bg-surface-50 flex items-center justify-center overflow-hidden shadow-soft-xl">
+    <div className="min-h-screen bg-white flex flex-col pb-safe">
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6">
+        <div className="relative w-56 h-56 mx-auto rounded-full bg-surface-50 flex items-center justify-center overflow-hidden shadow-soft-xl">
           <img 
             src={currentStep.image} 
             alt="Onboarding" 
@@ -49,8 +49,8 @@ export const OnboardingPage = () => {
           />
         </div>
         
-        <div className="space-y-4 max-w-sm mx-auto">
-          <div className="flex justify-center mb-2">{currentStep.icon}</div>
+        <div className="space-y-3 max-w-sm mx-auto">
+          <div className="flex justify-center mb-1">{currentStep.icon}</div>
           <h1 className="text-2xl font-medium text-surface-900 leading-tight">
             {currentStep.title}
           </h1>
@@ -71,7 +71,7 @@ export const OnboardingPage = () => {
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="px-8 pb-12 pt-4">
         <button
           onClick={handleNext}
           className="w-full py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg flex items-center justify-center gap-2 active:scale-95 transition-all"

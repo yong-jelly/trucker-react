@@ -182,7 +182,7 @@ export const HomePage = () => {
               <div>
                 <p className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-1">Available Balance</p>
                 <span className="text-3xl font-medium text-surface-900">
-                  ${profile.balance.toLocaleString()}
+                  ${profile?.balance?.toLocaleString() ?? '0'}
                 </span>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -208,7 +208,7 @@ export const HomePage = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">Reputation</p>
-                  <span className="text-2xl font-medium text-primary-600 leading-none">{profile.reputation.toLocaleString()}</span>
+                  <span className="text-2xl font-medium text-primary-600 leading-none">{profile?.reputation?.toLocaleString() ?? '0'}</span>
                 </div>
               </div>
             </div>
