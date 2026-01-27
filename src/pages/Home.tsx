@@ -10,12 +10,29 @@ import { getUserSlots } from '../entities/slot';
 import { getActiveRuns, type ActiveRun } from '../entities/run';
 import type { Order } from '../shared/api/types';
 
-export const HomePage = () => {
+// 프로필 타입 정의
+interface UserProfile {
+  balance: number;
+  reputation: number;
+  nickname: string;
+  avatar_url?: string | null;
+}
+
+// 로딩 컴포넌트
+const LoadingScreen = ({ message }: { message: string }) => (
+  <div className="flex min-h-screen items-center justify-center bg-surface-50">
+    <div className="text-center">
+      <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
+      <p className="text-sm font-medium text-surface-500">{message}</p>
+    </div>
+  </div>
+);
+
+// 메인 대시보드 컴포넌트 (profile이 반드시 존재해야 함)
+const Dashboard = ({ profile }: { profile: UserProfile }) => {
   const navigate = useNavigate();
   const { slots, setSlots } = useGameStore();
-  const { data: profile, isLoading: isProfileLoading, error: profileError } = useUserProfile();
-  const { user, isAuthenticated, isSyncing, isHydrated } = useUserStore();
-  const { mutate: upsertProfile, isPending: isCreating } = useUpsertProfile();
+  const { user, isAuthenticated } = useUserStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [isOrdersLoading, setIsOrdersLoading] = useState(true);
@@ -55,55 +72,26 @@ export const HomePage = () => {
     if (!isAuthenticated || !user) return;
     
     setIsOrdersLoading(true);
-    // 유저 ID를 전달하여 주문이 없을 경우 자동 생성 트리거
     getOrders(user.id)
       .then(setOrders)
       .catch(err => console.error(err))
       .finally(() => setIsOrdersLoading(false));
   }, [isAuthenticated, user]);
 
-  // 디버깅용 로그
-  useEffect(() => {
-    console.log('Home State:', { isHydrated, isAuthenticated, isSyncing, isProfileLoading, hasProfile: !!profile, profileError, slotsCount: slots.length });
-  }, [isHydrated, isAuthenticated, isSyncing, isProfileLoading, profile, profileError, slots.length]);
-
-  // 인증 상태 체크 및 리다이렉트
-  useEffect(() => {
-    if (isHydrated && !isSyncing && !isAuthenticated) {
-      navigate('/onboarding');
-    }
-  }, [isHydrated, isAuthenticated, isSyncing, navigate]);
-
   // 슬롯, 주문, 진행 중인 운행 목록 로드
   useEffect(() => {
-    if (isHydrated && isAuthenticated && user) {
-      // 프로필 존재 여부와 상관없이 기본 데이터 로드 시도
-      fetchSlots();
+    fetchSlots();
+    fetchOrders();
+    fetchActiveRuns();
+    
+    const interval = setInterval(() => {
       fetchOrders();
       fetchActiveRuns();
-      
-      // 주문 및 운행 상태는 1분마다 자동 갱신
-      const interval = setInterval(() => {
-        fetchOrders();
-        fetchActiveRuns();
-      }, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [isHydrated, isAuthenticated, user, fetchSlots, fetchOrders, fetchActiveRuns]);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [fetchSlots, fetchOrders, fetchActiveRuns]);
 
   const activeSlot = slots.find(s => !s.isLocked && !s.activeRunId);
-
-  const handleCreateProfile = () => {
-    if (!user) return;
-    
-    // 구글 계정 정보를 기본값으로 사용
-    const defaultNickname = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Trucker';
-    
-    upsertProfile({
-      nickname: defaultNickname.slice(0, 20),
-      avatar_url: user.user_metadata?.avatar_url || null,
-    });
-  };
 
   const getEquipmentIcon = (equipmentId: string | null | undefined) => {
     switch (equipmentId) {
@@ -125,80 +113,10 @@ export const HomePage = () => {
     }
   };
 
-  // 1. 초기 상태 (Hydration 및 세션 동기화 대기)
-  if (!isHydrated || isSyncing) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">시스템 준비 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 2. 미인증 상태 (Onboarding으로 이동 대기)
-  if (!isAuthenticated) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">인증 확인 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 3. 프로필 로딩 중
-  if (isProfileLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">프로필 불러오는 중...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 4. 프로필 없음 (신규 유저)
-  if (!profile) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-surface-50">
-        <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-6 shadow-soft-md">
-          <UserCircle className="h-10 w-10 text-primary-600" />
-        </div>
-        <h2 className="text-2xl font-medium text-surface-900 mb-2 leading-tight">새로운 트럭커를 환영합니다!</h2>
-        <p className="text-sm text-surface-500 mb-8 leading-relaxed">
-          도로에 나갈 준비가 거의 다 되었습니다.<br/>
-          계정 정보를 바탕으로 프로필을 생성할까요?
-        </p>
-        <button
-          onClick={handleCreateProfile}
-          disabled={isCreating}
-          className="w-full max-w-xs py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-        >
-          {isCreating ? <Loader2 className="h-5 w-5 animate-spin" /> : '프로필 생성하고 시작하기'}
-          {!isCreating && <ChevronRight className="h-5 w-5" />}
-        </button>
-      </div>
-    );
-  }
-
-  // 5. 필수 데이터 로딩 중 (슬롯, 운행 등)
+  // 데이터 로딩 중
   if (isSlotsLoading || isActiveRunsLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
-        <div className="text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">데이터 동기화 중...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen message="데이터 동기화 중..." />;
   }
-
-  // 여기서부터는 profile이 확실히 존재하는 상태 (Type Guard)
-  const safeProfile = profile;
 
   return (
     <div className="min-h-screen bg-surface-50 pb-24">
@@ -210,7 +128,7 @@ export const HomePage = () => {
               <div>
                 <p className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-1">Available Balance</p>
                 <span className="text-3xl font-medium text-surface-900">
-                  ${safeProfile.balance.toLocaleString()}
+                  ${profile.balance.toLocaleString()}
                 </span>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -236,7 +154,7 @@ export const HomePage = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">Reputation</p>
-                  <span className="text-2xl font-medium text-primary-600 leading-none">{safeProfile.reputation.toLocaleString()}</span>
+                  <span className="text-2xl font-medium text-primary-600 leading-none">{profile.reputation.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -387,3 +305,74 @@ export const HomePage = () => {
   );
 };
 
+// 메인 HomePage 컴포넌트 (상태 관리 및 라우팅)
+export const HomePage = () => {
+  const navigate = useNavigate();
+  const { data: profile, isLoading: isProfileLoading } = useUserProfile();
+  const { user, isAuthenticated, isSyncing, isHydrated } = useUserStore();
+  const { mutate: upsertProfile, isPending: isCreating } = useUpsertProfile();
+
+  // 디버깅용 로그
+  useEffect(() => {
+    console.log('Home State:', { isHydrated, isAuthenticated, isSyncing, isProfileLoading, hasProfile: !!profile });
+  }, [isHydrated, isAuthenticated, isSyncing, isProfileLoading, profile]);
+
+  // 인증 상태 체크 및 리다이렉트
+  useEffect(() => {
+    if (isHydrated && !isSyncing && !isAuthenticated) {
+      navigate('/onboarding');
+    }
+  }, [isHydrated, isAuthenticated, isSyncing, navigate]);
+
+  const handleCreateProfile = () => {
+    if (!user) return;
+    const defaultNickname = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Trucker';
+    upsertProfile({
+      nickname: defaultNickname.slice(0, 20),
+      avatar_url: user.user_metadata?.avatar_url || null,
+    });
+  };
+
+  // 1. Hydration 및 세션 동기화 대기
+  if (!isHydrated || isSyncing) {
+    return <LoadingScreen message="시스템 준비 중..." />;
+  }
+
+  // 2. 미인증 상태
+  if (!isAuthenticated) {
+    return <LoadingScreen message="인증 확인 중..." />;
+  }
+
+  // 3. 프로필 로딩 중
+  if (isProfileLoading) {
+    return <LoadingScreen message="프로필 불러오는 중..." />;
+  }
+
+  // 4. 프로필 없음 (신규 유저)
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-surface-50">
+        <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-6 shadow-soft-md">
+          <UserCircle className="h-10 w-10 text-primary-600" />
+        </div>
+        <h2 className="text-2xl font-medium text-surface-900 mb-2 leading-tight">새로운 트럭커를 환영합니다!</h2>
+        <p className="text-sm text-surface-500 mb-8 leading-relaxed">
+          도로에 나갈 준비가 거의 다 되었습니다.<br/>
+          계정 정보를 바탕으로 프로필을 생성할까요?
+        </p>
+        <button
+          onClick={handleCreateProfile}
+          disabled={isCreating}
+          className="w-full max-w-xs py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+        >
+          {isCreating ? <Loader2 className="h-5 w-5 animate-spin" /> : '프로필 생성하고 시작하기'}
+          {!isCreating && <ChevronRight className="h-5 w-5" />}
+        </button>
+      </div>
+    );
+  }
+
+  // 5. 프로필이 존재하는 경우에만 Dashboard 렌더링
+  // TypeScript가 이 시점에서 profile이 null이 아님을 보장
+  return <Dashboard profile={profile} />;
+};
