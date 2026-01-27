@@ -159,7 +159,17 @@ export const HomePage = () => {
     );
   }
 
-  if (!profile) return null;
+  // 인증되지 않은 상태에서 프로필이 없으면 onboarding으로 리다이렉트 대기
+  if (!profile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
+          <p className="text-sm font-medium text-surface-500">로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface-50 pb-24">
