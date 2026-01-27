@@ -13,6 +13,7 @@ interface RoutePreviewMapProps {
 export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
   const [routeData, setRouteData] = useState<any>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
   const inlineMapRef = useRef<MapRef>(null);
   const fullMapRef = useRef<MapRef>(null);
 
@@ -21,6 +22,8 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
     if (!mapRef.current || !routeData) return;
     
     const coordinates = routeData.coordinates;
+    if (!coordinates || coordinates.length === 0) return;
+
     const lats = coordinates.map((c: number[]) => c[1]);
     const lngs = coordinates.map((c: number[]) => c[0]);
     const minLat = Math.min(...lats);
@@ -67,13 +70,12 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
     fetchRoute();
   }, [order]);
 
-  // 데이터 로드 시 인라인 지도 fit
+  // 데이터 로드 및 지도 로드 완료 시 인라인 지도 fit
   useEffect(() => {
-    if (routeData) {
-      const timer = setTimeout(() => fitToRoute(inlineMapRef), 100);
-      return () => clearTimeout(timer);
+    if (routeData && isMapLoaded) {
+      fitToRoute(inlineMapRef);
     }
-  }, [routeData]);
+  }, [routeData, isMapLoaded]);
 
   // 확장 상태 변경 시 전체 화면 지도 리사이즈 및 fit
   useEffect(() => {
@@ -98,6 +100,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
       <div className="relative h-48 w-full overflow-hidden rounded-2xl border border-surface-100 shadow-soft-sm bg-surface-50">
         <Map
           ref={inlineMapRef}
+          onLoad={() => setIsMapLoaded(true)}
           initialViewState={{
             longitude: (order.startPoint[1] + order.endPoint[1]) / 2,
             latitude: (order.startPoint[0] + order.endPoint[0]) / 2,

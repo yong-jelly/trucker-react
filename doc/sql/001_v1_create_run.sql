@@ -63,7 +63,7 @@ BEGIN
         'IN_TRANSIT',
         v_eta_seconds,
         v_deadline_at,
-        p_selected_items->>'equipmentId',
+        COALESCE(p_selected_items->>'equipmentId', 'BICYCLE'),
         p_selected_items->>'documentId',
         p_selected_items->>'insuranceId',
         v_order.base_reward,

@@ -107,7 +107,8 @@ export const OrderDetailPage = () => {
       navigate(`/run/${newRun.id}`);
     } catch (error) {
       console.error('Failed to start delivery:', error);
-      alert('운행 시작 중 오류가 발생했습니다.');
+      // 에러 발생 시 홈으로 이동 (사용자에게 부드러운 경험 제공)
+      navigate('/');
     }
   };
 

@@ -69,14 +69,15 @@ export const HomePage = () => {
 
   // 인증 상태 체크 및 리다이렉트
   useEffect(() => {
-    if (!isSyncing && !isAuthenticated) {
+    if (isHydrated && !isSyncing && !isAuthenticated) {
       navigate('/onboarding');
     }
-  }, [isAuthenticated, isSyncing, navigate]);
+  }, [isHydrated, isAuthenticated, isSyncing, navigate]);
 
   // 슬롯, 주문, 진행 중인 운행 목록 로드
   useEffect(() => {
-    if (isAuthenticated && user) {
+    if (isHydrated && isAuthenticated && user) {
+      // 프로필 존재 여부와 상관없이 기본 데이터 로드 시도
       fetchSlots();
       fetchOrders();
       fetchActiveRuns();
@@ -88,7 +89,7 @@ export const HomePage = () => {
       }, 60000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, user, fetchSlots, fetchOrders, fetchActiveRuns]);
+  }, [isHydrated, isAuthenticated, user, fetchSlots, fetchOrders, fetchActiveRuns]);
 
   const activeSlot = slots.find(s => !s.isLocked && !s.activeRunId);
 
@@ -125,7 +126,7 @@ export const HomePage = () => {
   };
 
   // hydration이 완료되지 않았거나 동기화 중일 때 로딩 화면 표시
-  if (!isHydrated || isSyncing || isProfileLoading || isCreating || (isAuthenticated && (isSlotsLoading || isActiveRunsLoading))) {
+  if (!isHydrated || isSyncing || (isAuthenticated && (isSlotsLoading || isActiveRunsLoading))) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="text-center">
@@ -136,8 +137,8 @@ export const HomePage = () => {
     );
   }
 
-  // 프로필이 없는 경우 대응 UI
-  if (!profile && isAuthenticated) {
+  // 프로필이 없는 경우 대응 UI (프로필 로딩이 끝난 후 데이터가 없을 때만)
+  if (!isProfileLoading && !profile && isAuthenticated) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-surface-50">
         <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-6 shadow-soft-md">
@@ -159,8 +160,8 @@ export const HomePage = () => {
     );
   }
 
-  // 인증되지 않은 상태에서 프로필이 없으면 onboarding으로 리다이렉트 대기
-  if (!profile) {
+  // 데이터 로딩 중이거나 프로필이 아직 없는 경우 대기
+  if (isProfileLoading || !profile) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="text-center">

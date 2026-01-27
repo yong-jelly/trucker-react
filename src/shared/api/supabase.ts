@@ -48,6 +48,9 @@ export async function rpcTrucker<T = any>(
   params?: Record<string, any>
 ): Promise<{ data: T | null; error: any }> {
   try {
+    const session = (await supabase.auth.getSession()).data.session;
+    const token = session?.access_token || supabaseAnonKey;
+
     const response = await fetch(
       `${supabaseUrl}/rest/v1/rpc/${functionName}`,
       {
@@ -56,7 +59,7 @@ export async function rpcTrucker<T = any>(
           'Content-Type': 'application/json',
           'Content-Profile': 'trucker', // 스키마 지정 헤더
           'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || supabaseAnonKey}`,
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify(params || {}),
       }

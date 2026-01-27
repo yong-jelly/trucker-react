@@ -21,6 +21,7 @@ export function useUserProfile() {
         console.error("Profile fetch error via RPC:", error);
         throw error;
       }
+      
       return data;
     },
     enabled: !!user,

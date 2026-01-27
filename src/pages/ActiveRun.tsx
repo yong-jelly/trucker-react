@@ -124,12 +124,18 @@ export const ActiveRunPage = () => {
     
     try {
       // DB에 완료 처리 및 보상 지급
-      await completeRun({
+      const result = await completeRun({
         runId,
         finalReward,
         penaltyAmount,
         elapsedSeconds
       });
+
+      // 이미 완료된 경우 (cron에 의해 처리됨) 홈으로 부드럽게 이동
+      if (result.alreadyCompleted) {
+        navigate('/', { replace: true });
+        return;
+      }
 
       navigate('/settlement', { 
         state: { 
@@ -141,7 +147,8 @@ export const ActiveRunPage = () => {
       });
     } catch (err) {
       console.error('Failed to complete run:', err);
-      alert('운행 완료 처리 중 오류가 발생했습니다.');
+      // 에러 발생 시에도 홈으로 부드럽게 이동 (반복 에러 방지)
+      navigate('/', { replace: true });
     } finally {
       setIsCompleting(false);
     }

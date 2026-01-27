@@ -30,14 +30,16 @@ export const HireDriverPage = () => {
 
   const [, setIsHired] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const handleNegotiate = () => {
+    setErrorMessage(null);
     if (offer.attempts < 2) {
       // 새로운 수수료 랜덤 생성 (15~40%)
       const newRate = Math.floor(Math.random() * (40 - 15 + 1)) + 15;
       setOffer({ ...offer, baseCommission: newRate, attempts: offer.attempts + 1 });
     } else {
       // 3번째는 강제 고용 단계
-      alert('마지막 제안입니다. 수락 시 고용이 완료됩니다.');
       setOffer({ ...offer, attempts: 3 });
     }
   };
@@ -45,11 +47,10 @@ export const HireDriverPage = () => {
   const handleHire = () => {
     const deposit = (1000 + 500) * 1.1; // 예시 계산
     if (!profile || profile.balance < deposit) {
-      alert('예치금이 부족합니다.');
+      setErrorMessage('예치금이 부족합니다.');
       return;
     }
     setIsHired(true);
-    alert(`${offer.name} 드라이버가 고용되었습니다!`);
     navigate('/garage');
   };
 
@@ -117,6 +118,12 @@ export const HireDriverPage = () => {
               </div>
 
               <div className="mt-6 flex flex-col gap-3">
+                {errorMessage && (
+                  <div className="py-2 px-4 rounded-xl bg-accent-rose/10 text-accent-rose text-xs font-medium flex items-center justify-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {errorMessage}
+                  </div>
+                )}
                 {offer.attempts < 3 ? (
                   <button 
                     onClick={handleNegotiate}

@@ -186,12 +186,18 @@ export async function getRunHistory(params: {
   }));
 }
 
+export interface CompleteRunResult {
+  success: boolean;
+  alreadyCompleted: boolean;
+  data?: any;
+}
+
 export async function completeRun(params: {
   runId: string;
   finalReward: number;
   penaltyAmount: number;
   elapsedSeconds: number;
-}) {
+}): Promise<CompleteRunResult> {
   const { data, error } = await rpcTrucker('v1_complete_run', {
     p_run_id: params.runId,
     p_final_reward: Math.floor(params.finalReward),
@@ -200,11 +206,17 @@ export async function completeRun(params: {
   });
 
   if (error) {
+    // 이미 완료/취소된 경우는 에러가 아닌 정상 처리로 간주
+    if (error.code === 'P0001' && error.message?.includes('already completed')) {
+      console.log('Run already completed (possibly by cron), proceeding normally');
+      return { success: true, alreadyCompleted: true };
+    }
+    
     console.error('Failed to complete run:', error);
-    throw new Error('Failed to complete run');
+    throw error;
   }
 
-  return data;
+  return { success: true, alreadyCompleted: false, data };
 }
 
 export async function createRun(params: {

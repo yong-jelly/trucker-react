@@ -15,8 +15,13 @@ export const AdminSettingPage = () => {
     bypassTimePenaltyMinutes: 15,
   });
 
+  const [isSaved, setIsSaved] = useState(false);
+
   const handleSave = () => {
-    alert('설정이 저장되었습니다. (관리자 전용)');
+    // TODO: 실제 저장 로직 구현
+    console.log('Admin settings saved:', settings);
+    setIsSaved(true);
+    setTimeout(() => setIsSaved(false), 2000);
   };
 
   return (
@@ -36,10 +41,14 @@ export const AdminSettingPage = () => {
         </div>
         <button 
           onClick={handleSave}
-          className="flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2 text-xs font-medium hover:bg-primary-700"
+          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+            isSaved 
+              ? 'bg-accent-emerald' 
+              : 'bg-primary-600 hover:bg-primary-700'
+          }`}
         >
           <Save className="h-4 w-4" />
-          저장
+          {isSaved ? '저장됨!' : '저장'}
         </button>
       </header>
 

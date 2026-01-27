@@ -14,7 +14,12 @@ SECURITY DEFINER
 SET search_path = trucker, public
 AS $$
 BEGIN
-    -- 슬롯이 없으면 자동 생성 (기존 유저 대응)
+    -- 프로필이 없으면 빈 결과 반환 (외래키 제약 조건 위반 방지)
+    IF NOT EXISTS (SELECT 1 FROM trucker.tbl_user_profile WHERE auth_user_id = p_user_id) THEN
+        RETURN;
+    END IF;
+
+    -- 슬롯이 없으면 자동 생성 (기존 유저 또는 트리거 미작동 대응)
     IF NOT EXISTS (SELECT 1 FROM trucker.tbl_slots WHERE user_id = p_user_id) THEN
         INSERT INTO trucker.tbl_slots (user_id, index, is_locked) VALUES
             (p_user_id, 0, false),
