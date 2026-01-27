@@ -6,9 +6,11 @@ interface UserState {
   user: any | null;
   isAuthenticated: boolean;
   isSyncing: boolean;
+  isHydrated: boolean;
   setUser: (user: any) => void;
   clearUser: () => void;
   syncSession: () => Promise<void>;
+  setHydrated: (hydrated: boolean) => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -17,8 +19,10 @@ export const useUserStore = create<UserState>()(
       user: null,
       isAuthenticated: false,
       isSyncing: true,
+      isHydrated: false,
       setUser: (user) => set({ user, isAuthenticated: !!user, isSyncing: false }),
       clearUser: () => set({ user: null, isAuthenticated: false, isSyncing: false }),
+      setHydrated: (hydrated) => set({ isHydrated: hydrated }),
       syncSession: async () => {
         try {
           set({ isSyncing: true });
@@ -39,6 +43,10 @@ export const useUserStore = create<UserState>()(
     {
       name: "user-storage",
       partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      onRehydrateStorage: () => (state) => {
+        // Hydration 완료 시 호출됨
+        state?.setHydrated(true);
+      },
     }
   )
 );

@@ -14,7 +14,7 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { slots, setSlots } = useGameStore();
   const { data: profile, isLoading: isProfileLoading, error: profileError } = useUserProfile();
-  const { user, isAuthenticated, isSyncing } = useUserStore();
+  const { user, isAuthenticated, isSyncing, isHydrated } = useUserStore();
   const { mutate: upsertProfile, isPending: isCreating } = useUpsertProfile();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
@@ -64,8 +64,8 @@ export const HomePage = () => {
 
   // 디버깅용 로그
   useEffect(() => {
-    console.log('Home State:', { isAuthenticated, isSyncing, isProfileLoading, hasProfile: !!profile, profileError, slotsCount: slots.length });
-  }, [isAuthenticated, isSyncing, isProfileLoading, profile, profileError, slots.length]);
+    console.log('Home State:', { isHydrated, isAuthenticated, isSyncing, isProfileLoading, hasProfile: !!profile, profileError, slotsCount: slots.length });
+  }, [isHydrated, isAuthenticated, isSyncing, isProfileLoading, profile, profileError, slots.length]);
 
   // 인증 상태 체크 및 리다이렉트
   useEffect(() => {
@@ -124,7 +124,8 @@ export const HomePage = () => {
     }
   };
 
-  if (isSyncing || isProfileLoading || isCreating || (isAuthenticated && (isSlotsLoading || isActiveRunsLoading))) {
+  // hydration이 완료되지 않았거나 동기화 중일 때 로딩 화면 표시
+  if (!isHydrated || isSyncing || isProfileLoading || isCreating || (isAuthenticated && (isSlotsLoading || isActiveRunsLoading))) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="text-center">

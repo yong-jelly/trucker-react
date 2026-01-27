@@ -11,7 +11,7 @@ export function ProfilePage() {
   const navigate = useNavigate();
   const { tab } = useParams();
   const { data: _profile, isLoading: isProfileLoading } = useUserProfile();
-  const { isAuthenticated, isSyncing } = useUserStore();
+  const { isAuthenticated, isSyncing, isHydrated } = useUserStore();
   
   const activeTab = tab || "profile";
 
@@ -36,7 +36,7 @@ export function ProfilePage() {
     navigate(`/profile/${newTabId}`);
   };
 
-  if (isSyncing || (isProfileLoading && isAuthenticated)) {
+  if (!isHydrated || isSyncing || (isProfileLoading && isAuthenticated)) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-10 w-10 animate-spin text-primary-500" />
