@@ -125,20 +125,44 @@ export const HomePage = () => {
     }
   };
 
-  // hydration이 완료되지 않았거나 동기화 중일 때 로딩 화면 표시
-  if (!isHydrated || isSyncing || (isAuthenticated && (isSlotsLoading || isActiveRunsLoading))) {
+  // 1. 초기 상태 (Hydration 및 세션 동기화 대기)
+  if (!isHydrated || isSyncing) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">데이터 동기화 중...</p>
+          <p className="text-sm font-medium text-surface-500">시스템 준비 중...</p>
         </div>
       </div>
     );
   }
 
-  // 프로필이 없는 경우 대응 UI (프로필 로딩이 끝난 후 데이터가 없을 때만)
-  if (!isProfileLoading && !profile && isAuthenticated) {
+  // 2. 미인증 상태 (Onboarding으로 이동 대기)
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
+          <p className="text-sm font-medium text-surface-500">인증 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 3. 프로필 로딩 중
+  if (isProfileLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
+          <p className="text-sm font-medium text-surface-500">프로필 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 4. 프로필 없음 (신규 유저)
+  if (!profile) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-surface-50">
         <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-6 shadow-soft-md">
@@ -151,26 +175,30 @@ export const HomePage = () => {
         </p>
         <button
           onClick={handleCreateProfile}
-          className="w-full max-w-xs py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+          disabled={isCreating}
+          className="w-full max-w-xs py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
         >
-          프로필 생성하고 시작하기
-          <ChevronRight className="h-5 w-5" />
+          {isCreating ? <Loader2 className="h-5 w-5 animate-spin" /> : '프로필 생성하고 시작하기'}
+          {!isCreating && <ChevronRight className="h-5 w-5" />}
         </button>
       </div>
     );
   }
 
-  // 데이터 로딩 중이거나 프로필이 아직 없는 경우 대기
-  if (isProfileLoading || !profile) {
+  // 5. 필수 데이터 로딩 중 (슬롯, 운행 등)
+  if (isSlotsLoading || isActiveRunsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="text-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
-          <p className="text-sm font-medium text-surface-500">로딩 중...</p>
+          <p className="text-sm font-medium text-surface-500">데이터 동기화 중...</p>
         </div>
       </div>
     );
   }
+
+  // 여기서부터는 profile이 확실히 존재하는 상태 (Type Guard)
+  const safeProfile = profile;
 
   return (
     <div className="min-h-screen bg-surface-50 pb-24">
@@ -182,7 +210,7 @@ export const HomePage = () => {
               <div>
                 <p className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-1">Available Balance</p>
                 <span className="text-3xl font-medium text-surface-900">
-                  ${profile?.balance?.toLocaleString() ?? '0'}
+                  ${safeProfile.balance.toLocaleString()}
                 </span>
               </div>
               <div className="flex flex-col items-end gap-2">
@@ -208,7 +236,7 @@ export const HomePage = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">Reputation</p>
-                  <span className="text-2xl font-medium text-primary-600 leading-none">{profile?.reputation?.toLocaleString() ?? '0'}</span>
+                  <span className="text-2xl font-medium text-primary-600 leading-none">{safeProfile.reputation.toLocaleString()}</span>
                 </div>
               </div>
             </div>
