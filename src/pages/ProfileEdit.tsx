@@ -19,11 +19,11 @@ export function ProfileEditPage() {
           >
             <ArrowLeft className="h-5 w-5 text-surface-700" />
           </button>
-          <h1 className="text-xl font-black text-surface-900">프로필 편집</h1>
+          <h1 className="text-xl font-medium text-surface-900">프로필 편집</h1>
         </div>
         <Button 
           onClick={() => formRef.current?.submit()}
-          className="rounded-xl bg-primary-600 px-4 py-2 text-xs font-bold hover:bg-primary-700"
+          className="rounded-xl bg-primary-600 px-4 py-2 text-xs font-medium hover:bg-primary-700"
         >
           <Save className="h-4 w-4 mr-1.5" />
           저장

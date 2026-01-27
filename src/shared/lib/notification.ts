@@ -1,4 +1,4 @@
-import { supabase } from "../api/supabase";
+import { rpcTrucker } from "../api/supabase";
 
 interface NotificationPayload {
   title: string;
@@ -13,12 +13,7 @@ interface NotificationPayload {
 export async function sendNotification(userId: string, payload: NotificationPayload) {
   try {
     // 1. 사용자 프로필에서 알림 설정 조회
-    const { data: profile, error: profileError } = await supabase
-      .schema("trucker")
-      .from("tbl_user_profile")
-      .select("telegram_chat_id, slack_webhook_url, notification_enabled")
-      .eq("auth_user_id", userId)
-      .single();
+    const { data: profile, error: profileError } = await rpcTrucker("v1_get_user_profile", { p_auth_user_id: userId });
 
     if (profileError || !profile || !profile.notification_enabled) {
       return { success: false, reason: "Notification disabled or profile not found" };

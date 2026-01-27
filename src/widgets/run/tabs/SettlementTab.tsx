@@ -1,10 +1,14 @@
 import { useState, useMemo } from 'react';
 import { DollarSign, Clock, TrendingDown, TrendingUp, AlertTriangle, ArrowUp } from 'lucide-react';
-import type { Order } from '../../../shared/api/types';
 import { useGameStore } from '../../../app/store';
 
+interface OrderInfo {
+  title: string;
+  baseReward: number;
+}
+
 interface SettlementTabProps {
-  order: Order;
+  order: OrderInfo;
   elapsedSeconds: number;
   etaSeconds: number;
   runId: string;
@@ -116,7 +120,7 @@ export const SettlementTab = ({ order, elapsedSeconds, etaSeconds, runId }: Sett
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs font-medium text-surface-500">현재 예상 정산</p>
-            <p className={`text-2xl font-bold ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
+            <p className={`text-2xl font-medium ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
               ${currentTotal.toFixed(2)}
             </p>
           </div>
@@ -130,7 +134,7 @@ export const SettlementTab = ({ order, elapsedSeconds, etaSeconds, runId }: Sett
       {/* 영수증 타임라인 (역순) */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-bold text-surface-900">영수증</h4>
+          <h4 className="text-sm font-medium text-surface-900">영수증</h4>
           <span className="text-xs text-surface-400">{items.length}건</span>
         </div>
 
@@ -154,7 +158,7 @@ export const SettlementTab = ({ order, elapsedSeconds, etaSeconds, runId }: Sett
                 </div>
                 <p className="text-xs text-surface-400">{formatTime(item.timestamp)}</p>
               </div>
-              <span className={`text-sm font-bold ${item.amount >= 0 ? 'text-surface-900' : 'text-accent-rose'}`}>
+              <span className={`text-sm font-medium ${item.amount >= 0 ? 'text-surface-900' : 'text-accent-rose'}`}>
                 {item.amount >= 0 ? '+' : ''}${item.amount.toFixed(2)}
               </span>
             </div>

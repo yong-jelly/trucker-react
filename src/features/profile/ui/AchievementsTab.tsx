@@ -44,8 +44,8 @@ export function AchievementsTab() {
   return (
     <div className="space-y-4 px-4 py-2">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-black text-surface-900 uppercase tracking-widest">Unlocked Achievements</h3>
-        <span className="text-[10px] font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">2 / 4</span>
+        <h3 className="text-sm font-medium text-surface-900 uppercase tracking-widest">Unlocked Achievements</h3>
+        <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">2 / 4</span>
       </div>
 
       <div className="grid gap-3">
@@ -68,16 +68,16 @@ export function AchievementsTab() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-base font-black text-surface-900">{achievement.title}</h4>
+                  <h4 className="text-base font-medium text-surface-900">{achievement.title}</h4>
                   {achievement.unlocked && (
-                    <span className="text-[10px] font-bold text-surface-400">{achievement.date}</span>
+                    <span className="text-[10px] font-medium text-surface-400">{achievement.date}</span>
                   )}
                 </div>
                 <p className="text-xs text-surface-500 mt-0.5 leading-relaxed">{achievement.description}</p>
                 
                 {!achievement.unlocked && achievement.progress !== undefined && (
                   <div className="mt-3">
-                    <div className="flex justify-between text-[9px] font-bold text-surface-400 mb-1 uppercase">
+                    <div className="flex justify-between text-[9px] font-medium text-surface-400 mb-1 uppercase">
                       <span>Progress</span>
                       <span>{achievement.progress}%</span>
                     </div>

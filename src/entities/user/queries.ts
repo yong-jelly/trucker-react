@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/shared/api/supabase";
+import { supabase, rpcTrucker } from "@/shared/api/supabase";
 import { useUserStore } from "./index";
 
 export const userKeys = {
@@ -15,15 +15,10 @@ export function useUserProfile() {
     queryFn: async () => {
       if (!user) return null;
       
-      const { data, error } = await supabase
-        .schema("trucker")
-        .from("tbl_user_profile")
-        .select("*")
-        .eq("auth_user_id", user.id)
-        .maybeSingle();
+      const { data, error } = await rpcTrucker("v1_get_user_profile", { p_auth_user_id: user.id });
         
       if (error) {
-        console.error("Profile fetch error:", error);
+        console.error("Profile fetch error via RPC:", error);
         throw error;
       }
       return data;
@@ -53,18 +48,15 @@ export function useUpsertProfile() {
     }) => {
       if (!user) throw new Error("User not authenticated");
 
-      const { data, error } = await supabase
-        .schema("trucker")
-        .from("tbl_user_profile")
-        .upsert({
-          auth_user_id: user.id,
-          ...profile,
-          updated_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+      const { data, error } = await rpcTrucker("v1_upsert_user_profile", {
+        p_auth_user_id: user.id,
+        p_profile: profile
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Profile upsert error via RPC:", error);
+        throw error;
+      }
       return data;
     },
     onSuccess: () => {

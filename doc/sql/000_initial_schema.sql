@@ -1,7 +1,8 @@
 -- =====================================================
+-- 000_initial_schema.sql
 -- 트럭커(Trucker) 데이터베이스 스키마 설계 (trucker 스키마)
 -- 실행 방법:
---   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/schema.sql
+--   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/000_initial_schema.sql
 -- =====================================================
 
 -- 0. 스키마 생성 및 권한 부여
@@ -133,12 +134,65 @@ CREATE TABLE IF NOT EXISTS trucker.tbl_system_config (
     updated_at timestamp with time zone DEFAULT now()
 );
 
--- 이벤트 확률 설정 예시
+-- 이벤트 확률 설정
 INSERT INTO trucker.tbl_system_config (id, value, description) VALUES
 ('enforcement_base_prob', '{"normal": 0.05, "speeding": 0.20}', '단속 기본 확률'),
 ('enforcement_penalties', '{"document": 300, "bypass": 720, "evasion_success": 0, "evasion_fail": 1200}', '단속 대응별 페널티'),
 ('evasion_success_rate', '0.40', '돌파 성공 확률')
 ON CONFLICT (id) DO NOTHING;
+
+-- 카테고리별 기본 단가 및 해금 조건 설정
+-- base_rate: $/km, min_reputation: 해금 필요 평판, equipment: 필요 장비
+-- difficulty_range: 난이도 가중치 범위, distance_range: 거리 범위(km)
+INSERT INTO trucker.tbl_system_config (id, value, description) VALUES
+('category_config', '{
+  "CONVENIENCE": {
+    "base_rate": 1.5,
+    "min_reputation": 0,
+    "equipment": "BICYCLE",
+    "difficulty_range": [1.0, 1.3],
+    "distance_range": [2, 15],
+    "weight_range": [1, 10],
+    "volume_range": [1, 20]
+  },
+  "CONSTRUCTION": {
+    "base_rate": 4,
+    "min_reputation": 100,
+    "equipment": "VAN",
+    "difficulty_range": [1.0, 1.5],
+    "distance_range": [10, 50],
+    "weight_range": [50, 500],
+    "volume_range": [20, 200]
+  },
+  "EQUIPMENT": {
+    "base_rate": 8,
+    "min_reputation": 500,
+    "equipment": "TRUCK",
+    "difficulty_range": [1.2, 1.8],
+    "distance_range": [20, 100],
+    "weight_range": [100, 2000],
+    "volume_range": [50, 500]
+  },
+  "HEAVY_DUTY": {
+    "base_rate": 15,
+    "min_reputation": 500,
+    "equipment": "HEAVY_TRUCK",
+    "difficulty_range": [1.3, 2.0],
+    "distance_range": [50, 200],
+    "weight_range": [500, 5000],
+    "volume_range": [100, 1000]
+  },
+  "INTERNATIONAL": {
+    "base_rate": 50,
+    "min_reputation": 2000,
+    "equipment": "PLANE",
+    "difficulty_range": [1.5, 2.5],
+    "distance_range": [500, 5000],
+    "weight_range": [100, 100000],
+    "volume_range": [50, 10000]
+  }
+}', '카테고리별 기본 단가, 해금 평판, 필요 장비, 난이도/거리/무게/부피 범위')
+ON CONFLICT (id) DO UPDATE SET value = EXCLUDED.value, updated_at = now();
 
 -- RLS (Row Level Security) 설정
 ALTER TABLE trucker.tbl_user_profile ENABLE ROW LEVEL SECURITY;
@@ -171,17 +225,19 @@ GRANT ALL ON ALL TABLES IN SCHEMA trucker TO anon, authenticated, service_role;
 GRANT ALL ON ALL SEQUENCES IN SCHEMA trucker TO anon, authenticated, service_role;
 GRANT ALL ON ALL FUNCTIONS IN SCHEMA trucker TO anon, authenticated, service_role;
 
--- 신규 사용자 가입 시 프로필 자동 생성 함수
+-- 신규 사용자 가입 시 프로필 및 기본 슬롯 자동 생성 함수
 CREATE OR REPLACE FUNCTION trucker.handle_new_user()
  RETURNS trigger
  LANGUAGE plpgsql
  SECURITY DEFINER
+ SET search_path = trucker, public
 AS $function$
 DECLARE
   base_nickname TEXT;
   final_nickname TEXT;
   random_suffix TEXT;
 BEGIN
+  -- 1. 닉네임 생성
   base_nickname := split_part(NEW.email, '@', 1);
   IF base_nickname = '' OR base_nickname IS NULL THEN
     base_nickname := 'trucker';
@@ -190,8 +246,16 @@ BEGIN
   random_suffix := floor(random() * 9000 + 1000)::text;
   final_nickname := base_nickname || '_' || random_suffix;
 
+  -- 2. 프로필 생성
   INSERT INTO trucker.tbl_user_profile (auth_user_id, nickname)
   VALUES (NEW.id, final_nickname);
+
+  -- 3. 기본 슬롯 3개 생성 (첫 번째만 해금)
+  INSERT INTO trucker.tbl_slots (user_id, index, is_locked) VALUES
+    (NEW.id, 0, false),  -- 첫 번째 슬롯: 해금
+    (NEW.id, 1, true),   -- 두 번째 슬롯: 잠금 (평판/구매로 해금)
+    (NEW.id, 2, true);   -- 세 번째 슬롯: 잠금
+
   RETURN NEW;
 END;
 $function$;

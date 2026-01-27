@@ -68,13 +68,13 @@
   }
 
   body {
-    @apply min-h-dvh bg-white text-surface-900 antialiased scrollbar-hide;
+    @apply min-h-dvh bg-white text-surface-900 antialiased scrollbar-hide font-medium;
     font-family: "IBM Plex Sans KR", -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
     letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-semibold tracking-tight text-surface-900;
+    @apply tracking-tight text-surface-900;
   }
 
   *:focus-visible {

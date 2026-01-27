@@ -145,8 +145,8 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
           {/* 모달 헤더 */}
           <div className="flex items-center justify-between px-4 py-4 border-b border-surface-100 bg-white/95 backdrop-blur-md">
             <div className="flex flex-col">
-              <h3 className="text-sm font-black text-surface-900">{order.title}</h3>
-              <p className="text-[10px] font-bold text-surface-400 uppercase tracking-widest">경로 미리보기 • {order.distance}km</p>
+              <h3 className="text-sm font-medium text-surface-900">{order.title}</h3>
+              <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">경로 미리보기 • {order.distance}km</p>
             </div>
             <button 
               onClick={() => setIsExpanded(false)}
@@ -184,7 +184,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
                   <div className="rounded-full bg-white p-1.5 shadow-md border border-primary-100">
                     <MapPin className="h-5 w-5 text-primary-500" />
                   </div>
-                  <span className="mt-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold shadow-sm">출발지</span>
+                  <span className="mt-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-medium shadow-sm">출발지</span>
                 </div>
               </MapboxMarker>
               <MapboxMarker longitude={order.endPoint[1]} latitude={order.endPoint[0]}>
@@ -192,7 +192,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
                   <div className="rounded-full bg-white p-1.5 shadow-md border border-accent-emerald/20">
                     <MapPin className="h-5 w-5 text-accent-emerald" />
                   </div>
-                  <span className="mt-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-bold shadow-sm">도착지</span>
+                  <span className="mt-1 rounded bg-white px-1.5 py-0.5 text-[10px] font-medium shadow-sm">도착지</span>
                 </div>
               </MapboxMarker>
             </Map>

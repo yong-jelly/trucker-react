@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Map, { Source, Layer, Marker as MapboxMarker, NavigationControl } from 'react-map-gl/mapbox';
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useParams, useNavigate } from 'react-router';
-import { Map as MapIcon, List, ArrowLeft, MoreHorizontal, MapPin, TrendingUp, Zap } from 'lucide-react';
-import { MOCK_ORDERS, MAPBOX_TOKEN } from '../shared/lib/mockData';
+import { Map as MapIcon, List, ArrowLeft, MapPin, TrendingUp, Zap, Loader2 } from 'lucide-react';
+import { MAPBOX_TOKEN } from '../shared/lib/mockData';
 import { RunSheet } from '../widgets/run/RunSheet';
 import { useGameStore } from '../app/store';
+import { getRunById, completeRun, type RunDetail } from '../entities/run';
 
 type ViewMode = 'map' | 'info';
 
@@ -15,30 +16,85 @@ export const ActiveRunPage = () => {
   const navigate = useNavigate();
   const { addEventLog } = useGameStore();
   const [viewMode, setViewMode] = useState<ViewMode>('map');
-  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isCompleting, setIsCompleting] = useState(false);
   const [routeData, setRouteData] = useState<any>(null);
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
   const [isSpeeding, setIsOverSpeed] = useState(false);
   const [currentSpeedKmh, setCurrentSpeedKmh] = useState(0);
-  const [distanceCovered, setDistanceCovered] = useState(0);
   const [fuel, setFuel] = useState(100);
+  const [tick, setTick] = useState(0); // 실시간 갱신용
   const mapRef = useRef<MapRef>(null);
 
-  // 임시로 첫 번째 오더 사용
-  const order = MOCK_ORDERS.find(o => o.id === runId) || MOCK_ORDERS[0];
-  const etaSeconds = order.limitTimeMinutes * 60;
+  // DB에서 운행 데이터 로드
+  const fetchRunDetail = useCallback(async () => {
+    if (!runId) return;
+    
+    try {
+      const detail = await getRunById(runId);
+      if (detail) {
+        if (detail.run.status !== 'IN_TRANSIT') {
+          // 이미 완료된 경우 홈으로
+          navigate('/');
+          return;
+        }
+        setRunDetail(detail);
+        setFuel(detail.run.currentDurability); // currentDurability를 연료로 사용
+      }
+    } catch (err) {
+      console.error('Failed to fetch run detail:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [runId, navigate]);
+
+  useEffect(() => {
+    fetchRunDetail();
+  }, [fetchRunDetail]);
+
+  // 경과 시간 계산 (start_at 기준)
+  const elapsedSeconds = useMemo(() => {
+    if (!runDetail) return 0;
+    return Math.floor((Date.now() - runDetail.run.startAt) / 1000);
+  }, [runDetail, tick]);
+
+  // 주문 및 ETA 정보
+  const order = runDetail?.order;
+  const etaSeconds = runDetail?.run.etaSeconds || 0;
   
   // 실제 도로 거리
-  const totalDistanceKm = order.distance;
+  const totalDistanceKm = order?.distance || 0;
   
-  // 기본 속도 및 과속 설정
+  // 장비별 기본 속도 (km/h)
+  const EQUIPMENT_SPEEDS: Record<string, number> = {
+    'BICYCLE': 15,      // 자전거
+    'VAN': 60,          // 밴
+    'TRUCK': 80,        // 트럭
+    'HEAVY_TRUCK': 70,  // 헤비트럭
+    'PLANE': 500,       // 비행기
+  };
+  
+  // 현재 장비 유형 (없으면 기본 자전거)
+  const equipmentType = runDetail?.run.selectedItems?.equipmentId || order?.requiredEquipmentType || 'BICYCLE';
+  
+  // 장비 기반 속도 설정
+  const equipmentBaseSpeed = EQUIPMENT_SPEEDS[equipmentType] || 15;
   const fuelPenaltyMultiplier = fuel <= 0 ? 0.2 : 1.0; // 연료 고갈 시 80% 감속
-  const baseSpeedKmh = (totalDistanceKm / (etaSeconds / 3600)) * fuelPenaltyMultiplier;
-  const maxSpeedKmh = baseSpeedKmh * 1.5; // 최대 1.5배 과속 가능
-  const acceleration = 0.5; // 초당 가속도
+  const baseSpeedKmh = equipmentBaseSpeed * fuelPenaltyMultiplier;
+  const maxSpeedKmh = baseSpeedKmh * 1.5; // 가속 시 최대 1.5배 (자전거: 22.5km/h)
+  const acceleration = 2.0; // 초당 가속도 (빠르게 목표 속도 도달)
+
+  // 경과 시간 기반 이동 거리 계산
+  const distanceCovered = useMemo(() => {
+    if (!totalDistanceKm || !etaSeconds) return 0;
+    // 기본 속도로 이동한 거리 (과속 상태 고려하지 않은 단순 계산)
+    const baseDistance = (elapsedSeconds / etaSeconds) * totalDistanceKm;
+    return Math.min(baseDistance, totalDistanceKm);
+  }, [elapsedSeconds, etaSeconds, totalDistanceKm]);
 
   // 현재 진행률 계산
-  const progress = Math.min((distanceCovered / totalDistanceKm) * 100, 100);
+  const progress = totalDistanceKm > 0 ? Math.min((distanceCovered / totalDistanceKm) * 100, 100) : 0;
   
   // 거리 정보 계산
   const distanceRemaining = (totalDistanceKm - distanceCovered).toFixed(2);
@@ -46,10 +102,55 @@ export const ActiveRunPage = () => {
   // 현재 속도 기준 도착 예상 시간 (ETA)
   const estimatedRemainingSeconds = currentSpeedKmh > 0 
     ? (parseFloat(distanceRemaining) / currentSpeedKmh) * 3600 
-    : 0;
+    : etaSeconds - elapsedSeconds;
+
+  // 운행 데이터 로드 시 속도 초기화
+  useEffect(() => {
+    if (runDetail && currentSpeedKmh === 0) {
+      setCurrentSpeedKmh(baseSpeedKmh);
+    }
+  }, [runDetail, baseSpeedKmh, currentSpeedKmh]);
+
+  const isOvertime = elapsedSeconds > etaSeconds;
+
+  const handleComplete = useCallback(async () => {
+    if (!order || !runId || isCompleting) return;
+    
+    setIsCompleting(true);
+    const penaltyAmount = isOvertime 
+      ? Math.floor(Math.max(order.baseReward * 0.5, Math.floor((elapsedSeconds - etaSeconds) / 60) * 0.2))
+      : 0;
+    const finalReward = order.baseReward - penaltyAmount;
+    
+    try {
+      // DB에 완료 처리 및 보상 지급
+      await completeRun({
+        runId,
+        finalReward,
+        penaltyAmount,
+        elapsedSeconds
+      });
+
+      navigate('/settlement', { 
+        state: { 
+          order, 
+          elapsedSeconds, 
+          finalReward, 
+          penalty: penaltyAmount 
+        } 
+      });
+    } catch (err) {
+      console.error('Failed to complete run:', err);
+      alert('운행 완료 처리 중 오류가 발생했습니다.');
+    } finally {
+      setIsCompleting(false);
+    }
+  }, [order, runId, isCompleting, isOvertime, elapsedSeconds, etaSeconds, navigate]);
 
   // Mapbox 라우팅 데이터 가져오기 및 초기 위치 설정
   useEffect(() => {
+    if (!order) return;
+
     const fetchRoute = async () => {
       // 대륙간 운송은 도로 라우팅을 건너뛰고 바로 직선 경로 생성
       if (order.category === 'INTERNATIONAL') {
@@ -110,10 +211,19 @@ export const ActiveRunPage = () => {
     fetchRoute();
   }, [order]);
 
-  // 실시간 속도, 거리, 시간 업데이트 및 단속/연료 로직
+  // 실시간 갱신 타이머 (1초마다 tick 증가로 경과 시간 재계산)
   useEffect(() => {
+    if (!runDetail) return;
+
     const timer = setInterval(() => {
-      setElapsedSeconds(prev => prev + 1);
+      // 이미 도착한 경우 타이머 중지 및 자동 완료 처리
+      if (progress >= 100) {
+        clearInterval(timer);
+        handleComplete();
+        return;
+      }
+
+      setTick(prev => prev + 1);
       
       // 연료 소모 로직
       setFuel(prev => {
@@ -130,19 +240,12 @@ export const ActiveRunPage = () => {
         return prev;
       });
 
-      // 이동 거리 누적 (속도 기반)
-      setDistanceCovered(prev => {
-        const distancePerSecond = currentSpeedKmh / 3600;
-        return Math.min(prev + distancePerSecond, totalDistanceKm);
-      });
-
-      // 단속 로직 (매 15초마다 확률 체크)
+      // 단속 로직 (매 15초마다 확률 체크) - 서버에서 처리하도록 변경 예정
       if (elapsedSeconds > 0 && elapsedSeconds % 15 === 0 && progress < 100) {
         const baseProb = 0.05; // 기본 5%
         const multiplier = isSpeeding ? 4 : 1; // 과속 시 4배 (20%)
         
         if (Math.random() < (baseProb * multiplier)) {
-          // 단속 이벤트 발생 시뮬레이션
           const choices = ['DOCUMENT', 'BYPASS', 'EVASION'];
           const choice = choices[Math.floor(Math.random() * choices.length)];
           
@@ -155,13 +258,13 @@ export const ActiveRunPage = () => {
           if (choice === 'DOCUMENT') {
             title = '단속 회피 성공 (서류 제시)';
             description = '필수 서류 확인 완료. 무사 통과.';
-            etaChange = 300; // 5분 지연
+            etaChange = 300;
           } else if (choice === 'BYPASS') {
             title = '단속 회피 성공 (우회)';
             description = '경찰을 피해 우회로 진입.';
-            etaChange = 720; // 12분 지연
+            etaChange = 720;
           } else {
-            const isCaught = Math.random() > 0.4; // 60% 확률로 단속됨
+            const isCaught = Math.random() > 0.4;
             if (isCaught) {
               title = '과속 단속됨 (돌파 실패)';
               description = '벌금 부과 및 평판 하락.';
@@ -170,7 +273,6 @@ export const ActiveRunPage = () => {
             } else {
               title = '단속 돌파 성공';
               description = '경찰의 추격을 따돌림.';
-              amount = 0;
               type = 'BONUS';
             }
           }
@@ -190,7 +292,7 @@ export const ActiveRunPage = () => {
       }
     }, 1000);
     return () => clearInterval(timer);
-  }, [isSpeeding, baseSpeedKmh, maxSpeedKmh, currentSpeedKmh, totalDistanceKm, elapsedSeconds, progress, runId, addEventLog]);
+  }, [runDetail, isSpeeding, baseSpeedKmh, maxSpeedKmh, elapsedSeconds, progress, runId, addEventLog, handleComplete]);
 
   // 경로 위의 현재 위치 계산 (progress에 따라)
   useEffect(() => {
@@ -224,7 +326,6 @@ export const ActiveRunPage = () => {
   };
 
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
-  const isOvertime = elapsedSeconds > etaSeconds;
 
   // 도착 예정 시각 (현재 시각 + 남은 예상 초)
   const arrivalTime = new Date(Date.now() + estimatedRemainingSeconds * 1000);
@@ -242,20 +343,36 @@ export const ActiveRunPage = () => {
     geometry: routeData
   }), [routeData]);
 
-  const handleComplete = () => {
-    const finalReward = isOvertime 
-      ? Math.max(order.baseReward * 0.5, order.baseReward - Math.floor((elapsedSeconds - etaSeconds) / 60) * 0.2) 
-      : order.baseReward;
-    
-    navigate('/settlement', { 
-      state: { 
-        order, 
-        elapsedSeconds, 
-        finalReward, 
-        penalty: order.baseReward - finalReward 
-      } 
-    });
-  };
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
+          <p className="text-sm font-medium text-surface-500">운행 정보 로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 운행 정보 없음
+  if (!runDetail || !order) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-50 p-4 text-center">
+        <div className="mb-4 rounded-full bg-surface-100 p-4">
+          <MapPin className="h-8 w-8 text-surface-400" />
+        </div>
+        <h2 className="text-lg font-medium text-surface-900">운행 정보를 찾을 수 없습니다</h2>
+        <p className="mt-1 text-sm text-surface-500">이미 완료되었거나 존재하지 않는 운행입니다.</p>
+        <button 
+          onClick={() => navigate('/')}
+          className="mt-6 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white shadow-soft-md"
+        >
+          홈으로 돌아가기
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-surface-50">
@@ -269,8 +386,8 @@ export const ActiveRunPage = () => {
             <ArrowLeft className="h-5 w-5 text-surface-700" />
           </button>
           <div className="flex flex-col">
-            <p className="text-[10px] font-bold text-primary-500 uppercase tracking-tight">운행 중</p>
-            <p className="text-sm font-black text-surface-900 leading-tight">{order.title}</p>
+            <p className="text-[10px] font-medium text-primary-500 uppercase tracking-tight">운행 중</p>
+            <p className="text-sm font-medium text-surface-900 leading-tight">{order.title}</p>
           </div>
         </div>
 
@@ -279,7 +396,7 @@ export const ActiveRunPage = () => {
           <div className="flex rounded-lg bg-surface-100 p-0.5">
             <button
               onClick={() => setViewMode('map')}
-              className={`flex h-8 px-3 items-center justify-center rounded-md text-xs font-bold transition-all ${
+              className={`flex h-8 px-3 items-center justify-center rounded-md text-xs font-medium transition-all ${
                 viewMode === 'map' ? 'bg-white text-primary-600 shadow-soft-xs' : 'text-surface-500'
               }`}
             >
@@ -288,7 +405,7 @@ export const ActiveRunPage = () => {
             </button>
             <button
               onClick={() => setViewMode('info')}
-              className={`flex h-8 px-3 items-center justify-center rounded-md text-xs font-bold transition-all ${
+              className={`flex h-8 px-3 items-center justify-center rounded-md text-xs font-medium transition-all ${
                 viewMode === 'info' ? 'bg-white text-primary-600 shadow-soft-xs' : 'text-surface-500'
               }`}
             >
@@ -298,9 +415,10 @@ export const ActiveRunPage = () => {
           </div>
           <button 
             onClick={handleComplete}
-            className="flex h-9 items-center justify-center rounded-xl bg-primary-600 px-4 text-xs font-bold text-white shadow-soft-sm hover:bg-primary-700 active:scale-95 transition-all"
+            disabled={isCompleting}
+            className="flex h-9 items-center justify-center rounded-xl bg-primary-600 px-4 text-xs font-medium text-white shadow-soft-sm hover:bg-primary-700 active:scale-95 transition-all disabled:opacity-50"
           >
-            도착
+            {isCompleting ? <Loader2 className="h-4 w-4 animate-spin" /> : '도착'}
           </button>
         </div>
       </header>
@@ -309,23 +427,23 @@ export const ActiveRunPage = () => {
       <div className="absolute left-0 right-0 top-[60px] z-20 bg-white/80 backdrop-blur-sm px-4 py-3 border-b border-surface-100/50 shadow-soft-xs">
         <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest text-center">남은 시간</span>
-            <span className={`text-base font-black tabular-nums ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
+            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest text-center">남은 시간</span>
+            <span className={`text-base font-medium tabular-nums ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
               {isOvertime ? '지연 ' : ''}{formatDuration(isOvertime ? elapsedSeconds - etaSeconds : remainingSeconds)}
             </span>
           </div>
           
           <div className="flex flex-col items-center flex-1 max-w-[120px]">
-            <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest mb-1">현재 속도</span>
+            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest mb-1">현재 속도</span>
             <div className="flex items-baseline gap-0.5">
-              <span className="text-2xl font-black text-primary-600 leading-none tabular-nums">{currentSpeedKmh.toFixed(1)}</span>
-              <span className="text-[10px] font-bold text-surface-400">km/h</span>
+              <span className="text-2xl font-medium text-primary-600 leading-none tabular-nums">{currentSpeedKmh.toFixed(1)}</span>
+              <span className="text-[10px] font-medium text-surface-400">km/h</span>
             </div>
           </div>
 
           <div className="flex flex-col items-end">
-            <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest text-center">예상 보상</span>
-            <span className={`text-base font-black tabular-nums ${isOvertime ? 'text-accent-rose' : 'text-primary-600'}`}>
+            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest text-center">예상 보상</span>
+            <span className={`text-base font-medium tabular-nums ${isOvertime ? 'text-accent-rose' : 'text-primary-600'}`}>
               ${isOvertime ? Math.max(order.baseReward * 0.5, order.baseReward - Math.floor((elapsedSeconds - etaSeconds) / 60) * 0.2).toFixed(2) : order.baseReward.toFixed(2)}
             </span>
           </div>
@@ -333,40 +451,40 @@ export const ActiveRunPage = () => {
 
         {/* 하단 프로그레스 & 거리 정보 */}
         <div className="mx-auto max-w-2xl mt-2 flex items-center gap-3">
-          <span className="text-[10px] font-bold text-primary-500 whitespace-nowrap">{distanceCovered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}km</span>
+          <span className="text-[10px] font-medium text-primary-500 whitespace-nowrap">{distanceCovered.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}km</span>
           <div className="relative flex-1 h-1.5 rounded-full bg-surface-200/50 overflow-hidden">
             <div 
               className={`absolute left-0 top-0 h-full transition-all duration-1000 ${isSpeeding ? 'bg-accent-rose' : 'bg-primary-500'}`}
               style={{ width: `${progress}%` }}
             />
           </div>
-          <span className="text-[10px] font-bold text-surface-400 whitespace-nowrap">-{distanceRemaining.toLocaleString()}km</span>
+          <span className="text-[10px] font-medium text-surface-400 whitespace-nowrap">-{distanceRemaining.toLocaleString()}km</span>
         </div>
         
         {/* 도착 예정 시각 & 연료 정보 */}
         <div className="mx-auto max-w-2xl mt-1 flex items-center justify-between px-1">
           <div className="flex items-center gap-2">
-            <span className="text-[9px] font-bold text-surface-400 uppercase tracking-widest">연료</span>
+            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">연료</span>
             <div className="w-24 h-1.5 bg-surface-100 rounded-full overflow-hidden border border-surface-200">
               <div 
                 className={`h-full transition-all duration-500 ${fuel > 20 ? 'bg-accent-amber' : 'bg-accent-rose animate-pulse'}`}
                 style={{ width: `${fuel}%` }}
               />
             </div>
-            <span className={`text-[10px] font-black tabular-nums ${fuel > 20 ? 'text-surface-600' : 'text-accent-rose'}`}>
+            <span className={`text-[10px] font-medium tabular-nums ${fuel > 20 ? 'text-surface-600' : 'text-accent-rose'}`}>
               {Math.ceil(fuel)}%
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[9px] font-bold text-surface-400 uppercase tracking-widest">도착 예정:</span>
-            <span className="text-[10px] font-black text-primary-600">{formatArrivalTime(arrivalTime)}</span>
+            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">도착 예정:</span>
+            <span className="text-[10px] font-medium text-primary-600">{formatArrivalTime(arrivalTime)}</span>
           </div>
         </div>
       </div>
 
       {/* 과속 및 연료 버튼 (우측 하단) */}
       <div className="absolute right-4 bottom-80 z-40 flex flex-col items-center gap-3">
-        <div className={`text-[10px] font-black px-2 py-0.5 rounded bg-white shadow-soft-sm border border-surface-100 transition-opacity duration-300 ${isSpeeding ? 'opacity-100 text-accent-rose' : 'opacity-0'}`}>
+        <div className={`text-[10px] font-medium px-2 py-0.5 rounded bg-white shadow-soft-sm border border-surface-100 transition-opacity duration-300 ${isSpeeding ? 'opacity-100 text-accent-rose' : 'opacity-0'}`}>
           과속 운행 중
         </div>
         
@@ -381,7 +499,7 @@ export const ActiveRunPage = () => {
         >
           <div className="flex flex-col items-center">
             <TrendingUp className={`h-7 w-7 ${isSpeeding ? 'text-white' : ''}`} />
-            <span className="text-[10px] font-black uppercase tracking-tighter mt-0.5">가속</span>
+            <span className="text-[10px] font-medium uppercase tracking-tighter mt-0.5">가속</span>
           </div>
         </button>
 
@@ -392,7 +510,7 @@ export const ActiveRunPage = () => {
         >
           <div className="flex flex-col items-center">
             <Zap className="h-6 w-6 group-hover:animate-bounce" />
-            <span className="text-[8px] font-black uppercase mt-0.5">보충</span>
+            <span className="text-[8px] font-medium uppercase mt-0.5">보충</span>
           </div>
         </button>
       </div>
@@ -446,7 +564,7 @@ export const ActiveRunPage = () => {
                 <div className="rounded-full bg-white p-1 shadow-md">
                   <MapPin className="h-5 w-5 text-primary-500" />
                 </div>
-                <span className="mt-1 rounded bg-white px-1 text-[10px] font-bold shadow-sm">출발</span>
+                <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">출발</span>
               </div>
             </MapboxMarker>
 
@@ -455,7 +573,7 @@ export const ActiveRunPage = () => {
                 <div className="rounded-full bg-white p-1 shadow-md">
                   <MapPin className="h-5 w-5 text-accent-emerald" />
                 </div>
-                <span className="mt-1 rounded bg-white px-1 text-[10px] font-bold shadow-sm">도착</span>
+                <span className="mt-1 rounded bg-white px-1 text-[10px] font-medium shadow-sm">도착</span>
               </div>
             </MapboxMarker>
           </Map>
@@ -465,11 +583,11 @@ export const ActiveRunPage = () => {
           <div className="mx-auto max-w-2xl space-y-4">
             {/* 경로 요약 */}
             <div className="rounded-2xl bg-white p-5 shadow-soft-sm">
-              <h3 className="text-sm font-bold text-surface-900">경로 정보</h3>
+              <h3 className="text-sm font-medium text-surface-900">경로 정보</h3>
               <div className="mt-3 flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-600">A</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-xs font-medium text-primary-600">A</div>
                 <div className="h-px flex-1 bg-surface-200" />
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-emerald/20 text-xs font-bold text-accent-emerald">B</div>
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-emerald/20 text-xs font-medium text-accent-emerald">B</div>
               </div>
               <div className="mt-2 flex justify-between text-xs text-surface-500">
                 <span>출발지</span>
@@ -480,7 +598,7 @@ export const ActiveRunPage = () => {
 
             {/* 운행 세팅 */}
             <div className="rounded-2xl bg-white p-5 shadow-soft-sm">
-              <h3 className="text-sm font-bold text-surface-900">적용된 세팅</h3>
+              <h3 className="text-sm font-medium text-surface-900">적용된 세팅</h3>
               <div className="mt-3 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-surface-500">서류</span>

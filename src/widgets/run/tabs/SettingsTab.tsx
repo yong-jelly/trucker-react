@@ -13,7 +13,7 @@ export const SettingsTab = () => {
 
       {/* 현재 적용된 세팅 */}
       <div className="space-y-3">
-        <h4 className="text-sm font-bold text-surface-900">적용된 세팅</h4>
+        <h4 className="text-sm font-medium text-surface-900">적용된 세팅</h4>
 
         {/* 서류 */}
         <div className="flex items-center justify-between rounded-xl border border-surface-200 p-3">

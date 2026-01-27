@@ -1,9 +1,16 @@
 import { MapPin, Clock, Package, Navigation } from 'lucide-react';
-import type { Order } from '../../../shared/api/types';
 import { CATEGORY_LABELS } from '../../../shared/lib/mockData';
 
+interface OrderInfo {
+  title: string;
+  category: string;
+  cargoName: string;
+  distance: number;
+  baseReward: number;
+}
+
 interface OverviewTabProps {
-  order: Order;
+  order: OrderInfo;
   elapsedSeconds: number;
   etaSeconds: number;
 }
@@ -56,7 +63,7 @@ export const OverviewTab = ({ order, elapsedSeconds, etaSeconds }: OverviewTabPr
 
       {/* 주문 정보 */}
       <div className="rounded-xl border border-surface-200 bg-white p-4">
-        <h4 className="text-sm font-bold text-surface-900">주문 정보</h4>
+        <h4 className="text-sm font-medium text-surface-900">주문 정보</h4>
         <div className="mt-3 space-y-3">
           <div className="flex items-start gap-3">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50">

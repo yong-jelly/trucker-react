@@ -35,3 +35,41 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     },
   },
 });
+
+/**
+ * trucker 스키마의 RPC 함수를 호출하는 헬퍼
+ * Supabase에서 trucker 스키마를 expose한 경우 사용
+ * 
+ * PostgREST는 Content-Profile 헤더를 통해 어떤 스키마의 함수를 호출할지 지정합니다.
+ * https://postgrest.org/en/stable/references/api/schemas.html
+ */
+export async function rpcTrucker<T = any>(
+  functionName: string,
+  params?: Record<string, any>
+): Promise<{ data: T | null; error: any }> {
+  try {
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/rpc/${functionName}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Profile': 'trucker', // 스키마 지정 헤더
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || supabaseAnonKey}`,
+        },
+        body: JSON.stringify(params || {}),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: response.statusText }));
+      return { data: null, error: errorData };
+    }
+
+    const data = await response.json();
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Receipt, Info, AlertCircle, Settings, ChevronUp, ChevronDown } from 'lucide-react';
-import type { Order } from '../../shared/api/types';
 import { SettlementTab } from './tabs/SettlementTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { EventsTab } from './tabs/EventsTab';
@@ -9,8 +8,18 @@ import { SettingsTab } from './tabs/SettingsTab';
 type TabType = 'settlement' | 'overview' | 'events' | 'settings';
 type SheetHeight = 'collapsed' | 'medium' | 'full';
 
+// RunSheet에서 필요한 Order 속성만 정의
+interface OrderInfo {
+  title: string;
+  category: string;
+  cargoName: string;
+  distance: number;
+  baseReward: number;
+  limitTimeMinutes: number;
+}
+
 interface RunSheetProps {
-  order: Order;
+  order: OrderInfo;
   elapsedSeconds: number;
   etaSeconds: number;
   runId: string;

@@ -2,11 +2,14 @@ import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
 import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Truck, Plane, Anchor } from 'lucide-react';
 import { useGameStore } from '../app/store';
-import { MOCK_ORDERS, CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
+import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
-import { useUserStore } from '../entities/user';
+import { useUserStore, useUserProfile } from '../entities/user';
 import { sendNotification } from '../shared/lib/notification';
 import { Dialog, DialogContent, DialogTitle } from '../shared/ui/Dialog';
+import { createRun } from '../entities/run';
+import { getOrderById } from '../entities/order';
+import type { Order } from '../shared/api/types';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
 // ...
@@ -21,16 +24,25 @@ const EQUIPMENT_LABELS: Record<string, string> = {
 export const OrderDetailPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
-  const { profile, slots } = useGameStore();
+  const { slots } = useGameStore();
+  const { data: profile } = useUserProfile();
   const { user } = useUserStore();
   const [isContractOpen, setIsContractOpen] = useState(false);
+  const [order, setOrder] = useState<Order | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 페이지 진입 시 스크롤을 최상단으로 이동
+  // 페이지 진입 시 스크롤을 최상단으로 이동 및 데이터 로드
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+    
+    if (orderId) {
+      getOrderById(orderId)
+        .then(setOrder)
+        .catch(err => console.error(err))
+        .finally(() => setIsLoading(false));
+    }
+  }, [orderId]);
 
-  const order = MOCK_ORDERS.find(o => o.id === orderId);
   const availableSlot = slots.find(s => !s.isLocked && !s.activeRunId);
 
   const formatDuration = (minutes: number) => {
@@ -40,29 +52,63 @@ export const OrderDetailPage = () => {
     return `${m}분`;
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
+      </div>
+    );
+  }
+
   if (!order) {
-    // ...
-    return <div>Order not found</div>;
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-50 p-4 text-center">
+        <div className="mb-4 rounded-full bg-surface-100 p-4">
+          <Package className="h-8 w-8 text-surface-400" />
+        </div>
+        <h2 className="text-lg font-medium text-surface-900">주문을 찾을 수 없습니다</h2>
+        <p className="mt-1 text-sm text-surface-500">이미 만료되었거나 존재하지 않는 주문입니다.</p>
+        <button 
+          onClick={() => navigate('/')}
+          className="mt-6 rounded-xl bg-primary-600 px-6 py-2.5 text-sm font-medium text-white shadow-soft-md"
+        >
+          홈으로 돌아가기
+        </button>
+      </div>
+    );
   };
 
   const handleStartDelivery = () => {
     setIsContractOpen(true);
   };
 
-  const handleConfirmContract = () => {
-    // TODO: 실제 운행 시작 로직 (DB에 Run 생성 등)
-    // 임시로 orderId를 runId로 사용
-    
-    if (user && order) {
+  const handleConfirmContract = async () => {
+    if (!user || !order || !availableSlot) return;
+
+    try {
+      // 실제 DB에 Run 생성
+      const newRun = await createRun({
+        userId: user.id,
+        orderId: order.id,
+        slotId: availableSlot.id,
+        selectedItems: {
+          // TODO: 실제 선택된 아이템 ID 연동 필요
+          documentId: order.requiredDocumentId || undefined,
+        }
+      });
+
       sendNotification(user.id, {
         title: "🚚 운행 시작 안내",
         message: `[${order.cargoName}] 운행을 시작합니다.\n목적지까지 안전하게 운행하세요!`,
         type: "info"
       });
-    }
 
-    setIsContractOpen(false);
-    navigate(`/run/${order.id}`);
+      setIsContractOpen(false);
+      navigate(`/run/${newRun.id}`);
+    } catch (error) {
+      console.error('Failed to start delivery:', error);
+      alert('운행 시작 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -76,7 +122,7 @@ export const OrderDetailPage = () => {
         >
           <ArrowLeft className="h-5 w-5 text-surface-700" />
         </button>
-        <h1 className="text-lg font-bold text-surface-900">주문 상세</h1>
+        <h1 className="text-lg font-medium text-surface-900">주문 상세</h1>
       </header>
 
       <div className="mx-auto max-w-2xl space-y-4 p-4">
@@ -89,7 +135,7 @@ export const OrderDetailPage = () => {
             {CATEGORY_LABELS[order.category]}
           </span>
           
-          <h2 className="mt-3 text-xl font-bold text-surface-900">{order.title}</h2>
+          <h2 className="mt-3 text-xl font-medium text-surface-900">{order.title}</h2>
           <p className="mt-1 text-sm text-surface-500">{order.cargoName}</p>
 
           <div className="mt-5 grid grid-cols-2 gap-4">
@@ -98,43 +144,43 @@ export const OrderDetailPage = () => {
                 <MapPin className="h-4 w-4" />
                 <span className="text-xs">거리</span>
               </div>
-              <p className="mt-1 text-lg font-semibold text-surface-900">{order.distance.toLocaleString()}km</p>
+              <p className="mt-1 text-lg font-medium text-surface-900">{(order.distance || 0).toLocaleString()}km</p>
             </div>
             <div className="rounded-xl bg-surface-50 p-3">
               <div className="flex items-center gap-2 text-surface-500">
                 <Clock className="h-4 w-4" />
                 <span className="text-xs">제한시간</span>
               </div>
-              <p className="mt-1 text-lg font-semibold text-surface-900">{formatDuration(order.limitTimeMinutes)}</p>
+              <p className="mt-1 text-lg font-medium text-surface-900">{formatDuration(order.limitTimeMinutes || 0)}</p>
             </div>
             <div className="rounded-xl bg-surface-50 p-3">
               <div className="flex items-center gap-2 text-surface-500">
                 <Package className="h-4 w-4" />
                 <span className="text-xs">무게/부피</span>
               </div>
-              <p className="mt-1 text-sm font-semibold text-surface-900">{order.weight.toLocaleString()}kg / {order.volume.toLocaleString()}L</p>
+              <p className="mt-1 text-sm font-medium text-surface-900">{(order.weight || 0).toLocaleString()}kg / {(order.volume || 0).toLocaleString()}L</p>
             </div>
             <div className="rounded-xl bg-surface-50 p-3">
               <div className="flex items-center gap-2 text-surface-500">
                 {order.requiredEquipmentType ? (
                   (() => {
                     const Icon = EQUIPMENT_ICONS[order.requiredEquipmentType];
-                    return <Icon className="h-4 w-4" />;
+                    return Icon ? <Icon className="h-4 w-4" /> : <Bike className="h-4 w-4" />;
                   })()
                 ) : <Bike className="h-4 w-4" />}
                 <span className="text-xs">필요 장비</span>
               </div>
-              <p className="mt-1 text-sm font-semibold text-surface-900">
-                {order.requiredEquipmentType ? EQUIPMENT_LABELS[order.requiredEquipmentType] : '자전거'}
+              <p className="mt-1 text-sm font-medium text-surface-900">
+                {order.requiredEquipmentType ? (EQUIPMENT_LABELS[order.requiredEquipmentType] || order.requiredEquipmentType) : '자전거'}
               </p>
             </div>
             <div className="col-span-2 rounded-xl bg-primary-50 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-primary-600">
                   <DollarSign className="h-5 w-5" />
-                  <span className="text-xs font-bold uppercase tracking-wider">기본 보상</span>
+                  <span className="text-xs font-medium uppercase tracking-wider">기본 보상</span>
                 </div>
-                <p className="text-2xl font-black text-primary-600">${order.baseReward.toLocaleString()}</p>
+                <p className="text-2xl font-medium text-primary-600">${(order.baseReward || 0).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -142,7 +188,7 @@ export const OrderDetailPage = () => {
 
         {/* 출발 전 세팅 카드 */}
         <div className="rounded-2xl bg-white p-5 shadow-soft-sm">
-          <h3 className="flex items-center gap-2 text-base font-bold text-surface-900">
+          <h3 className="flex items-center gap-2 text-base font-medium text-surface-900">
             <Wrench className="h-4 w-4" />
             출발 전 세팅
           </h3>
@@ -203,7 +249,7 @@ export const OrderDetailPage = () => {
                 <Info className="h-4 w-4 text-primary-600" />
               </div>
               <div>
-                <p className="text-sm font-bold text-surface-900">항공 운송 안내</p>
+                <p className="text-sm font-medium text-surface-900">항공 운송 안내</p>
                 <p className="mt-1 text-xs text-surface-600 leading-relaxed">
                   이 주문은 대륙간 장거리 운송 건으로, **화물 비행기(Cargo Plane)** 라이선스 및 장비가 필수입니다. 
                   (현재 선박 운송은 지원되지 않습니다.)
@@ -231,7 +277,7 @@ export const OrderDetailPage = () => {
           {availableSlot ? (
             <button
               onClick={handleStartDelivery}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 py-4 text-base font-bold text-white shadow-soft-md transition-colors hover:bg-primary-700 active:bg-primary-800"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 py-4 text-base font-medium text-white shadow-soft-md transition-colors hover:bg-primary-700 active:bg-primary-800"
             >
               <Play className="h-5 w-5" />
               운행 시작
@@ -240,7 +286,7 @@ export const OrderDetailPage = () => {
             <div className="space-y-2">
               <button
                 disabled
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-200 py-4 text-base font-bold text-surface-400"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-200 py-4 text-base font-medium text-surface-400"
               >
                 슬롯 없음
               </button>
@@ -259,26 +305,28 @@ export const OrderDetailPage = () => {
       <Dialog open={isContractOpen} onOpenChange={setIsContractOpen}>
         <DialogContent className="rounded-3xl max-w-[340px] p-0 overflow-hidden border-none bg-surface-50">
           <div className="bg-primary-600 p-6 text-white">
-            <DialogTitle className="text-center font-black text-xl tracking-tight">운송 계약 체결</DialogTitle>
+            <DialogTitle className="text-center font-medium text-xl tracking-tight">운송 계약 체결</DialogTitle>
             <p className="text-center text-primary-100 text-xs mt-1">Contract Confirmation</p>
           </div>
           
           <div className="p-6 space-y-6">
             <div className="space-y-4">
               <div className="rounded-2xl bg-white p-4 shadow-sm border border-surface-100">
-                <h4 className="text-xs font-bold text-surface-400 uppercase tracking-widest mb-3">주문 요약</h4>
+                <h4 className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-3">주문 요약</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-surface-600">화물명</span>
-                    <span className="font-bold text-surface-900">{order.cargoName}</span>
+                    <span className="font-medium text-surface-900">{order.cargoName}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-surface-600">예상 소요</span>
-                    <span className="font-bold text-surface-900">{Math.round(order.distance / 60)}분 (ETA)</span>
+                    <span className="font-medium text-surface-900">
+                      {order.distance < 1 ? Math.round(order.distance * 60) + '초' : Math.round(order.distance) + '분'} (ETA)
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-surface-100 pt-2 mt-2">
                     <span className="text-surface-600">최종 보상금</span>
-                    <span className="font-black text-primary-600">${order.baseReward.toLocaleString()}</span>
+                    <span className="font-medium text-primary-600">${order.baseReward.toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -286,7 +334,7 @@ export const OrderDetailPage = () => {
               <div className="rounded-2xl bg-accent-amber/5 p-4 border border-accent-amber/20">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="h-4 w-4 text-accent-amber" />
-                  <h4 className="text-xs font-bold text-accent-amber uppercase tracking-widest">주의사항</h4>
+                  <h4 className="text-xs font-medium text-accent-amber uppercase tracking-widest">주의사항</h4>
                 </div>
                 <ul className="text-xs text-surface-600 space-y-1 list-disc pl-4">
                   <li>운행 중 <strong>단속 이벤트</strong>가 발생할 수 있습니다.</li>
@@ -299,13 +347,13 @@ export const OrderDetailPage = () => {
             <div className="flex gap-3">
               <button 
                 onClick={() => setIsContractOpen(false)}
-                className="flex-1 rounded-2xl bg-surface-200 py-3.5 text-sm font-bold text-surface-600 hover:bg-surface-300 transition-colors"
+                className="flex-1 rounded-2xl bg-surface-200 py-3.5 text-sm font-medium text-surface-600 hover:bg-surface-300 transition-colors"
               >
                 취소
               </button>
               <button 
                 onClick={handleConfirmContract}
-                className="flex-[2] rounded-2xl bg-primary-600 py-3.5 text-sm font-bold text-white shadow-soft-md hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+                className="flex-[2] rounded-2xl bg-primary-600 py-3.5 text-sm font-medium text-white shadow-soft-md hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
               >
                 <FileText className="h-4 w-4" />
                 계약 서명 및 출발

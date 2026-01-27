@@ -49,14 +49,14 @@ export const OrderCard = ({ order, onClick, disabled, disabledReason }: OrderCar
             </span>
 
             {/* 최소 가용 장비 표시 */}
-            <div className="flex items-center gap-1.5 rounded-lg bg-surface-50 px-2 py-1 text-[10px] font-bold text-surface-600 border border-surface-100">
+            <div className="flex items-center gap-1.5 rounded-lg bg-surface-50 px-2 py-1 text-[10px] font-medium text-surface-600 border border-surface-100">
               <EquipmentIcon className="h-3 w-3" />
               <span>{order.requiredEquipmentType ? EQUIPMENT_LABELS[order.requiredEquipmentType] : '자전거'}</span>
             </div>
           </div>
 
           {/* 제목 */}
-          <h3 className="text-base font-semibold text-surface-900">{order.title}</h3>
+          <h3 className="text-base font-medium text-surface-900">{order.title}</h3>
 
           {/* 대륙간 운송 가이드 (아이콘/메시지) */}
           {order.category === 'INTERNATIONAL' && (
@@ -84,7 +84,7 @@ export const OrderCard = ({ order, onClick, disabled, disabledReason }: OrderCar
               <Package className="h-3.5 w-3.5" />
               <span>{order.weight.toLocaleString()}kg</span>
             </div>
-            <div className="flex items-center gap-1.5 font-semibold text-primary-600">
+            <div className="flex items-center gap-1.5 font-medium text-primary-600">
               <DollarSign className="h-3.5 w-3.5" />
               <span>${order.baseReward.toLocaleString()}</span>
             </div>

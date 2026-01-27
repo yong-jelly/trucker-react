@@ -31,7 +31,7 @@ export function PageHeader({ tabs, activeTab, onTabChange, title, showBackButton
             </button>
           )}
           {title && (
-            <h1 className="text-xl font-black text-surface-900">{title}</h1>
+            <h1 className="text-xl font-medium text-surface-900">{title}</h1>
           )}
         </div>
         <div className="flex gap-6 overflow-x-auto scrollbar-hide -mb-px">
@@ -40,7 +40,7 @@ export function PageHeader({ tabs, activeTab, onTabChange, title, showBackButton
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={cn(
-                "relative py-3 text-sm font-bold transition-all whitespace-nowrap",
+                "relative py-3 text-sm font-medium transition-all whitespace-nowrap",
                 activeTab === tab.id
                   ? "text-primary-600"
                   : "text-surface-400 hover:text-surface-600"

@@ -51,7 +51,7 @@ export const OnboardingPage = () => {
         
         <div className="space-y-4 max-w-sm mx-auto">
           <div className="flex justify-center mb-2">{currentStep.icon}</div>
-          <h1 className="text-2xl font-black text-surface-900 leading-tight">
+          <h1 className="text-2xl font-medium text-surface-900 leading-tight">
             {currentStep.title}
           </h1>
           <p className="text-sm text-surface-500 leading-relaxed">
@@ -74,7 +74,7 @@ export const OnboardingPage = () => {
       <div className="p-8">
         <button
           onClick={handleNext}
-          className="w-full py-4 bg-primary-600 text-white rounded-2xl font-black text-lg shadow-soft-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
+          className="w-full py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg flex items-center justify-center gap-2 active:scale-95 transition-all"
         >
           {step === steps.length ? "시작하기" : "다음으로"}
           <ArrowRight className="h-5 w-5" />
@@ -82,7 +82,7 @@ export const OnboardingPage = () => {
         {step < steps.length && (
           <button 
             onClick={() => navigate('/login')}
-            className="w-full mt-4 py-2 text-sm font-bold text-surface-400 hover:text-surface-600 transition-colors"
+            className="w-full mt-4 py-2 text-sm font-medium text-surface-400 hover:text-surface-600 transition-colors"
           >
             건너뛰기
           </button>

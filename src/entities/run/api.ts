@@ -1,5 +1,209 @@
-import { supabase } from '../../shared/api/supabase';
+import { rpcTrucker } from '../../shared/api/supabase';
 import type { Run } from '../../shared/api/types';
+
+/**
+ * 진행 중인 운행 정보 (주문/슬롯 정보 포함)
+ */
+export interface ActiveRun {
+  run: Run;
+  order: {
+    title: string;
+    category: string;
+    cargoName: string;
+    distance: number;
+    baseReward: number;
+  };
+  slotIndex: number;
+}
+
+/**
+ * 유저의 진행 중인 운행 목록 조회
+ */
+export async function getActiveRuns(userId: string): Promise<ActiveRun[]> {
+  const { data, error } = await rpcTrucker('v1_get_active_runs', { p_user_id: userId });
+
+  if (error) {
+    console.error('Failed to fetch active runs:', error);
+    throw new Error('Failed to fetch active runs');
+  }
+
+  return (data || []).map((row: any) => ({
+    run: {
+      id: row.run_id,
+      orderId: row.order_id,
+      slotId: row.slot_id,
+      status: row.status,
+      startAt: new Date(row.start_at).getTime(),
+      etaSeconds: row.eta_seconds,
+      deadlineAt: new Date(row.deadline_at).getTime(),
+      selectedItems: {
+        equipmentId: row.selected_equipment_id,
+        documentId: row.selected_document_id,
+        insuranceId: row.selected_insurance_id,
+      },
+      currentReward: row.current_reward,
+      accumulatedPenalty: row.accumulated_penalty,
+      accumulatedBonus: row.accumulated_bonus,
+      currentRisk: row.current_risk,
+      currentDurability: row.current_durability,
+    },
+    order: {
+      title: row.order_title,
+      category: row.order_category,
+      cargoName: row.order_cargo_name,
+      distance: row.order_distance,
+      baseReward: row.order_base_reward,
+    },
+    slotIndex: row.slot_index,
+  }));
+}
+
+/**
+ * 운행 상세 정보 (주문/슬롯 정보 포함)
+ */
+export interface RunDetail {
+  run: Run;
+  order: {
+    title: string;
+    category: string;
+    cargoName: string;
+    distance: number;
+    baseReward: number;
+    limitTimeMinutes: number;
+    startPoint: [number, number];
+    endPoint: [number, number];
+    requiredEquipmentType: string | null;
+  };
+  slotIndex: number;
+}
+
+/**
+ * 특정 운행 상세 조회
+ */
+export async function getRunById(runId: string): Promise<RunDetail | null> {
+  const { data, error } = await rpcTrucker('v1_get_run_by_id', { p_run_id: runId });
+
+  if (error) {
+    console.error('Failed to fetch run:', error);
+    throw new Error('Failed to fetch run');
+  }
+
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  const row = data[0];
+  return {
+    run: {
+      id: row.run_id,
+      orderId: row.order_id,
+      slotId: row.slot_id,
+      status: row.status,
+      startAt: new Date(row.start_at).getTime(),
+      etaSeconds: row.eta_seconds,
+      deadlineAt: new Date(row.deadline_at).getTime(),
+      selectedItems: {
+        equipmentId: row.selected_equipment_id,
+        documentId: row.selected_document_id,
+        insuranceId: row.selected_insurance_id,
+      },
+      currentReward: row.current_reward,
+      accumulatedPenalty: row.accumulated_penalty,
+      accumulatedBonus: row.accumulated_bonus,
+      currentRisk: row.current_risk,
+      currentDurability: row.current_durability,
+    },
+    order: {
+      title: row.order_title,
+      category: row.order_category,
+      cargoName: row.order_cargo_name,
+      distance: row.order_distance,
+      baseReward: row.order_base_reward,
+      limitTimeMinutes: row.order_limit_time_minutes,
+      startPoint: [row.order_start_lat, row.order_start_lng],
+      endPoint: [row.order_end_lat, row.order_end_lng],
+      requiredEquipmentType: row.order_required_equipment_type,
+    },
+    slotIndex: row.slot_index,
+  };
+}
+
+/**
+ * 운행 완료 및 정산 처리
+ */
+/**
+ * 운행 히스토리 정보
+ */
+export interface RunHistory {
+  runId: string;
+  orderId: string;
+  status: string;
+  startAt: number;
+  completedAt: number | null;
+  selectedEquipmentId: string | null;
+  currentReward: number;
+  accumulatedPenalty: number;
+  orderTitle: string;
+  orderCargoName: string;
+  orderDistance: number;
+  orderCategory: string;
+}
+
+/**
+ * 사용자의 운행 히스토리 조회
+ */
+export async function getRunHistory(params: {
+  userId: string;
+  equipmentId?: string;
+  limit?: number;
+}): Promise<RunHistory[]> {
+  const { data, error } = await rpcTrucker('v1_get_run_history', {
+    p_user_id: params.userId,
+    p_equipment_id: params.equipmentId,
+    p_limit: params.limit || 20,
+  });
+
+  if (error) {
+    console.error('Failed to fetch run history:', error);
+    throw new Error('Failed to fetch run history');
+  }
+
+  return (data || []).map((row: any) => ({
+    runId: row.run_id,
+    orderId: row.order_id,
+    status: row.status,
+    startAt: new Date(row.start_at).getTime(),
+    completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
+    selectedEquipmentId: row.selected_equipment_id,
+    currentReward: row.current_reward,
+    accumulatedPenalty: row.accumulated_penalty,
+    orderTitle: row.order_title,
+    orderCargoName: row.order_cargo_name,
+    orderDistance: row.order_distance,
+    orderCategory: row.order_category,
+  }));
+}
+
+export async function completeRun(params: {
+  runId: string;
+  finalReward: number;
+  penaltyAmount: number;
+  elapsedSeconds: number;
+}) {
+  const { data, error } = await rpcTrucker('v1_complete_run', {
+    p_run_id: params.runId,
+    p_final_reward: Math.floor(params.finalReward),
+    p_penalty_amount: Math.floor(params.penaltyAmount),
+    p_elapsed_seconds: params.elapsedSeconds,
+  });
+
+  if (error) {
+    console.error('Failed to complete run:', error);
+    throw new Error('Failed to complete run');
+  }
+
+  return data;
+}
 
 export async function createRun(params: {
   userId: string;
@@ -9,86 +213,18 @@ export async function createRun(params: {
 }): Promise<Run> {
   const { userId, orderId, slotId, selectedItems } = params;
 
-  // 1. 주문 정보 조회 (보상금, 거리 등 계산용)
-  const { data: order, error: orderError } = await supabase
-    .from('trucker.tbl_orders')
-    .select('*')
-    .eq('id', orderId)
-    .single();
+  // DB 함수(RPC)를 호출하여 원자적으로 처리 (trucker 스키마)
+  const { data: run, error: runError } = await rpcTrucker('v1_create_run', {
+    p_user_id: userId,
+    p_order_id: orderId,
+    p_slot_id: slotId,
+    p_selected_items: selectedItems
+  });
 
-  if (orderError || !order) {
-    throw new Error('Order not found');
+  if (runError || !run) {
+    console.error('Failed to create run via RPC:', runError);
+    throw new Error(runError?.message || 'Failed to create run');
   }
-
-  // ETA 계산: 거리(km) / 속도(60km/h) * 3600 (초) -> 단순화: 1km당 1분(60초)
-  const etaSeconds = Math.round(order.distance * 60); 
-  const deadlineAt = new Date(Date.now() + order.limit_time_minutes * 60 * 1000).toISOString();
-
-  // 2. Run 생성
-  const { data: run, error: runError } = await supabase
-    .from('trucker.tbl_runs')
-    .insert({
-      user_id: userId,
-      order_id: orderId,
-      slot_id: slotId,
-      status: 'IN_TRANSIT',
-      eta_seconds: etaSeconds,
-      deadline_at: deadlineAt,
-      selected_equipment_id: selectedItems.equipmentId,
-      selected_document_id: selectedItems.documentId,
-      selected_insurance_id: selectedItems.insuranceId,
-      current_reward: order.base_reward,
-      current_risk: 0.05, // 기본 위험도
-      current_durability: 100,
-      current_fuel: 100
-    })
-    .select()
-    .single();
-
-  if (runError) {
-    console.error('Failed to create run:', runError);
-    throw new Error('Failed to create run');
-  }
-
-  // 3. 슬롯 상태 업데이트
-  const { error: slotError } = await supabase
-    .from('trucker.tbl_slots')
-    .update({ active_run_id: run.id })
-    .eq('id', slotId);
-
-  if (slotError) {
-    console.error('Failed to update slot:', slotError);
-    // 롤백 로직이 필요하지만 MVP에서는 생략
-  }
-
-  // 4. 이벤트 로그 추가 (운행 시작)
-  await supabase
-    .from('trucker.tbl_event_logs')
-    .insert({
-      run_id: run.id,
-      type: 'SYSTEM',
-      title: '운행 시작',
-      description: `[${order.title}] 운행이 시작되었습니다. 안전 운전하세요!`,
-      amount: 0,
-      eta_change_seconds: 0,
-      is_estimated: false
-    });
-
-  // 5. 트랜잭션 기록 (계약 체결)
-  // 예치금이나 수수료가 있다면 여기서 차감
-  // 현재는 기록만 남김
-  /*
-  await supabase
-    .from('trucker.tbl_transactions')
-    .insert({
-      user_id: userId,
-      run_id: run.id,
-      type: 'CONTRACT',
-      amount: 0,
-      balance_after: 0, // 실제 잔액 조회 필요
-      description: `운송 계약 체결: ${order.title}`
-    });
-  */
 
   // 카멜케이스 변환하여 반환
   return {

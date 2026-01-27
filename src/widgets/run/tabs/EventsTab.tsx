@@ -87,7 +87,7 @@ export const EventsTab = () => {
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-bold text-surface-900">이벤트 타임라인</h4>
+        <h4 className="text-sm font-medium text-surface-900">이벤트 타임라인</h4>
         <span className="text-xs text-surface-400">{events.length}건</span>
       </div>
 

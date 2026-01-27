@@ -20,7 +20,7 @@ export const HelpPage = () => {
         >
           <ArrowLeft className="h-5 w-5 text-surface-700" />
         </button>
-        <h1 className="text-xl font-black text-surface-900 tracking-tight">도움말 및 가이드</h1>
+        <h1 className="text-xl font-medium text-surface-900 tracking-tight">도움말 및 가이드</h1>
       </header>
 
       <div className="mx-auto max-w-2xl p-4 space-y-10">
@@ -30,13 +30,13 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
               <DollarSign className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">트럭커 경제 시스템</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">트럭커 경제 시스템</h2>
           </div>
           
           <div className="space-y-6">
             {/* 드라이버 고용 및 예치금 */}
             <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
-              <h3 className="text-sm font-black text-surface-900 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-surface-900 flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary-500" />
                 드라이버 고용 및 예치금(Deposit)
               </h3>
@@ -45,49 +45,49 @@ export const HelpPage = () => {
               </p>
               
               <div className="rounded-2xl bg-surface-900 p-4 font-mono">
-                <h4 className="text-[9px] font-bold text-primary-400 uppercase mb-2 tracking-widest text-center">Deposit Formula</h4>
-                <p className="text-sm text-white font-black text-center">
+                <h4 className="text-[9px] font-medium text-primary-400 uppercase mb-2 tracking-widest text-center">Deposit Formula</h4>
+                <p className="text-sm text-white font-medium text-center">
                   (Max_Commission + Firing_Penalty) × 1.1
                 </p>
               </div>
 
               <div className="grid gap-3">
                 <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                  <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-2">수수료 및 계약</h4>
+                  <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-2">수수료 및 계약</h4>
                   <ul className="space-y-2 text-[11px] text-surface-700">
                     <li className="flex justify-between items-start gap-4">
-                      <span className="font-bold text-surface-900">수수료 지불:</span>
+                      <span className="font-medium text-surface-900">수수료 지불:</span>
                       <span className="text-right">운행 완료 시 총 보상의 일정 비율(%)을 지급</span>
                     </li>
                     <li className="flex justify-between items-start gap-4">
-                      <span className="font-bold text-surface-900">고정 계약:</span>
+                      <span className="font-medium text-surface-900">고정 계약:</span>
                       <span className="text-right">계약 시 확정된 비율은 해고 전까지 유지</span>
                     </li>
                     <li className="flex justify-between items-start gap-4 border-t border-surface-100 pt-2">
-                      <span className="font-bold text-surface-900">NPC 드라이버:</span>
+                      <span className="font-medium text-surface-900">NPC 드라이버:</span>
                       <span className="text-right">랜덤 수수료 (15% ~ 40%)</span>
                     </li>
                     <li className="flex justify-between items-start gap-4">
-                      <span className="font-bold text-primary-600">유저 드라이버:</span>
+                      <span className="font-medium text-primary-600">유저 드라이버:</span>
                       <span className="text-right">생성자 설정 비율 (기본 30%)</span>
                     </li>
                   </ul>
                 </div>
 
                 <div className="rounded-2xl border border-accent-rose/20 bg-accent-rose/5 p-4">
-                  <h4 className="text-[10px] font-bold text-accent-rose uppercase mb-2">해고 및 환불 규정</h4>
+                  <h4 className="text-[10px] font-medium text-accent-rose uppercase mb-2">해고 및 환불 규정</h4>
                   <ul className="space-y-2 text-[11px] text-surface-700">
                     <li className="flex justify-between">
                       <span>최소 의무 기간</span>
-                      <span className="font-bold text-accent-rose">10회 운행</span>
+                      <span className="font-medium text-accent-rose">10회 운행</span>
                     </li>
                     <li className="flex justify-between">
                       <span>조기 해고 시</span>
-                      <span className="font-bold text-accent-rose">예치금 위약금 차감</span>
+                      <span className="font-medium text-accent-rose">예치금 위약금 차감</span>
                     </li>
                     <li className="flex justify-between border-t border-accent-rose/10 pt-2">
                       <span>정상 해고 시 환불</span>
-                      <span className="font-bold text-accent-emerald">5% 수수료 제외 전액</span>
+                      <span className="font-medium text-accent-emerald">5% 수수료 제외 전액</span>
                     </li>
                   </ul>
                 </div>
@@ -100,7 +100,7 @@ export const HelpPage = () => {
                 <History className="h-5 w-5 text-surface-400" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-surface-900 uppercase tracking-widest mb-1">거래 내역 (Transaction History)</h3>
+                <h3 className="text-xs font-medium text-surface-900 uppercase tracking-widest mb-1">거래 내역 (Transaction History)</h3>
                 <p className="text-[11px] text-surface-500 leading-relaxed">
                   고용, 해고, 수수료, 예치금 등 모든 금전적 흐름은 실시간으로 기록됩니다.
                 </p>
@@ -115,20 +115,20 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
               <FileText className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">주문 생성 및 계약 알고리즘</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">주문 생성 및 계약 알고리즘</h2>
           </div>
           
           <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-sm font-black text-surface-900">1. 오퍼 생성 프로세스 (Generation)</h3>
+              <h3 className="text-sm font-medium text-surface-900">1. 오퍼 생성 프로세스 (Generation)</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
-                시스템은 유저의 <span className="font-bold text-primary-600">평판 지수</span>와 <span className="font-bold text-primary-600">현재 위치</span>를 기반으로 15~30분마다 새로운 오퍼를 생성합니다.
+                시스템은 유저의 <span className="font-medium text-primary-600">평판 지수</span>와 <span className="font-medium text-primary-600">현재 위치</span>를 기반으로 15~30분마다 새로운 오퍼를 생성합니다.
               </p>
             </div>
 
             <div className="grid gap-4">
               <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-3">보상 산출 공식 (Reward Calculation)</h4>
+                <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-3">보상 산출 공식 (Reward Calculation)</h4>
                 <div className="bg-surface-900 rounded-xl p-3 font-mono text-[10px] text-primary-400 mb-3">
                   Reward = Base_Rate × Distance × Difficulty_Weight
                 </div>
@@ -139,34 +139,34 @@ export const HelpPage = () => {
               </div>
 
               <div className="rounded-2xl border border-primary-100 bg-primary-50/30 p-4">
-                <h4 className="text-[10px] font-bold text-primary-600 uppercase mb-3">제한 시간 및 ETA 설계</h4>
+                <h4 className="text-[10px] font-medium text-primary-600 uppercase mb-3">제한 시간 및 ETA 설계</h4>
                 <p className="text-[11px] text-surface-700 leading-relaxed mb-2">
-                  운행 제한 시간은 시스템이 계산한 최적 경로의 <span className="font-bold">예상 소요 시간(ETA)의 1.25배</span>로 설정됩니다.
+                  운행 제한 시간은 시스템이 계산한 최적 경로의 <span className="font-medium">예상 소요 시간(ETA)의 1.25배</span>로 설정됩니다.
                 </p>
                 <div className="flex justify-between items-center text-[10px] bg-white/50 p-2 rounded-lg">
                   <span className="text-surface-500">여유 버퍼(Buffer)</span>
-                  <span className="font-black text-primary-600">25% 고정</span>
+                  <span className="font-medium text-primary-600">25% 고정</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-sm font-black text-surface-900">2. 경제 주체 연동 알고리즘 (Economic Linkage)</h3>
+              <h3 className="text-sm font-medium text-surface-900">2. 경제 주체 연동 알고리즘 (Economic Linkage)</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
                 주문 수락부터 정산까지, 모든 데이터는 실시간으로 상호작용하며 유저의 경제 상태를 변화시킵니다.
               </p>
               <div className="mt-4 space-y-3">
                 <div className="flex items-start gap-3 p-3 rounded-2xl bg-surface-50">
-                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-600 shrink-0">1</div>
-                  <p className="text-[11px] text-surface-700"><span className="font-bold text-surface-900">계약 체결:</span> 슬롯 점유 및 드라이버 배정. 고용된 드라이버가 있을 경우 예치금에서 수수료 선적립 프로세스 가동.</p>
+                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-medium text-primary-600 shrink-0">1</div>
+                  <p className="text-[11px] text-surface-700"><span className="font-medium text-surface-900">계약 체결:</span> 슬롯 점유 및 드라이버 배정. 고용된 드라이버가 있을 경우 예치금에서 수수료 선적립 프로세스 가동.</p>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-2xl bg-surface-50">
-                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-600 shrink-0">2</div>
-                  <p className="text-[11px] text-surface-700"><span className="font-bold text-surface-900">실시간 변동:</span> 과속 시 단속 확률 증가(최대 4배) 및 연료 소모 가속(최대 3배). 이는 최종 정산 금액의 패널티로 직결됩니다.</p>
+                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-medium text-primary-600 shrink-0">2</div>
+                  <p className="text-[11px] text-surface-700"><span className="font-medium text-surface-900">실시간 변동:</span> 과속 시 단속 확률 증가(최대 4배) 및 연료 소모 가속(최대 3배). 이는 최종 정산 금액의 패널티로 직결됩니다.</p>
                 </div>
                 <div className="flex items-start gap-3 p-3 rounded-2xl bg-surface-50">
-                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-bold text-primary-600 shrink-0">3</div>
-                  <p className="text-[11px] text-surface-700"><span className="font-bold text-surface-900">최종 정산:</span> 보상금에서 드라이버 수수료(계약된 %)를 차감한 후 유저 자산에 반영. 동시에 평판 지수 업데이트.</p>
+                  <div className="h-5 w-5 rounded-full bg-primary-100 flex items-center justify-center text-[10px] font-medium text-primary-600 shrink-0">3</div>
+                  <p className="text-[11px] text-surface-700"><span className="font-medium text-surface-900">최종 정산:</span> 보상금에서 드라이버 수수료(계약된 %)를 차감한 후 유저 자산에 반영. 동시에 평판 지수 업데이트.</p>
                 </div>
               </div>
             </div>
@@ -179,12 +179,12 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">평판 및 오퍼 해금</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">평판 및 오퍼 해금</h2>
           </div>
           
           <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
             <div className="space-y-2">
-              <h3 className="text-sm font-black text-surface-900">1. 평판 지수(Reputation)의 역할</h3>
+              <h3 className="text-sm font-medium text-surface-900">1. 평판 지수(Reputation)의 역할</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
                 평판은 트럭커 세계에서의 신뢰도를 나타내는 핵심 지표입니다. 단순히 돈을 버는 것을 넘어, 고부가가치 화물을 취급하기 위한 필수 요건입니다.
               </p>
@@ -192,45 +192,45 @@ export const HelpPage = () => {
 
             <div className="grid gap-4">
               <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-3">평판 변동 알고리즘</h4>
+                <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-3">평판 변동 알고리즘</h4>
                 <div className="space-y-2 text-[11px]">
                   <div className="flex justify-between items-center">
                     <span className="text-surface-700">정시 도착</span>
-                    <span className="font-black text-accent-emerald">+10 ~ +50</span>
+                    <span className="font-medium text-accent-emerald">+10 ~ +50</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-surface-700">지각 도착</span>
-                    <span className="font-black text-accent-amber">+2 ~ +5</span>
+                    <span className="font-medium text-accent-amber">+2 ~ +5</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-surface-700">단속 적발</span>
-                    <span className="font-black text-accent-rose">-20 ~ -100</span>
+                    <span className="font-medium text-accent-rose">-20 ~ -100</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-surface-700">운행 포기</span>
-                    <span className="font-black text-accent-rose">-50</span>
+                    <span className="font-medium text-accent-rose">-50</span>
                   </div>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-primary-100 bg-primary-50/30 p-4">
-                <h4 className="text-[10px] font-bold text-primary-600 uppercase mb-3">해금 마일스톤</h4>
+                <h4 className="text-[10px] font-medium text-primary-600 uppercase mb-3">해금 마일스톤</h4>
                 <div className="space-y-3 text-[11px]">
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-surface-900">평판 0+</span>
+                    <span className="font-medium text-surface-900">평판 0+</span>
                     <span className="text-surface-500">기본 배달 (자전거)</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-surface-900">평판 100+</span>
+                    <span className="font-medium text-surface-900">평판 100+</span>
                     <span className="text-surface-500">소형 밴 오퍼</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-surface-900">평판 500+</span>
+                    <span className="font-medium text-surface-900">평판 500+</span>
                     <span className="text-surface-500">대형 트럭 계약</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="font-bold text-surface-900">평판 2,000+</span>
-                    <span className="text-primary-600 font-black">항공/해운 특수 오퍼</span>
+                    <span className="font-medium text-surface-900">평판 2,000+</span>
+                    <span className="text-primary-600 font-medium">항공/해운 특수 오퍼</span>
                   </div>
                 </div>
               </div>
@@ -247,49 +247,49 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-rose shadow-soft-md">
               <ShieldAlert className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">과속 및 단속 시스템</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">과속 및 단속 시스템</h2>
           </div>
           
           <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
             <p className="text-xs text-surface-600 leading-relaxed">
-              <span className="font-bold text-accent-rose uppercase">Boost</span> 모드 활성화 시 속도는 빨라지지만 단속 위험도가 급증합니다.
+              <span className="font-medium text-accent-rose uppercase">Boost</span> 모드 활성화 시 속도는 빨라지지만 단속 위험도가 급증합니다.
             </p>
 
             <div className="grid gap-3">
               <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-2">단속 확률 시뮬레이션</h4>
+                <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-2">단속 확률 시뮬레이션</h4>
                 <div className="flex items-end justify-between">
                   <span className="text-xs font-medium text-surface-700">정속 주행 시</span>
-                  <span className="text-base font-black text-primary-600">5% ~ 15%</span>
+                  <span className="text-base font-medium text-primary-600">5% ~ 15%</span>
                 </div>
                 <div className="mt-2 flex items-end justify-between">
                   <span className="text-xs font-medium text-surface-700">과속 주행 시</span>
-                  <span className="text-base font-black text-accent-rose">25% ~ 45%</span>
+                  <span className="text-base font-medium text-accent-rose">25% ~ 45%</span>
                 </div>
               </div>
 
               <div className="rounded-2xl border border-accent-amber/20 bg-accent-amber/5 p-4">
-                <h4 className="text-[10px] font-bold text-accent-amber uppercase mb-2">단속 대응 매뉴얼</h4>
+                <h4 className="text-[10px] font-medium text-accent-amber uppercase mb-2">단속 대응 매뉴얼</h4>
                 <ul className="space-y-3 text-[11px] text-surface-700">
                   <li className="leading-tight flex flex-col gap-1">
                     <div><strong className="text-surface-900">서류 제시:</strong> 필수 서류 보유 시 무사 통과</div>
                     <div className="text-[10px] text-surface-500 pl-3 border-l-2 border-accent-emerald/30">
-                      • <span className="text-accent-emerald font-bold">Penalty:</span> ETA +300s (5분 지연) / 벌금 $0
+                      • <span className="text-accent-emerald font-medium">Penalty:</span> ETA +300s (5분 지연) / 벌금 $0
                     </div>
                   </li>
                   <li className="leading-tight flex flex-col gap-1">
                     <div><strong className="text-surface-900">우회:</strong> 단속 회피 (이동 거리 증가)</div>
                     <div className="text-[10px] text-surface-500 pl-3 border-l-2 border-accent-amber/30">
-                      • <span className="text-accent-amber font-bold">Penalty:</span> ETA +720s (12분 지연) / 벌금 $0
+                      • <span className="text-accent-amber font-medium">Penalty:</span> ETA +720s (12분 지연) / 벌금 $0
                     </div>
                   </li>
                   <li className="leading-tight flex flex-col gap-1">
                     <div><strong className="text-surface-900">돌파:</strong> 초고속 회피 시도</div>
                     <div className="text-[10px] text-surface-500 pl-3 border-l-2 border-accent-rose/30">
-                      • <span className="text-accent-emerald font-bold">Success (40%):</span> ETA +0s / 벌금 $0
+                      • <span className="text-accent-emerald font-medium">Success (40%):</span> ETA +0s / 벌금 $0
                     </div>
                     <div className="text-[10px] text-surface-500 pl-3 border-l-2 border-accent-rose/30">
-                      • <span className="text-accent-rose font-bold">Failure (60%):</span> 벌금 -$1,200 / 평판 하락
+                      • <span className="text-accent-rose font-medium">Failure (60%):</span> 벌금 -$1,200 / 평판 하락
                     </div>
                   </li>
                 </ul>
@@ -304,39 +304,39 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 shadow-soft-md">
               <Zap className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">서버사이드 이벤트 시스템</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">서버사이드 이벤트 시스템</h2>
           </div>
           
           <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
             <p className="text-xs text-surface-600 leading-relaxed">
-              운행 중 발생하는 모든 이벤트는 서버에서 <span className="font-bold text-purple-600">1분 주기</span>로 자동 체크됩니다. 앱을 켜두지 않아도 결과는 동일하게 처리됩니다.
+              운행 중 발생하는 모든 이벤트는 서버에서 <span className="font-medium text-purple-600">1분 주기</span>로 자동 체크됩니다. 앱을 켜두지 않아도 결과는 동일하게 처리됩니다.
             </p>
 
             <div className="grid gap-3">
               <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-2">자동 대응 알고리즘</h4>
+                <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-2">자동 대응 알고리즘</h4>
                 <ul className="space-y-2 text-[11px] text-surface-700">
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-surface-900 shrink-0">1순위:</span>
-                    <span>서류 보유 시 <span className="text-accent-emerald font-bold">서류 제시</span> (가장 안전)</span>
+                    <span className="font-medium text-surface-900 shrink-0">1순위:</span>
+                    <span>서류 보유 시 <span className="text-accent-emerald font-medium">서류 제시</span> (가장 안전)</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="font-bold text-surface-900 shrink-0">2순위:</span>
-                    <span>서류 미보유 시 <span className="text-accent-amber font-bold">우회</span> 또는 <span className="text-accent-rose font-bold">돌파</span> 시도 (확률적 결정)</span>
+                    <span className="font-medium text-surface-900 shrink-0">2순위:</span>
+                    <span>서류 미보유 시 <span className="text-accent-amber font-medium">우회</span> 또는 <span className="text-accent-rose font-medium">돌파</span> 시도 (확률적 결정)</span>
                   </li>
                 </ul>
               </div>
 
               <div className="rounded-2xl border border-purple-100 bg-purple-50/30 p-4">
-                <h4 className="text-[10px] font-bold text-purple-600 uppercase mb-2">시스템 설정값 (System Config)</h4>
+                <h4 className="text-[10px] font-medium text-purple-600 uppercase mb-2">시스템 설정값 (System Config)</h4>
                 <div className="space-y-1 text-[10px] font-mono text-surface-600">
                   <div className="flex justify-between">
                     <span>enforcement_base_prob</span>
-                    <span className="font-bold">5% (Normal)</span>
+                    <span className="font-medium">5% (Normal)</span>
                   </div>
                   <div className="flex justify-between">
                     <span>evasion_success_rate</span>
-                    <span className="font-bold">40%</span>
+                    <span className="font-medium">40%</span>
                   </div>
                 </div>
               </div>
@@ -350,7 +350,7 @@ export const HelpPage = () => {
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
               <Zap className="h-5 w-5 text-white" />
             </div>
-            <h2 className="text-xl font-black text-surface-900 tracking-tight">장비 상세 가이드</h2>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">장비 상세 가이드</h2>
           </div>
           
           <div className="space-y-6">
@@ -360,38 +360,38 @@ export const HelpPage = () => {
                 <table className="w-full text-left text-[11px] border-collapse">
                   <thead>
                     <tr className="border-b border-surface-100">
-                      <th className="py-2 px-2 font-bold text-surface-400 uppercase tracking-tighter">수단</th>
-                      <th className="py-2 px-2 font-bold text-surface-400 uppercase tracking-tighter text-right">최대중량</th>
-                      <th className="py-2 px-2 font-bold text-surface-400 uppercase tracking-tighter text-right">최고속도</th>
-                      <th className="py-2 px-2 font-bold text-surface-400 uppercase tracking-tighter text-right">구매가</th>
+                      <th className="py-2 px-2 font-medium text-surface-400 uppercase tracking-tighter">수단</th>
+                      <th className="py-2 px-2 font-medium text-surface-400 uppercase tracking-tighter text-right">최대중량</th>
+                      <th className="py-2 px-2 font-medium text-surface-400 uppercase tracking-tighter text-right">최고속도</th>
+                      <th className="py-2 px-2 font-medium text-surface-400 uppercase tracking-tighter text-right">구매가</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-50">
                     <tr>
-                      <td className="py-3 px-2 font-bold text-surface-900">자전거 (T1)</td>
+                      <td className="py-3 px-2 font-medium text-surface-900">자전거 (T1)</td>
                       <td className="py-3 px-2 text-right tabular-nums">10kg</td>
                       <td className="py-3 px-2 text-right tabular-nums text-primary-600">20km/h</td>
-                      <td className="py-3 px-2 text-right font-bold text-surface-400">기본</td>
+                      <td className="py-3 px-2 text-right font-medium text-surface-400">기본</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-2 font-bold text-surface-900">소형 밴 (T2)</td>
+                      <td className="py-3 px-2 font-medium text-surface-900">소형 밴 (T2)</td>
                       <td className="py-3 px-2 text-right tabular-nums">500kg</td>
                       <td className="py-3 px-2 text-right tabular-nums text-primary-600">80km/h</td>
-                      <td className="py-3 px-2 text-right font-bold text-primary-600">${(5000).toLocaleString()}</td>
+                      <td className="py-3 px-2 text-right font-medium text-primary-600">${(5000).toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-2 font-bold text-surface-900">대형 트럭 (T3)</td>
+                      <td className="py-3 px-2 font-medium text-surface-900">대형 트럭 (T3)</td>
                       <td className="py-3 px-2 text-right tabular-nums">5,000kg</td>
                       <td className="py-3 px-2 text-right tabular-nums text-primary-600">100km/h</td>
-                      <td className="py-3 px-2 text-right font-bold text-primary-600">${(25000).toLocaleString()}</td>
+                      <td className="py-3 px-2 text-right font-medium text-primary-600">${(25000).toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-2 font-bold text-surface-900 text-accent-blue flex items-center gap-1">
+                      <td className="py-3 px-2 font-medium text-surface-900 text-accent-blue flex items-center gap-1">
                         <FastForward className="h-3 w-3" /> 화물기 (T5)
                       </td>
                       <td className="py-3 px-2 text-right tabular-nums">100,000kg</td>
                       <td className="py-3 px-2 text-right tabular-nums text-primary-600">800km/h</td>
-                      <td className="py-3 px-2 text-right font-bold text-primary-600">${(500000).toLocaleString()}</td>
+                      <td className="py-3 px-2 text-right font-medium text-primary-600">${(500000).toLocaleString()}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -400,21 +400,34 @@ export const HelpPage = () => {
 
             {/* 연료 시스템 */}
             <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
-              <h3 className="text-sm font-black text-surface-900 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-surface-900 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-accent-amber" />
-                연료 매커니즘
+                속도 및 연료 매커니즘
               </h3>
               <div className="grid gap-3">
                 <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
-                  <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-2">보충 방법</h4>
+                  <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-2">속도 유지 및 가속 (Speed & Boost)</h4>
+                  <ul className="space-y-2 text-[11px] text-surface-700">
+                    <li className="flex justify-between items-start gap-4">
+                      <span className="font-medium text-surface-900 shrink-0">적정 속도:</span>
+                      <span className="text-right">보유 장비의 기본 속도로 자동 유지됩니다. (자전거: 15km/h, 밴: 60km/h 등)</span>
+                    </li>
+                    <li className="flex justify-between items-start gap-4">
+                      <span className="font-medium text-primary-600 shrink-0">가속(Boost):</span>
+                      <span className="text-right">가속 모드 활성화 시 기본 속도의 <span className="font-medium">1.5배</span>까지 속도가 상승합니다.</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
+                  <h4 className="text-[10px] font-medium text-surface-400 uppercase mb-2">연료 보충 방법</h4>
                   <p className="text-[11px] text-surface-700 leading-relaxed">
-                    운행 화면의 <span className="font-bold text-accent-amber underline">Refill</span> 버튼을 클릭하여 수동 보충하거나, 자동화 아이템을 통해 관리할 수 있습니다.
+                    운행 화면의 <span className="font-medium text-accent-amber underline">Refill</span> 버튼을 클릭하여 수동 보충하거나, 자동화 아이템을 통해 관리할 수 있습니다.
                   </p>
                 </div>
                 <div className="rounded-2xl border border-accent-rose/20 bg-accent-rose/5 p-4">
-                  <h4 className="text-[10px] font-bold text-accent-rose uppercase mb-2">고갈 페널티</h4>
+                  <h4 className="text-[10px] font-medium text-accent-rose uppercase mb-2">고갈 페널티</h4>
                   <p className="text-[11px] text-surface-700 leading-relaxed">
-                    연료가 0이 되면 속도가 <span className="font-bold text-accent-rose">80% 감속</span>됩니다.
+                    연료가 0이 되면 속도가 <span className="font-medium text-accent-rose">80% 감속</span>됩니다.
                   </p>
                 </div>
               </div>
@@ -428,7 +441,7 @@ export const HelpPage = () => {
             <Info className="h-24 w-24" />
           </div>
           <div className="relative z-10">
-            <h3 className="flex items-center gap-2 text-lg font-black uppercase tracking-tighter">
+            <h3 className="flex items-center gap-2 text-lg font-medium uppercase tracking-tighter">
               <Info className="h-5 w-5 text-primary-400" />
               Trucker's Pro Tip
             </h3>
@@ -438,7 +451,7 @@ export const HelpPage = () => {
             </p>
             <button 
               onClick={() => navigate('/garage')}
-              className="mt-6 w-full py-4 rounded-2xl bg-primary-600 text-white font-black text-sm hover:bg-primary-700 transition-all active:scale-95 shadow-lg"
+              className="mt-6 w-full py-4 rounded-2xl bg-primary-600 text-white font-medium text-sm hover:bg-primary-700 transition-all active:scale-95 shadow-lg"
             >
               지금 창고(Garage)로 이동하기
             </button>

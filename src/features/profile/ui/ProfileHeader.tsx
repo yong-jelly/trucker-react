@@ -31,14 +31,14 @@ export function ProfileHeader() {
 
           {/* 사용자 텍스트 정보 */}
           <div className="flex-1 overflow-hidden">
-            <h2 className="text-2xl font-black text-surface-900 truncate mb-1">
+            <h2 className="text-2xl font-medium text-surface-900 truncate mb-1">
               {profile.nickname}
             </h2>
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">
                 평판 {profile.reputation.toLocaleString()}
               </span>
-              <span className="text-xs font-bold text-accent-amber bg-accent-amber/10 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-accent-amber bg-accent-amber/10 px-2 py-0.5 rounded-full">
                 자산 ${(profile.balance).toLocaleString()}
               </span>
             </div>
@@ -59,7 +59,7 @@ export function ProfileHeader() {
           <Button
             onClick={() => navigate("/profile/edit")}
             variant="outline"
-            className="flex-1 rounded-2xl h-14 text-base font-bold border-surface-200"
+            className="flex-1 rounded-2xl h-14 text-base font-medium border-surface-200"
           >
             프로필 편집
           </Button>
@@ -67,28 +67,28 @@ export function ProfileHeader() {
 
         {/* 업적 요약 섹션 */}
         <div className="mb-8">
-          <div className="text-[11px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-4 px-1">
+          <div className="text-[11px] font-medium text-surface-400 uppercase tracking-[0.2em] mb-4 px-1">
             Achievements Summary
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-surface-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-surface-400 uppercase mb-1">총 운행</p>
-              <p className="text-lg font-black text-surface-900">12</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">총 운행</p>
+              <p className="text-lg font-medium text-surface-900">12</p>
             </div>
             <div className="bg-surface-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-surface-400 uppercase mb-1">정시율</p>
-              <p className="text-lg font-black text-surface-900">92%</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">정시율</p>
+              <p className="text-lg font-medium text-surface-900">92%</p>
             </div>
             <div className="bg-surface-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-surface-400 uppercase mb-1">최대 수익</p>
-              <p className="text-lg font-black text-surface-900">$12k</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">최대 수익</p>
+              <p className="text-lg font-medium text-surface-900">$12k</p>
             </div>
           </div>
         </div>
 
         {/* 설정 메뉴 */}
         <div className="space-y-2">
-          <div className="text-[11px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-3 px-1">
+          <div className="text-[11px] font-medium text-surface-400 uppercase tracking-[0.2em] mb-3 px-1">
             Account Settings
           </div>
           <button
@@ -99,7 +99,7 @@ export function ProfileHeader() {
               <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center group-hover:bg-rose-100 transition-colors shadow-sm">
                 <LogOut className="h-5 w-5 text-surface-400 group-hover:text-accent-rose transition-colors" />
               </div>
-              <span className="text-[17px] font-bold text-surface-700 group-hover:text-accent-rose transition-colors">
+              <span className="text-[17px] font-medium text-surface-700 group-hover:text-accent-rose transition-colors">
                 로그아웃
               </span>
             </div>

@@ -33,7 +33,7 @@ export const MapWidget = () => {
                 <MapPin className="h-4 w-4 text-primary-500" />
               </div>
               <div className="mt-1 hidden group-hover:block">
-                <span className="rounded bg-surface-900 px-2 py-1 text-[10px] font-bold text-white shadow-lg whitespace-nowrap">
+                <span className="rounded bg-surface-900 px-2 py-1 text-[10px] font-medium text-white shadow-lg whitespace-nowrap">
                   {order.title}
                 </span>
               </div>

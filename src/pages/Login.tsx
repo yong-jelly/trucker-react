@@ -44,7 +44,7 @@ export const LoginPage = () => {
             <div className="mx-auto w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mb-4">
               <LogIn className="h-8 w-8 text-primary-600" />
             </div>
-            <h1 className="text-3xl font-black text-surface-900 tracking-tight leading-tight">
+            <h1 className="text-3xl font-medium text-surface-900 tracking-tight leading-tight">
               도로 위로<br/>복귀하기
             </h1>
             <p className="text-sm text-surface-500 leading-relaxed">
@@ -54,7 +54,7 @@ export const LoginPage = () => {
 
           <div className="space-y-4">
             {error && (
-              <div className="flex items-center gap-2 p-4 rounded-xl bg-accent-rose/10 text-accent-rose text-xs font-bold animate-in fade-in zoom-in duration-200">
+              <div className="flex items-center gap-2 p-4 rounded-xl bg-accent-rose/10 text-accent-rose text-xs font-medium animate-in fade-in zoom-in duration-200">
                 <AlertCircle className="h-4 w-4 shrink-0" />
                 <p>{error}</p>
               </div>
@@ -87,14 +87,14 @@ export const LoginPage = () => {
                   />
                 </svg>
               )}
-              <span className="text-base font-bold text-surface-700 group-hover:text-surface-900">
+              <span className="text-base font-medium text-surface-700 group-hover:text-surface-900">
                 {loading ? '연결 중...' : 'Google 계정으로 계속하기'}
               </span>
             </button>
           </div>
 
           <div className="text-center">
-            <p className="text-[10px] text-surface-400 leading-relaxed uppercase tracking-widest font-bold">
+            <p className="text-[10px] text-surface-400 leading-relaxed uppercase tracking-widest font-medium">
               Secure Login via Supabase Auth
             </p>
           </div>

@@ -85,7 +85,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
             {avatarUrl ? (
               <img src={avatarUrl} alt={nickname} className="w-full h-full object-cover" />
             ) : (
-              <div className="text-4xl font-black text-surface-200 uppercase">
+              <div className="text-4xl font-medium text-surface-200 uppercase">
                 {nickname.charAt(0) || "?"}
               </div>
             )}
@@ -101,7 +101,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
         </div>
 
         <div className="text-center">
-          <p className="text-[11px] font-bold text-surface-400 uppercase tracking-widest leading-none">
+          <p className="text-[11px] font-medium text-surface-400 uppercase tracking-widest leading-none">
             {authUser?.email || "이메일 정보 없음"}
           </p>
         </div>
@@ -109,7 +109,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
 
       {/* 닉네임 입력 */}
       <div className="space-y-3">
-        <label className="block text-[14px] font-bold text-surface-900 ml-1">
+        <label className="block text-[14px] font-medium text-surface-900 ml-1">
           닉네임
         </label>
         <Input
@@ -118,14 +118,14 @@ export const ProfileEditForm = forwardRef((props, ref) => {
           placeholder="닉네임을 입력하세요 (2~30자)"
           required
           maxLength={30}
-          className="h-14 px-5 rounded-2xl bg-white border-surface-100 focus:border-primary-500 transition-all text-[17px] font-bold shadow-soft-sm"
+          className="h-14 px-5 rounded-2xl bg-white border-surface-100 focus:border-primary-500 transition-all text-[17px] font-medium shadow-soft-sm"
         />
         <p className="text-[10px] text-surface-400 ml-1 font-medium">트럭커들 사이에서 불릴 이름입니다.</p>
       </div>
 
       {/* 소개 입력 */}
       <div className="space-y-3">
-        <label className="block text-[14px] font-bold text-surface-900 ml-1">
+        <label className="block text-[14px] font-medium text-surface-900 ml-1">
           자기소개
         </label>
         <textarea
@@ -149,7 +149,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
               {notificationEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
             </div>
             <div>
-              <h3 className="text-sm font-bold text-surface-900">이벤트 알림</h3>
+              <h3 className="text-sm font-medium text-surface-900">이벤트 알림</h3>
               <p className="text-[10px] text-surface-400 font-medium">주요 게임 이벤트 발생 시 알림을 받습니다.</p>
             </div>
           </div>
@@ -166,7 +166,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
           <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
             {/* 텔레그램 설정 */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[13px] font-bold text-surface-700 ml-1">
+              <label className="flex items-center gap-2 text-[13px] font-medium text-surface-700 ml-1">
                 <Send className="w-3.5 h-3.5 text-[#229ED9]" />
                 Telegram Chat ID
               </label>
@@ -183,7 +183,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
 
             {/* 슬랙 설정 */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 text-[13px] font-bold text-surface-700 ml-1">
+              <label className="flex items-center gap-2 text-[13px] font-medium text-surface-700 ml-1">
                 <MessageSquare className="w-3.5 h-3.5 text-[#4A154B]" />
                 Slack Webhook URL
               </label>
@@ -202,7 +202,7 @@ export const ProfileEditForm = forwardRef((props, ref) => {
       </div>
 
       {error && (
-        <div className="rounded-2xl bg-red-50 p-4 text-sm font-bold text-red-600 animate-in fade-in zoom-in duration-200">
+        <div className="rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-600 animate-in fade-in zoom-in duration-200">
           {error}
         </div>
       )}

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { ArrowLeft, Users, UserPlus, UserMinus, DollarSign, Info, ChevronRight, Check, X, AlertCircle } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { Assets } from '../shared/assets';
+import { useUserProfile } from '../entities/user';
 
 type DriverType = 'NPC' | 'USER';
 
@@ -16,7 +17,7 @@ interface DriverOffer {
 
 export const HireDriverPage = () => {
   const navigate = useNavigate();
-  const { profile } = useGameStore();
+  const { data: profile } = useUserProfile();
   const [activeTab, setActiveTab] = useState<DriverType>('NPC');
   
   // NPC 드라이버 오퍼 상태
@@ -44,7 +45,7 @@ export const HireDriverPage = () => {
 
   const handleHire = () => {
     const deposit = (1000 + 500) * 1.1; // 예시 계산
-    if (profile.balance < deposit) {
+    if (!profile || profile.balance < deposit) {
       alert('예치금이 부족합니다.');
       return;
     }
@@ -63,10 +64,12 @@ export const HireDriverPage = () => {
           >
             <ArrowLeft className="h-5 w-5 text-surface-700" />
           </button>
-          <h1 className="text-xl font-bold text-surface-900">드라이버 고용</h1>
+          <h1 className="text-xl font-medium text-surface-900">드라이버 고용</h1>
         </div>
         <div className="rounded-full bg-primary-50 px-4 py-1.5 border border-primary-100">
-          <span className="text-sm font-bold text-primary-600">${profile.balance.toLocaleString()}</span>
+          <span className="text-sm font-medium text-primary-600">
+            ${profile?.balance.toLocaleString() ?? '0'}
+          </span>
         </div>
       </header>
 
@@ -75,7 +78,7 @@ export const HireDriverPage = () => {
         <div className="flex rounded-2xl bg-white p-1 shadow-soft-sm border border-surface-100">
           <button
             onClick={() => setActiveTab('NPC')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
               activeTab === 'NPC' ? 'bg-primary-600 text-white shadow-soft-md' : 'text-surface-500 hover:bg-surface-50'
             }`}
           >
@@ -84,7 +87,7 @@ export const HireDriverPage = () => {
           </button>
           <button
             onClick={() => setActiveTab('USER')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
               activeTab === 'USER' ? 'bg-primary-600 text-white shadow-soft-md' : 'text-surface-500 hover:bg-surface-50'
             }`}
           >
@@ -100,17 +103,17 @@ export const HireDriverPage = () => {
               <div className="mx-auto h-32 w-32 rounded-full bg-surface-50 p-1 border-4 border-primary-100 overflow-hidden mb-4">
                 <img src={offer.avatar} alt="드라이버" className="h-full w-full object-cover rounded-full" />
               </div>
-              <h2 className="text-xl font-black text-surface-900">{offer.name}</h2>
+              <h2 className="text-xl font-medium text-surface-900">{offer.name}</h2>
               <p className="text-sm text-surface-500 mt-1">전문 물류 전문가</p>
               
               <div className="mt-8 grid grid-cols-2 gap-4">
                 <div className="rounded-2xl bg-surface-50 p-4">
-                  <p className="text-[10px] font-bold text-surface-400 uppercase mb-1">제안 수수료</p>
-                  <p className="text-2xl font-black text-primary-600">{offer.baseCommission}%</p>
+                  <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">제안 수수료</p>
+                  <p className="text-2xl font-medium text-primary-600">{offer.baseCommission}%</p>
                 </div>
                 <div className="rounded-2xl bg-surface-50 p-4">
-                  <p className="text-[10px] font-bold text-surface-400 uppercase mb-1">협상 기회</p>
-                  <p className="text-2xl font-black text-surface-900">{3 - offer.attempts}/3</p>
+                  <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">협상 기회</p>
+                  <p className="text-2xl font-medium text-surface-900">{3 - offer.attempts}/3</p>
                 </div>
               </div>
 
@@ -118,19 +121,19 @@ export const HireDriverPage = () => {
                 {offer.attempts < 3 ? (
                   <button 
                     onClick={handleNegotiate}
-                    className="w-full py-4 rounded-2xl bg-white border-2 border-primary-600 text-primary-600 font-black text-base hover:bg-primary-50 transition-all active:scale-95"
+                    className="w-full py-4 rounded-2xl bg-white border-2 border-primary-600 text-primary-600 font-medium text-base hover:bg-primary-50 transition-all active:scale-95"
                   >
                     수수료 재협상하기
                   </button>
                 ) : (
-                  <div className="py-2 px-4 rounded-xl bg-accent-amber/10 text-accent-amber text-xs font-bold flex items-center justify-center gap-2">
+                  <div className="py-2 px-4 rounded-xl bg-accent-amber/10 text-accent-amber text-xs font-medium flex items-center justify-center gap-2">
                     <AlertCircle className="h-4 w-4" />
                     더 이상의 협상은 불가능합니다.
                   </div>
                 )}
                 <button 
                   onClick={handleHire}
-                  className="w-full py-4 rounded-2xl bg-primary-600 text-white font-black text-base shadow-soft-lg hover:bg-primary-700 transition-all active:scale-95"
+                  className="w-full py-4 rounded-2xl bg-primary-600 text-white font-medium text-base shadow-soft-lg hover:bg-primary-700 transition-all active:scale-95"
                 >
                   이 조건으로 고용하기
                 </button>
@@ -141,20 +144,20 @@ export const HireDriverPage = () => {
             <div className="rounded-2xl bg-surface-900 p-6 text-white space-y-4">
               <div className="flex items-center gap-2">
                 <DollarSign className="h-5 w-5 text-primary-400" />
-                <h3 className="text-sm font-bold">고용 예치금 상세</h3>
+                <h3 className="text-sm font-medium">고용 예치금 상세</h3>
               </div>
               <div className="space-y-2 text-xs text-surface-300">
                 <div className="flex justify-between">
                   <span>최대 예상 수수료 적립</span>
-                  <span className="text-white font-bold">$1,000</span>
+                  <span className="text-white font-medium">$1,000</span>
                 </div>
                 <div className="flex justify-between">
                   <span>의무 기간 내 해고 위약금</span>
-                  <span className="text-white font-bold">$500</span>
+                  <span className="text-white font-medium">$500</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t border-white/10">
-                  <span className="text-primary-400 font-bold">합계 (10% 버퍼 포함)</span>
-                  <span className="text-primary-400 font-black text-sm">$1,650</span>
+                  <span className="text-primary-400 font-medium">합계 (10% 버퍼 포함)</span>
+                  <span className="text-primary-400 font-medium text-sm">$1,650</span>
                 </div>
               </div>
               <p className="text-[10px] text-surface-400 leading-relaxed">
@@ -169,17 +172,17 @@ export const HireDriverPage = () => {
               <div className="mx-auto h-20 w-20 rounded-full bg-surface-50 flex items-center justify-center mb-4">
                 <Users className="h-10 w-10 text-surface-200" />
               </div>
-              <h2 className="text-lg font-bold text-surface-900">유저 드라이버 마켓</h2>
+              <h2 className="text-lg font-medium text-surface-900">유저 드라이버 마켓</h2>
               <p className="text-sm text-surface-500 mt-2">
                 다른 유저가 생성한 개성 넘치는 드라이버를<br/>고용할 수 있는 기능이 곧 추가됩니다!
               </p>
-              <div className="mt-6 inline-block rounded-full bg-primary-50 px-4 py-1 text-[10px] font-bold text-primary-600 uppercase tracking-widest">
+              <div className="mt-6 inline-block rounded-full bg-primary-50 px-4 py-1 text-[10px] font-medium text-primary-600 uppercase tracking-widest">
                 Coming Soon
               </div>
             </div>
 
             <div className="rounded-2xl bg-white p-6 border border-surface-100 space-y-3">
-              <h3 className="text-sm font-bold text-surface-900 flex items-center gap-2">
+              <h3 className="text-sm font-medium text-surface-900 flex items-center gap-2">
                 <Info className="h-4 w-4 text-primary-500" />
                 유저 드라이버란?
               </h3>
