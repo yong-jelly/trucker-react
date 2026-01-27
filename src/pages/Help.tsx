@@ -298,6 +298,52 @@ export const HelpPage = () => {
           </div>
         </section>
 
+        {/* 3.5 서버사이드 이벤트 시스템 */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 shadow-soft-md">
+              <Zap className="h-5 w-5 text-white" />
+            </div>
+            <h2 className="text-xl font-black text-surface-900 tracking-tight">서버사이드 이벤트 시스템</h2>
+          </div>
+          
+          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
+            <p className="text-xs text-surface-600 leading-relaxed">
+              운행 중 발생하는 모든 이벤트는 서버에서 <span className="font-bold text-purple-600">1분 주기</span>로 자동 체크됩니다. 앱을 켜두지 않아도 결과는 동일하게 처리됩니다.
+            </p>
+
+            <div className="grid gap-3">
+              <div className="rounded-2xl bg-surface-50 p-4 border border-surface-100">
+                <h4 className="text-[10px] font-bold text-surface-400 uppercase mb-2">자동 대응 알고리즘</h4>
+                <ul className="space-y-2 text-[11px] text-surface-700">
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-surface-900 shrink-0">1순위:</span>
+                    <span>서류 보유 시 <span className="text-accent-emerald font-bold">서류 제시</span> (가장 안전)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="font-bold text-surface-900 shrink-0">2순위:</span>
+                    <span>서류 미보유 시 <span className="text-accent-amber font-bold">우회</span> 또는 <span className="text-accent-rose font-bold">돌파</span> 시도 (확률적 결정)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="rounded-2xl border border-purple-100 bg-purple-50/30 p-4">
+                <h4 className="text-[10px] font-bold text-purple-600 uppercase mb-2">시스템 설정값 (System Config)</h4>
+                <div className="space-y-1 text-[10px] font-mono text-surface-600">
+                  <div className="flex justify-between">
+                    <span>enforcement_base_prob</span>
+                    <span className="font-bold">5% (Normal)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>evasion_success_rate</span>
+                    <span className="font-bold">40%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* 4. 장비 상세 제원 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
