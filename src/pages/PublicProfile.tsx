@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { 
-  ArrowLeft, Bot, UserCircle, Package, History, PlayCircle, 
+  ArrowLeft, Bot, UserCircle, History, PlayCircle, 
   Loader2, Bike, Truck, Car, Plane, MapPin, Clock, RefreshCw
 } from 'lucide-react';
 import { getLeaderboard, type LeaderboardEntry } from '../entities/leaderboard/api';
 import { getActiveRuns, type ActiveRun, getRunHistory, type RunHistory } from '../entities/run';
-import { formatDate, getTimeDiff } from '../shared/lib/date';
+import { getTimeDiff, formatRelativeTime } from '../shared/lib/date';
 
 export const PublicProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -86,7 +86,7 @@ export const PublicProfilePage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
       </div>
     );
@@ -94,7 +94,7 @@ export const PublicProfilePage = () => {
 
   if (!profileInfo) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-surface-50 p-6 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white p-6 text-center">
         <p className="text-surface-500 mb-4">프로필 정보를 찾을 수 없습니다.</p>
         <button onClick={() => navigate(-1)} className="text-primary-600 font-medium">돌아가기</button>
       </div>
@@ -102,7 +102,7 @@ export const PublicProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
+    <div className="min-h-screen bg-white pb-12">
       <header className="sticky top-0 z-10 bg-white border-b border-surface-100 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -125,7 +125,7 @@ export const PublicProfilePage = () => {
 
       <main className="mx-auto max-w-2xl px-4 py-6 space-y-6">
         {/* 프로필 헤더 */}
-        <section className="bg-white rounded-2xl p-6 border border-surface-100 shadow-soft-sm flex flex-col items-center text-center">
+        <section className="bg-white rounded-2xl p-6 border border-surface-100 flex flex-col items-center text-center">
           <div className={`h-20 w-20 rounded-full flex items-center justify-center mb-4 overflow-hidden ${
             profileInfo.isBot ? 'bg-amber-100' : 'bg-primary-100'
           }`}>
@@ -179,7 +179,7 @@ export const PublicProfilePage = () => {
             {profileInfo.isBot && activeRuns.length === 0 && profileInfo.botStatus !== 'RESTING' && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-medium">
                 <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-                주문서 확인 중
+                휴식 중
               </div>
             )}
             {activeRuns.length > 0 && (
@@ -194,7 +194,7 @@ export const PublicProfilePage = () => {
               {activeRuns.map((active) => (
                 <div 
                   key={active.run.id} 
-                  className="bg-white rounded-2xl border border-emerald-100 shadow-soft-sm overflow-hidden cursor-pointer hover:border-emerald-200 transition-colors"
+                  className="bg-white rounded-2xl border border-emerald-100 overflow-hidden cursor-pointer hover:border-emerald-200 transition-colors"
                   onClick={() => navigate(`/p/run/${active.run.id}`)}
                 >
                   <div className="bg-emerald-50/50 px-4 py-2 border-b border-emerald-50 flex items-center justify-between">
@@ -218,7 +218,7 @@ export const PublicProfilePage = () => {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl p-8 text-center border border-surface-100 shadow-soft-xs">
+            <div className="bg-white rounded-2xl p-8 text-center border border-surface-100">
               <p className="text-sm text-surface-400">현재 대기 중입니다.</p>
             </div>
           )}
@@ -230,14 +230,14 @@ export const PublicProfilePage = () => {
             <History className="h-4 w-4 text-primary-500" />
             최근 운행 기록
           </h3>
-          <div className="bg-white rounded-2xl border border-surface-100 shadow-soft-sm divide-y divide-surface-50">
+          <div className="bg-white rounded-2xl border border-surface-100 divide-y divide-surface-50">
             {history.length > 0 ? (
               history.map((item) => (
                 <div key={item.runId} className="p-4 flex items-center justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-surface-900 truncate">{item.orderTitle}</p>
                     <p className="text-[10px] text-surface-400 mt-0.5">
-                      {formatDate(item.completedAt || item.startAt)} · {item.orderDistance}km
+                      {formatRelativeTime(new Date(item.completedAt || item.startAt).getTime())} · {item.orderDistance}km
                     </p>
                   </div>
                   <div className="text-right shrink-0 ml-4">
