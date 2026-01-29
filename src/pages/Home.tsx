@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Package, ChevronRight, HelpCircle, Settings, Users, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane } from 'lucide-react';
+import { Package, ChevronRight, HelpCircle, Settings, Users, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane, History, Trophy } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { OrderCard } from '../entities/order/OrderCard';
 import { useUserProfile, useUpsertProfile, type UserProfile } from '../entities/user/queries';
@@ -198,6 +198,20 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                 >
                   <Package className="h-3.5 w-3.5" />
                   창고
+                </button>
+                <button 
+                  onClick={() => navigate('/transactions')}
+                  className="flex items-center gap-1 rounded-xl bg-surface-100 px-3 py-1.5 text-xs font-medium text-surface-700 border border-surface-200 shadow-soft-xs active:scale-95 transition-all"
+                >
+                  <History className="h-3.5 w-3.5" />
+                  거래 내역
+                </button>
+                <button 
+                  onClick={() => navigate('/leaderboard')}
+                  className="flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-200 shadow-soft-xs active:scale-95 transition-all"
+                >
+                  <Trophy className="h-3.5 w-3.5" />
+                  랭킹
                 </button>
               </div>
             </div>

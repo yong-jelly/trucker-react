@@ -11,6 +11,8 @@ import { OnboardingPage } from '../pages/Onboarding';
 import { LoginPage } from '../pages/Login';
 import { ProfilePage } from '../pages/Profile';
 import { ProfileEditPage } from '../pages/ProfileEdit';
+import { TransactionHistoryPage } from '../pages/TransactionHistory';
+import { LeaderboardPage } from '../pages/Leaderboard';
 
 export const App = () => {
   return (
@@ -29,6 +31,8 @@ export const App = () => {
         <Route path="/help" element={<HelpPage />} />
         <Route path="/super/admin/setting" element={<AdminSettingPage />} />
         <Route path="/hire" element={<HireDriverPage />} />
+        <Route path="/transactions" element={<TransactionHistoryPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
       </Routes>
     </BrowserRouter>
   );

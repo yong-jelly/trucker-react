@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
 
-import { ArrowLeft, ShieldAlert, Zap, FileText, FastForward, Info, DollarSign, TrendingUp, Users, History } from 'lucide-react';
+import { ArrowLeft, Zap, FastForward, Info, Users } from 'lucide-react';
 
 export const HelpPage = () => {
   const navigate = useNavigate();
@@ -27,9 +27,6 @@ export const HelpPage = () => {
         {/* 1. 경제 시스템 (핵심) */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
-              <DollarSign className="h-5 w-5 text-white" />
-            </div>
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">트럭커 경제 시스템</h2>
           </div>
           
@@ -93,28 +90,23 @@ export const HelpPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* 거래 기록 */}
-            <div className="rounded-3xl bg-surface-50 p-5 border border-surface-100 flex items-start gap-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-soft-sm">
-                <History className="h-5 w-5 text-surface-400" />
-              </div>
-              <div>
-                <h3 className="text-xs font-medium text-surface-900 uppercase tracking-widest mb-1">거래 내역 (Transaction History)</h3>
-                <p className="text-[11px] text-surface-500 leading-relaxed">
-                  고용, 해고, 수수료, 예치금 등 모든 금전적 흐름은 실시간으로 기록됩니다.
-                </p>
-              </div>
-            </div>
           </div>
         </section>
 
-        {/* 2. 주문 생성 및 계약 시스템 (핵심 알고리즘) */}
+        {/* 2. 거래 내역 (Transaction History) */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
+            <h2 className="text-xl font-medium text-surface-900 tracking-tight">거래 내역 (Transaction History)</h2>
+          </div>
+          
+          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
+            {/* 내용은 추후 추가 예정 */}
+          </div>
+        </section>
+
+        {/* 3. 주문 생성 및 계약 시스템 (핵심 알고리즘) */}
+        <section className="space-y-4">
+          <div className="flex items-center gap-2 px-1">
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">주문 생성 및 계약 알고리즘</h2>
           </div>
           
@@ -173,12 +165,9 @@ export const HelpPage = () => {
           </div>
         </section>
 
-        {/* 3. 평판 및 오퍼 해금 시스템 */}
+        {/* 4. 평판 및 오퍼 해금 시스템 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
-              <TrendingUp className="h-5 w-5 text-white" />
-            </div>
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">평판 및 오퍼 해금</h2>
           </div>
           
@@ -241,12 +230,9 @@ export const HelpPage = () => {
           </div>
         </section>
 
-        {/* 3. 과속 및 단속 시스템 */}
+        {/* 5. 과속 및 단속 시스템 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-rose shadow-soft-md">
-              <ShieldAlert className="h-5 w-5 text-white" />
-            </div>
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">과속 및 단속 시스템</h2>
           </div>
           
@@ -298,12 +284,9 @@ export const HelpPage = () => {
           </div>
         </section>
 
-        {/* 3.5 서버사이드 이벤트 시스템 */}
+        {/* 6. 서버사이드 이벤트 시스템 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-600 shadow-soft-md">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">서버사이드 이벤트 시스템</h2>
           </div>
           
@@ -344,12 +327,9 @@ export const HelpPage = () => {
           </div>
         </section>
 
-        {/* 4. 장비 상세 제원 */}
+        {/* 7. 장비 상세 제원 */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary-600 shadow-soft-md">
-              <Zap className="h-5 w-5 text-white" />
-            </div>
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">장비 상세 가이드</h2>
           </div>
           
@@ -386,7 +366,7 @@ export const HelpPage = () => {
                       <td className="py-3 px-2 text-right font-medium text-primary-600">${(25000).toLocaleString()}</td>
                     </tr>
                     <tr>
-                      <td className="py-3 px-2 font-medium text-surface-900 text-accent-blue flex items-center gap-1">
+                      <td className="py-3 px-2 font-medium text-accent-blue flex items-center gap-1">
                         <FastForward className="h-3 w-3" /> 화물기 (T5)
                       </td>
                       <td className="py-3 px-2 text-right tabular-nums">100,000kg</td>

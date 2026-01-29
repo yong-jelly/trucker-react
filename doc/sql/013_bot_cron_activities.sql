@@ -1,0 +1,338 @@
+-- =====================================================
+-- 013_bot_cron_activities.sql
+-- 봇 활동 Cron 함수 (매 분 실행)
+-- 
+-- 봇 동작 로직:
+--   1. 대기 중인 봇 확인 (활성 운행 없는 봇)
+--   2. 가용 주문 중 랜덤 선택
+--   3. 운행 생성
+--   4. 진행 중인 운행 상태 업데이트
+--   5. 완료 시간 도달 시 자동 완료 처리
+-- 
+-- 실행 방법:
+--   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/013_bot_cron_activities.sql
+-- =====================================================
+
+-- 1. 봇 운행 생성 함수 (public_profile_id 기반)
+CREATE OR REPLACE FUNCTION trucker.bot_create_run(
+    p_bot_id uuid,  -- public_profile_id
+    p_order_id uuid,
+    p_slot_id uuid
+)
+RETURNS trucker.tbl_runs
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = trucker, public
+AS $$
+DECLARE
+    v_order RECORD;
+    v_run trucker.tbl_runs;
+    v_eta_seconds integer;
+    v_deadline_at timestamp with time zone;
+BEGIN
+    -- 1. 주문 정보 조회
+    SELECT * INTO v_order FROM trucker.tbl_orders WHERE id = p_order_id;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Order not found';
+    END IF;
+
+    -- 2. ETA 및 마감 시간 계산 (자전거 15km/h 기준)
+    v_eta_seconds := ROUND(v_order.distance / 15 * 3600);  -- km / (km/h) * 3600 = seconds
+    v_deadline_at := now() + (v_order.limit_time_minutes * interval '1 minute');
+
+    -- 3. Run 생성 (봇용 - public_profile_id 사용)
+    INSERT INTO trucker.tbl_runs (
+        user_id,
+        order_id,
+        slot_id,
+        status,
+        eta_seconds,
+        deadline_at,
+        selected_equipment_id,
+        current_reward,
+        current_risk,
+        current_durability,
+        current_fuel
+    ) VALUES (
+        p_bot_id,  -- public_profile_id
+        p_order_id,
+        p_slot_id,
+        'IN_TRANSIT',
+        v_eta_seconds,
+        v_deadline_at,
+        'BICYCLE',
+        v_order.base_reward,
+        0.05,
+        100,
+        100
+    )
+    RETURNING * INTO v_run;
+
+    -- 4. 슬롯 상태 업데이트
+    UPDATE trucker.tbl_slots 
+    SET active_run_id = v_run.id 
+    WHERE id = p_slot_id;
+
+    -- 5. 이벤트 로그 추가 (운행 시작)
+    INSERT INTO trucker.tbl_event_logs (
+        run_id,
+        type,
+        title,
+        description,
+        amount,
+        eta_change_seconds,
+        is_estimated
+    ) VALUES (
+        v_run.id,
+        'SYSTEM',
+        '🤖 봇 운행 시작',
+        '[' || v_order.title || '] 봇이 배송을 시작했습니다.',
+        0,
+        0,
+        false
+    );
+
+    RETURN v_run;
+END;
+$$;
+
+-- 2. 봇 운행 완료 함수 (public_profile_id 기반)
+CREATE OR REPLACE FUNCTION trucker.bot_complete_run(p_run_id uuid)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = trucker, public
+AS $$
+DECLARE
+    v_run RECORD;
+    v_order RECORD;
+    v_bot_id uuid;
+    v_final_reward bigint;
+    v_penalty bigint := 0;
+    v_new_balance bigint;
+    v_reputation_gain integer;
+    v_new_reputation integer;
+    v_elapsed_seconds integer;
+    v_success_rate float;
+BEGIN
+    -- 1. 운행 정보 조회
+    SELECT * INTO v_run FROM trucker.tbl_runs WHERE id = p_run_id FOR UPDATE;
+    
+    IF NOT FOUND THEN
+        RETURN jsonb_build_object('status', 'error', 'message', 'Run not found');
+    END IF;
+    
+    IF v_run.status != 'IN_TRANSIT' THEN
+        RETURN jsonb_build_object('status', 'error', 'message', 'Run already completed');
+    END IF;
+
+    v_bot_id := v_run.user_id;
+    
+    -- 2. 주문 정보 조회
+    SELECT * INTO v_order FROM trucker.tbl_orders WHERE id = v_run.order_id;
+    
+    -- 3. 경과 시간 계산
+    v_elapsed_seconds := EXTRACT(EPOCH FROM (now() - v_run.start_at))::integer;
+    
+    -- 4. 성공/실패 및 보상 계산 (봇은 90% 확률로 성공, 랜덤 보너스)
+    v_success_rate := 0.9 + (random() * 0.1);  -- 90-100%
+    
+    IF random() < v_success_rate THEN
+        -- 성공: 기본 보상 + 랜덤 보너스 (0-15%)
+        v_final_reward := v_run.current_reward + ROUND(v_run.current_reward * random() * 0.15);
+        v_reputation_gain := 10 + ROUND(random() * 5)::integer;  -- 10-15
+    ELSE
+        -- 실패: 50% 보상, 페널티 발생
+        v_penalty := ROUND(v_run.current_reward * 0.2);
+        v_final_reward := ROUND(v_run.current_reward * 0.5);
+        v_reputation_gain := 2;
+    END IF;
+
+    -- 5. 운행 상태 업데이트
+    UPDATE trucker.tbl_runs
+    SET 
+        status = 'COMPLETED',
+        completed_at = now(),
+        current_reward = v_final_reward,
+        accumulated_penalty = v_penalty
+    WHERE id = p_run_id;
+
+    -- 6. 슬롯 해제
+    UPDATE trucker.tbl_slots
+    SET active_run_id = NULL
+    WHERE id = v_run.slot_id;
+
+    -- 7. 봇 잔액 및 평판 업데이트 (public_profile_id 기반)
+    UPDATE trucker.tbl_user_profile
+    SET 
+        balance = balance + v_final_reward,
+        reputation = reputation + v_reputation_gain,
+        updated_at = now()
+    WHERE public_profile_id = v_bot_id
+    RETURNING balance, reputation INTO v_new_balance, v_new_reputation;
+
+    -- 8. 거래 내역 기록
+    INSERT INTO trucker.tbl_transactions (
+        user_id,
+        run_id,
+        type,
+        amount,
+        balance_after,
+        description
+    ) VALUES (
+        v_bot_id,
+        p_run_id,
+        'REWARD',
+        v_final_reward,
+        v_new_balance,
+        format('🤖 봇 운행 완료: %s (패널티: $%s)', v_order.title, v_penalty)
+    );
+
+    -- 9. 완료 이벤트 로그
+    INSERT INTO trucker.tbl_event_logs (
+        run_id,
+        type,
+        title,
+        description,
+        amount
+    ) VALUES (
+        p_run_id,
+        'SYSTEM',
+        '🤖 봇 운행 완료',
+        format('배송이 완료되었습니다. 보상: $%s', v_final_reward),
+        v_final_reward
+    );
+
+    RETURN jsonb_build_object(
+        'status', 'success',
+        'bot_id', v_bot_id,
+        'final_reward', v_final_reward,
+        'penalty', v_penalty,
+        'new_balance', v_new_balance,
+        'new_reputation', v_new_reputation,
+        'elapsed_seconds', v_elapsed_seconds
+    );
+END;
+$$;
+
+-- 3. 메인 봇 활동 처리 함수 (매 분 실행)
+CREATE OR REPLACE FUNCTION trucker.process_bot_activities()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = trucker, public
+AS $$
+DECLARE
+    v_bot RECORD;
+    v_slot_id uuid;
+    v_order RECORD;
+    v_run RECORD;
+    v_result jsonb;
+    v_runs_started integer := 0;
+    v_runs_completed integer := 0;
+    v_orders_generated integer := 0;
+BEGIN
+    -- 1. 완료 시간이 된 봇 운행 처리
+    FOR v_run IN 
+        SELECT r.* 
+        FROM trucker.tbl_runs r
+        JOIN trucker.tbl_user_profile u ON r.user_id = u.public_profile_id
+        WHERE u.is_bot = true 
+          AND r.status = 'IN_TRANSIT'
+          AND now() >= r.start_at + (r.eta_seconds * interval '1 second')
+    LOOP
+        PERFORM trucker.bot_complete_run(v_run.id);
+        v_runs_completed := v_runs_completed + 1;
+    END LOOP;
+
+    -- 2. 주문이 부족하면 생성 (10개 미만이면 8개 추가)
+    IF (SELECT count(*) FROM trucker.tbl_orders) < 10 THEN
+        PERFORM trucker.v1_generate_bicycle_orders(8);
+        v_orders_generated := 8;
+    END IF;
+
+    -- 3. 대기 중인 봇이 새 주문을 수락
+    FOR v_bot IN 
+        SELECT * FROM trucker.tbl_user_profile 
+        WHERE is_bot = true 
+        ORDER BY random()  -- 랜덤 순서로 처리
+    LOOP
+        -- 봇이 주문을 수락할 수 있는지 확인
+        IF trucker.can_bot_accept_order(v_bot.public_profile_id) THEN
+            -- 50% 확률로만 새 주문 수락 (너무 빠르게 주문을 독점하지 않도록)
+            IF random() < 0.5 THEN
+                -- 가용 슬롯 조회
+                v_slot_id := trucker.get_available_bot_slot(v_bot.public_profile_id);
+                
+                IF v_slot_id IS NOT NULL THEN
+                    -- 랜덤 주문 선택 (아직 수락되지 않은 주문)
+                    SELECT * INTO v_order 
+                    FROM trucker.tbl_orders o
+                    WHERE NOT EXISTS (
+                        SELECT 1 FROM trucker.tbl_runs r 
+                        WHERE r.order_id = o.id AND r.status = 'IN_TRANSIT'
+                    )
+                    ORDER BY random()
+                    LIMIT 1;
+                    
+                    IF FOUND THEN
+                        -- 운행 생성
+                        PERFORM trucker.bot_create_run(
+                            v_bot.public_profile_id,
+                            v_order.id,
+                            v_slot_id
+                        );
+                        v_runs_started := v_runs_started + 1;
+                    END IF;
+                END IF;
+            END IF;
+        END IF;
+    END LOOP;
+
+    -- 4. 결과 반환
+    RETURN jsonb_build_object(
+        'timestamp', now(),
+        'runs_started', v_runs_started,
+        'runs_completed', v_runs_completed,
+        'orders_generated', v_orders_generated
+    );
+END;
+$$;
+
+-- 4. pg_cron 스케줄 설정 (매 분 실행)
+-- 주의: pg_cron 확장이 설치되어 있어야 합니다
+-- Supabase에서는 Dashboard > Database > Extensions에서 pg_cron 활성화
+
+-- 기존 스케줄 삭제 (있으면)
+SELECT cron.unschedule('process-bot-activities') 
+WHERE EXISTS (
+    SELECT 1 FROM cron.job WHERE jobname = 'process-bot-activities'
+);
+
+-- 새 스케줄 등록 (매 분)
+SELECT cron.schedule(
+    'process-bot-activities',
+    '* * * * *',  -- 매 분
+    $$SELECT trucker.process_bot_activities()$$
+);
+
+-- 5. 수동 실행용 래퍼 함수
+CREATE OR REPLACE FUNCTION trucker.v1_trigger_bot_activities()
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = trucker, public
+AS $$
+BEGIN
+    RETURN trucker.process_bot_activities();
+END;
+$$;
+
+-- 권한 부여
+GRANT EXECUTE ON FUNCTION trucker.bot_create_run TO service_role;
+GRANT EXECUTE ON FUNCTION trucker.bot_complete_run TO service_role;
+GRANT EXECUTE ON FUNCTION trucker.process_bot_activities TO service_role;
+GRANT EXECUTE ON FUNCTION trucker.v1_trigger_bot_activities TO authenticated, service_role;
+
+COMMENT ON FUNCTION trucker.process_bot_activities IS '봇 활동 처리 - 운행 생성/완료, 주문 생성 (매 분 cron 실행)';
+COMMENT ON FUNCTION trucker.v1_trigger_bot_activities IS '봇 활동 수동 트리거 (디버깅/테스트용)';
