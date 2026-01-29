@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Package, ChevronRight, HelpCircle, Settings, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane, History, Trophy } from 'lucide-react';
+import { Package, ChevronRight, HelpCircle, Settings, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane, History, Trophy, Info, Zap, Shield, Target } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { OrderCard } from '../entities/order/OrderCard';
 import { useUserProfile, useUpsertProfile, type UserProfile } from '../entities/user/queries';
@@ -12,13 +12,50 @@ import type { Order } from '../shared/api/types';
 
 // 로딩 컴포넌트
 const LoadingScreen = ({ message }: { message: string }) => (
-  <div className="flex min-h-screen items-center justify-center bg-surface-50">
+  <div className="flex min-h-screen items-center justify-center bg-white">
     <div className="text-center">
       <Loader2 className="h-10 w-10 animate-spin text-primary-500 mx-auto mb-4" />
       <p className="text-sm font-medium text-surface-500">{message}</p>
     </div>
   </div>
 );
+
+// 미션 보드 아이템 컴포넌트
+const MissionCard = ({ title, progress, type, onClick }: { title: string; progress: string; type: 'speed' | 'safety' | 'challenge'; onClick: () => void }) => {
+  const getIcon = () => {
+    switch (type) {
+      case 'speed': return <Zap className="h-4 w-4 text-amber-500" />;
+      case 'safety': return <Shield className="h-4 w-4 text-blue-500" />;
+      case 'challenge': return <Target className="h-4 w-4 text-rose-500" />;
+    }
+  };
+
+  return (
+    <div className="min-w-[280px] bg-white border border-surface-100 p-5 rounded-2xl shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        {getIcon()}
+        <span className="text-[10px] font-medium text-surface-400 uppercase tracking-wider">
+          {type === 'speed' ? '속도' : type === 'safety' ? '안정' : '도전'}
+        </span>
+      </div>
+      <h3 className="text-sm font-medium text-surface-900 mb-4 h-10 line-clamp-2">{title}</h3>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1">
+          <div className="h-1 w-full bg-surface-50 rounded-full overflow-hidden">
+            <div className="h-full bg-primary-500 rounded-full" style={{ width: progress }} />
+          </div>
+          <p className="text-[10px] font-medium text-surface-400 mt-2">{progress} 완료</p>
+        </div>
+        <button 
+          onClick={onClick}
+          className="px-4 py-2 bg-primary-50 text-primary-600 text-[11px] font-medium rounded-lg hover:bg-primary-100 transition-colors"
+        >
+          바로 시작
+        </button>
+      </div>
+    </div>
+  );
+};
 
 // 메인 대시보드 컴포넌트 (profile이 반드시 존재해야 함)
 const Dashboard = ({ profile }: { profile: UserProfile }) => {
@@ -44,11 +81,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
     if (!isAuthenticated || !profileId) return;
     
     try {
-      console.log('Fetching slots for profile:', profileId);
       const userSlots = await getUserSlots(profileId);
-      console.log('Fetched slots:', userSlots);
-      
-      // MVP 대응: 슬롯이 1개도 없거나 index 0이 없으면 강제로 기본 슬롯 생성 (클라이언트 사이드 보정)
       let finalSlots = [...userSlots];
       if (finalSlots.length === 0) {
         finalSlots = [
@@ -57,7 +90,6 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
           { id: 'temp-2', index: 2, isLocked: true },
         ];
       }
-      
       setSlots(finalSlots);
     } catch (err) {
       console.error('Failed to fetch slots:', err);
@@ -132,213 +164,128 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-24">
+    <div className="min-h-screen bg-slate-50/30 pb-24">
       <div className="mx-auto">
-        {/* 헤더 */}
-        <header className="sticky top-0 z-10 bg-white px-4 py-4 border-b border-surface-100">
-          <div className="flex flex-col gap-6 bg-white p-6 border border-surface-100 rounded-2xl">
-            {/* 상단: 프로필 정보 */}
-            <div className="flex items-center justify-between gap-3">
-              <button 
-                onClick={() => navigate('/profile')}
-                className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
-              >
-                <div className="relative shrink-0">
-                  <div className="flex h-14 w-14 items-center justify-center bg-primary-50 text-primary-600 rounded-full overflow-hidden">
-                    {profile.avatar_url ? (
-                      <img 
-                        src={profile.avatar_url} 
-                        alt={profile.nickname} 
-                        className="h-full w-full object-cover" 
-                        loading="lazy"
-                        decoding="async"
-                      />
-                    ) : (
-                      <UserCircle className="h-8 w-8" />
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center bg-white border border-surface-100 rounded-full">
-                    <Trophy className="h-3 w-3 text-amber-500" />
-                  </div>
+        {/* 1) 상단 고정 '랭킹 헤더' */}
+        <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md px-4 pt-4 pb-6 border-b border-surface-100/50">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-surface-100">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 bg-primary-50 flex items-center justify-center rounded-xl">
+                  <Trophy className="h-5 w-5 text-primary-600" />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-lg font-bold text-surface-900 truncate">{profile.nickname}</h2>
-                    <span className="rounded-full bg-surface-100 px-2 py-0.5 text-[10px] font-bold text-surface-500 uppercase tracking-tight shrink-0">Level 1</span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium text-surface-900">골드 III</span>
+                    <span className="text-[10px] font-medium text-surface-400 bg-surface-50 px-1.5 py-0.5 rounded">내 순위 128위</span>
                   </div>
-                  <div className="mt-1 flex items-center gap-3">
-                    <div className="flex items-center gap-1">
-                      <p className="text-[10px] font-medium text-surface-400 uppercase tracking-wider">평판</p>
-                      <span className="text-xs font-bold text-primary-600">{profile.reputation.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              </button>
-              
-              <div className="flex gap-2 shrink-0">
-                <button 
-                  onClick={() => navigate('/help')}
-                  className="flex h-10 w-10 items-center justify-center bg-surface-50 text-surface-500 border border-surface-100 rounded-full"
-                >
-                  <HelpCircle className="h-5 w-5" />
-                </button>
-                <button 
-                  onClick={() => navigate('/super/admin/setting')}
-                  className="flex h-10 w-10 items-center justify-center bg-surface-50 text-surface-500 border border-surface-100 rounded-full"
-                >
-                  <Settings className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* 중단: 잔액 정보 */}
-            <div className="flex items-end justify-between border-t border-surface-50 pt-6">
-              <div>
-                <p className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-1">보유 잔액</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-sm font-bold text-surface-400">$</span>
-                  <span className="text-4xl font-black text-surface-900 tracking-tight">
-                    {profile.balance.toLocaleString()}
-                  </span>
+                  <p className="text-[11px] font-medium text-primary-600 mt-0.5">다음 등급까지 120점</p>
                 </div>
               </div>
-              <button 
-                onClick={() => navigate('/transactions')}
-                className="mb-1 flex items-center gap-1.5 bg-surface-900 px-4 py-2 text-xs font-bold text-white rounded-xl"
-              >
-                <History className="h-3.5 w-3.5" />
-                내역
-              </button>
+              <div className="flex gap-1">
+                <button onClick={() => navigate('/help')} className="p-2 text-surface-400 hover:bg-surface-50 rounded-full transition-colors">
+                  <Info className="h-4 w-4" />
+                </button>
+                <button onClick={() => navigate('/super/admin/setting')} className="p-2 text-surface-400 hover:bg-surface-50 rounded-full transition-colors">
+                  <Settings className="h-4 w-4" />
+                </button>
+              </div>
             </div>
             
-            {/* 하단: 슬롯 및 주요 액션 버튼 */}
-            <div className="space-y-4 border-t border-surface-50 pt-6">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-surface-900 uppercase tracking-wider whitespace-nowrap">운행 슬롯</span>
-                  <div className="flex gap-1.5">
-                    {slots.map((slot) => {
-                      const isMVPDisabled = slot.index > 0;
-                      const isLocked = slot.isLocked || isMVPDisabled;
-                      return (
-                        <div 
-                          key={slot.id} 
-                          className={`h-2 w-6 rounded-full transition-all ${
-                            isLocked 
-                              ? 'bg-surface-100' 
-                              : slot.activeRunId
-                                ? 'bg-accent-emerald animate-pulse w-8'
-                                : 'bg-primary-500'
-                          }`}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => navigate('/hire')}
-                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
-                  >
-                    고용
-                  </button>
-                  <button 
-                    onClick={() => navigate('/garage')}
-                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
-                  >
-                    창고
-                  </button>
-                  <button 
-                    onClick={() => navigate('/leaderboard')}
-                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
-                  >
-                    랭킹
-                  </button>
-                </div>
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-[10px] font-medium text-surface-400 uppercase tracking-wider">등급 진행</span>
+                <span className="text-[10px] font-medium text-surface-900">880 / 1,000</span>
+              </div>
+              <div className="h-1.5 w-full bg-surface-50 rounded-full overflow-hidden">
+                <div className="h-full bg-primary-500 rounded-full transition-all duration-1000" style={{ width: '88%' }} />
               </div>
             </div>
           </div>
         </header>
 
-        {/* 메인 콘텐츠 */}
-        <main className="mt-6 space-y-8 px-4">
-          {/* 진행 중인 운행 */}
+        <main className="mt-6 space-y-10">
+          {/* 2) 오늘의 경쟁 목표 (미션 보드) */}
+          <section className="space-y-4">
+            <div className="px-4 flex items-center justify-between">
+              <h2 className="text-sm font-medium text-surface-900">오늘의 경쟁 목표</h2>
+              <span className="text-[10px] font-medium text-surface-400">3개 남음</span>
+            </div>
+            <div className="flex gap-4 overflow-x-auto px-4 pb-2 no-scrollbar">
+              <MissionCard 
+                type="speed"
+                title="30분 이내 연속 3회 배달 완료하기"
+                progress="1/3"
+                onClick={() => {}}
+              />
+              <MissionCard 
+                type="safety"
+                title="평점 4.8점 이상으로 5회 운행 완료"
+                progress="4/5"
+                onClick={() => {}}
+              />
+              <MissionCard 
+                type="challenge"
+                title="100km 이상의 장거리 주문 1회 수행"
+                progress="0/1"
+                onClick={() => {}}
+              />
+            </div>
+          </section>
+
+          {/* 3) 진행 중 위젯 (작업이 있을 때만 노출) */}
           {activeRuns.length > 0 && (
-            <section className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-medium text-surface-900 flex items-center gap-2">
-                  <PlayCircle className="h-5 w-5 text-accent-emerald" />
-                  진행 중인 운행
-                </h2>
-                <button 
-                  onClick={fetchActiveRuns}
-                  className="p-2 text-surface-400 hover:text-surface-600 transition-colors"
-                >
-                  <RefreshCw className={`h-4 w-4 ${isActiveRunsLoading ? 'animate-spin' : ''}`} />
-                </button>
-              </div>
-              <div className="space-y-3">
-                {activeRuns.map((activeRun) => (
-                  <button
-                    key={activeRun.run.id}
-                    onClick={() => navigate(`/run/${activeRun.run.id}`)}
-                    className="w-full text-left overflow-hidden bg-white border border-accent-emerald/30 rounded-2xl"
+            <section className="px-4">
+              <div className="bg-primary-500 p-5 rounded-2xl shadow-lg shadow-primary-500/20 text-white">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="h-2 w-2 bg-white rounded-full animate-pulse" />
+                    <span className="text-[10px] font-medium uppercase tracking-widest opacity-80">현재 운행 중</span>
+                  </div>
+                  <span className="text-xs font-medium">+150 RP 획득 예정</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-medium truncate">{activeRuns[0].order.title}</h3>
+                    <p className="text-[10px] font-medium mt-1 opacity-70">ETA 12분 · 4.2km 남음</p>
+                  </div>
+                  <button 
+                    onClick={() => navigate(`/run/${activeRuns[0].run.id}`)}
+                    className="shrink-0 px-4 py-2 bg-white text-primary-600 text-[11px] font-medium rounded-lg"
                   >
-                    <div className="bg-accent-emerald/5 px-4 py-2 flex items-center justify-between border-b border-accent-emerald/10">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-accent-emerald animate-pulse" />
-                        <span className="text-[10px] font-medium text-accent-emerald uppercase tracking-widest">슬롯 {activeRun.slotIndex + 1} 운행 중</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] font-medium text-surface-500">
-                        {getEquipmentIcon(activeRun.run.selectedItems.equipmentId)}
-                        <span>{getEquipmentName(activeRun.run.selectedItems.equipmentId)}</span>
-                      </div>
-                    </div>
-                    <div className="p-4 flex items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="text-sm font-medium text-surface-900 leading-tight truncate">{activeRun.order.title}</h3>
-                        <p className="text-[10px] font-medium text-surface-400 mt-1 truncate">
-                          {activeRun.order.cargoName} · {activeRun.order.distance}km
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">현재 보상</p>
-                        <p className="text-sm font-medium text-accent-emerald">${activeRun.run.currentReward.toLocaleString()}</p>
-                      </div>
-                    </div>
+                    진행 보기
                   </button>
-                ))}
+                </div>
               </div>
             </section>
           )}
 
-          {/* 사용 가능한 주문 */}
-          <section className="space-y-4">
+          {/* 4) 주문 리스트 (전략 선택) */}
+          <section className="space-y-4 px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-baseline gap-2">
-                <h2 className="text-lg font-medium text-surface-900">사용 가능한 주문</h2>
-                <span className="text-[10px] font-medium text-surface-400">
-                  {isOrdersLoading ? '· 로딩 중...' : `· ${orders.length}개`}
-                </span>
+                <h2 className="text-sm font-medium text-surface-900">추천 주문 리스트</h2>
+                <span className="text-[10px] font-medium text-surface-400">랭킹 효율순</span>
               </div>
               <button 
                 onClick={fetchOrders}
                 className="p-2 text-surface-400 hover:text-surface-600 transition-colors"
               >
-                <RefreshCw className={`h-4 w-4 ${isOrdersLoading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-3.5 w-3.5 ${isOrdersLoading ? 'animate-spin' : ''}`} />
               </button>
             </div>
             
             <div className="space-y-3">
               {isOrdersLoading ? (
                 <div className="flex justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-surface-300" />
+                  <Loader2 className="h-8 w-8 animate-spin text-surface-200" />
                 </div>
               ) : orders.length > 0 ? (
-                orders.map((order) => (
+                orders.map((order, index) => (
                   <OrderCard
                     key={order.id}
                     order={order}
+                    status={index === 0 ? 'recommended' : 'default'}
                     onClick={() => navigate(`/order/${order.id}`)}
                     disabled={!activeSlot}
                     disabledReason={!activeSlot ? '사용 가능한 슬롯이 없습니다' : undefined}
@@ -346,28 +293,32 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                 ))
               ) : (
                 <div className="bg-white p-12 text-center border border-surface-100 rounded-2xl">
-                  <Package className="h-12 w-12 text-surface-200 mx-auto mb-4" />
-                  <p className="text-sm font-medium text-surface-400">현재 사용 가능한 주문이 없습니다</p>
-                  <p className="text-xs text-surface-300 mt-1 mb-6">잠시 후 다시 확인해주세요</p>
-                  <button 
-                    onClick={fetchOrders}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-50 text-primary-600 border border-primary-100 text-sm font-medium rounded-xl"
-                  >
-                    <RefreshCw className={`h-4 w-4 ${isOrdersLoading ? 'animate-spin' : ''}`} />
-                    새로고침
-                  </button>
+                  <Package className="h-10 w-10 text-surface-100 mx-auto mb-4" />
+                  <p className="text-sm font-medium text-surface-400">새로운 주문을 기다리는 중...</p>
                 </div>
               )}
             </div>
           </section>
-
-          {/* 추가 오퍼 안내 */}
-          <div className="flex flex-col items-center justify-center border-2 border-dashed border-surface-200 bg-white py-8 px-6 text-center rounded-2xl">
-            <p className="text-sm text-surface-500">
-              더 많은 오퍼는 평판을 올리면 해금됩니다
-            </p>
-          </div>
         </main>
+
+        {/* 하단 네비게이션 보조 (기존 기능들) */}
+        <div className="fixed bottom-6 left-4 right-4 z-30">
+          <div className="bg-white/90 backdrop-blur-lg border border-surface-100 p-2 rounded-2xl shadow-xl flex items-center justify-around">
+            <button onClick={() => navigate('/garage')} className="flex flex-col items-center gap-1 p-2 flex-1">
+              <Package className="h-5 w-5 text-surface-400" />
+              <span className="text-[10px] font-medium text-surface-500">창고</span>
+            </button>
+            <button onClick={() => navigate('/hire')} className="flex flex-col items-center gap-1 p-2 flex-1">
+              <UserCircle className="h-5 w-5 text-surface-400" />
+              <span className="text-[10px] font-medium text-surface-500">고용</span>
+            </button>
+            <div className="w-px h-6 bg-surface-100 mx-1" />
+            <div className="flex flex-col items-center gap-1 p-2 flex-1">
+              <span className="text-xs font-medium text-surface-900">${profile.balance.toLocaleString()}</span>
+              <span className="text-[10px] font-medium text-surface-400 uppercase tracking-tighter">보유 자산</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
