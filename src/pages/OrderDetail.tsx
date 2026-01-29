@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor, ChevronRight, Check } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor, ChevronRight, Check, Truck, Plane, Ship, Car, Loader2 } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
@@ -10,15 +10,24 @@ import { Dialog, DialogContent, DialogTitle } from '../shared/ui/Dialog';
 import { createRun } from '../entities/run';
 import { getOrderById } from '../entities/order';
 import type { Order } from '../shared/api/types';
-import { EQUIPMENTS, type Equipment } from '../shared/api/equipment';
+import { useUserEquipments, type UserEquipment, getEquipmentImagePath } from '../entities/equipment';
+import { Assets } from '../shared/assets';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
-// ...
-  SHIP: Anchor,
+  BICYCLE: Bike,
+  VAN: Car,
+  TRUCK: Truck,
+  HEAVY_TRUCK: Truck,
+  PLANE: Plane,
+  SHIP: Ship,
 };
 
 const EQUIPMENT_LABELS: Record<string, string> = {
-// ...
+  BICYCLE: '자전거',
+  VAN: '밴',
+  TRUCK: '트럭',
+  HEAVY_TRUCK: '대형 트럭',
+  PLANE: '화물기',
   SHIP: '컨테이너선',
 };
 
@@ -31,8 +40,11 @@ export const OrderDetailPage = () => {
   const [isContractOpen, setIsContractOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEquipment, setSelectedEquipment] = useState<Equipment>(EQUIPMENTS[0]); // 기본 자전거
+  const [selectedEquipment, setSelectedEquipment] = useState<UserEquipment | null>(null);
   const [isEquipmentSheetOpen, setIsEquipmentSheetOpen] = useState(false);
+  
+  // 유저 보유 장비 조회
+  const { data: userEquipments, isLoading: isEquipmentsLoading } = useUserEquipments(profile?.public_profile_id);
   
   // public_profile_id 사용 (auth 테이블과 독립적)
   const profileId = profile?.public_profile_id;
@@ -49,6 +61,15 @@ export const OrderDetailPage = () => {
     }
   }, [orderId]);
 
+  // 유저 장비 로드 후 기본 장비 선택
+  useEffect(() => {
+    if (userEquipments && userEquipments.length > 0 && !selectedEquipment) {
+      // is_equipped가 true인 장비 우선, 없으면 첫 번째 장비
+      const equipped = userEquipments.find(e => e.isEquipped) || userEquipments[0];
+      setSelectedEquipment(equipped);
+    }
+  }, [userEquipments, selectedEquipment]);
+
   const availableSlot = slots.find(s => !s.isLocked && !s.activeRunId);
 
   const formatDuration = (minutes: number) => {
@@ -58,7 +79,7 @@ export const OrderDetailPage = () => {
     return `${m}분`;
   };
 
-  if (isLoading) {
+  if (isLoading || isEquipmentsLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-surface-50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-600 border-t-transparent" />
@@ -89,7 +110,7 @@ export const OrderDetailPage = () => {
   };
 
   const handleConfirmContract = async () => {
-    if (!profileId || !order || !availableSlot) return;
+    if (!profileId || !order || !availableSlot || !selectedEquipment) return;
 
     try {
       // 실제 DB에 Run 생성 (public_profile_id 사용)
@@ -98,7 +119,7 @@ export const OrderDetailPage = () => {
         orderId: order.id,
         slotId: availableSlot.id,
         selectedItems: {
-          equipmentId: selectedEquipment.id,
+          equipmentId: selectedEquipment.equipmentId,
           documentId: order.requiredDocumentId || undefined,
         }
       });
@@ -219,29 +240,37 @@ export const OrderDetailPage = () => {
             </div>
 
             {/* 장비 선택 */}
-            <button 
-              onClick={() => setIsEquipmentSheetOpen(true)}
-              className="flex w-full items-center justify-between rounded-xl border border-surface-200 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/30"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50">
-                  {(() => {
-                    const Icon = EQUIPMENT_ICONS[selectedEquipment.type] || Bike;
-                    return <Icon className="h-4 w-4 text-primary-600" />;
-                  })()}
+            {selectedEquipment ? (
+              <button 
+                onClick={() => setIsEquipmentSheetOpen(true)}
+                className="flex w-full items-center justify-between rounded-xl border border-surface-200 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/30"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50 overflow-hidden">
+                    <img 
+                      src={Assets.images.basicBicycle} 
+                      alt={selectedEquipment.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-medium text-surface-900">{selectedEquipment.name}</p>
+                    <p className="text-xs text-primary-600 font-medium">
+                      예상 소요: {Math.round((order.distance / selectedEquipment.baseSpeed) * 60)}분 (부스트 시 {Math.round((order.distance / selectedEquipment.maxSpeed) * 60)}분)
+                    </p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-surface-900">{selectedEquipment.name}</p>
-                  <p className="text-xs text-primary-600 font-medium">
-                    예상 소요: {Math.round((order.distance / selectedEquipment.speedKmH) * 60)}분
-                  </p>
+                <div className="flex items-center gap-1 text-xs text-primary-500 font-medium">
+                  <span>변경</span>
+                  <ChevronRight className="h-3 w-3" />
                 </div>
+              </button>
+            ) : (
+              <div className="flex items-center justify-center rounded-xl border border-dashed border-surface-300 p-3">
+                <Loader2 className="h-4 w-4 animate-spin text-surface-400 mr-2" />
+                <span className="text-sm text-surface-500">장비 불러오는 중...</span>
               </div>
-              <div className="flex items-center gap-1 text-xs text-primary-500 font-medium">
-                <span>변경</span>
-                <ChevronRight className="h-3 w-3" />
-              </div>
-            </button>
+            )}
 
             {/* 보험 선택 */}
             <button className="flex w-full items-center justify-between rounded-xl border border-dashed border-surface-300 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/30">
@@ -338,12 +367,12 @@ export const OrderDetailPage = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-surface-600">선택 장비</span>
-                    <span className="font-medium text-surface-900">{selectedEquipment.name}</span>
+                    <span className="font-medium text-surface-900">{selectedEquipment?.name || '없음'}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-surface-600">예상 소요</span>
                     <span className="font-medium text-primary-600">
-                      {Math.round((order.distance / selectedEquipment.speedKmH) * 60)}분 (ETA)
+                      {selectedEquipment ? Math.round((order.distance / selectedEquipment.baseSpeed) * 60) : '-'}분 (ETA)
                     </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-surface-100 pt-2 mt-2">
@@ -416,69 +445,84 @@ export const OrderDetailPage = () => {
             </div>
 
             <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-4">
-              {EQUIPMENTS.map((eq) => {
-                const isSelected = selectedEquipment.id === eq.id;
-                const isAllowed = eq.allowedCategories.includes(order.category);
-                const isTooHeavy = order.weight > eq.maxWeight;
-                const isTooLarge = order.volume > eq.maxVolume;
-                const isDisabled = !isAllowed || isTooHeavy || isTooLarge;
-                
-                const etaMinutes = Math.round((order.distance / eq.speedKmH) * 60);
+              {userEquipments && userEquipments.length > 0 ? (
+                userEquipments.map((eq) => {
+                  const isSelected = selectedEquipment?.equipmentId === eq.equipmentId;
+                  const isAllowed = eq.allowedCategories.includes(order.category);
+                  const isTooHeavy = order.weight > eq.maxWeight;
+                  const isTooLarge = order.volume > eq.maxVolume;
+                  const isDisabled = !isAllowed || isTooHeavy || isTooLarge;
+                  
+                  const etaMinutes = Math.round((order.distance / eq.baseSpeed) * 60);
+                  const boostEtaMinutes = Math.round((order.distance / eq.maxSpeed) * 60);
 
-                return (
-                  <button
-                    key={eq.id}
-                    disabled={isDisabled}
-                    onClick={() => {
-                      setSelectedEquipment(eq);
-                      setIsEquipmentSheetOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between rounded-2xl border p-4 transition-all ${
-                      isSelected 
-                        ? 'border-primary-500 bg-primary-50/50 ring-1 ring-primary-500' 
-                        : isDisabled
-                          ? 'border-surface-100 bg-surface-50 opacity-60 grayscale'
-                          : 'border-surface-100 bg-white hover:border-primary-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
-                        isSelected ? 'bg-primary-600 text-white' : 'bg-surface-100 text-surface-500'
-                      }`}>
-                        {(() => {
-                          const Icon = EQUIPMENT_ICONS[eq.type] || Bike;
-                          return <Icon className="h-6 w-6" />;
-                        })()}
-                      </div>
-                      <div className="text-left">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-surface-900">{eq.name}</h3>
-                          {isDisabled && (
-                            <span className="text-[10px] font-medium text-accent-rose bg-accent-rose/10 px-1.5 py-0.5 rounded">
-                              {!isAllowed ? '제한된 카테고리' : '용량 초과'}
+                  return (
+                    <button
+                      key={eq.equipmentId}
+                      disabled={isDisabled}
+                      onClick={() => {
+                        setSelectedEquipment(eq);
+                        setIsEquipmentSheetOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between rounded-2xl border p-4 transition-all ${
+                        isSelected 
+                          ? 'border-primary-500 bg-primary-50/50 ring-1 ring-primary-500' 
+                          : isDisabled
+                            ? 'border-surface-100 bg-surface-50 opacity-60 grayscale'
+                            : 'border-surface-100 bg-white hover:border-primary-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-xl overflow-hidden ${
+                          isSelected ? 'ring-2 ring-primary-500' : 'bg-surface-100'
+                        }`}>
+                          <img 
+                            src={Assets.images.basicBicycle} 
+                            alt={eq.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="text-left">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm font-semibold text-surface-900">{eq.name}</h3>
+                            {isDisabled && (
+                              <span className="text-[10px] font-medium text-accent-rose bg-accent-rose/10 px-1.5 py-0.5 rounded">
+                                {!isAllowed ? '제한된 카테고리' : '용량 초과'}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-1 flex items-center gap-3 text-[11px] text-surface-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {etaMinutes}분 (부스트 {boostEtaMinutes}분)
                             </span>
-                          )}
-                        </div>
-                        <div className="mt-1 flex items-center gap-3 text-[11px] text-surface-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {etaMinutes}분
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            {eq.maxWeight.toLocaleString()}kg
-                          </span>
+                            <span className="flex items-center gap-1">
+                              <Package className="h-3 w-3" />
+                              {eq.maxWeight.toLocaleString()}kg
+                            </span>
+                          </div>
+                          <div className="mt-1 text-[10px] text-surface-400">
+                            기본 {eq.baseSpeed}km/h · 최대 {eq.maxSpeed}km/h
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {isSelected && (
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white">
-                        <Check className="h-4 w-4" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+                      {isSelected && (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white">
+                          <Check className="h-4 w-4" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="h-16 w-16 rounded-full bg-surface-50 flex items-center justify-center mb-4">
+                    <Wrench className="h-8 w-8 text-surface-200" />
+                  </div>
+                  <p className="text-sm font-medium text-surface-400">보유한 장비가 없습니다</p>
+                  <p className="text-xs text-surface-300 mt-1">창고에서 장비를 구매해보세요!</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
