@@ -7,7 +7,6 @@ import { useUserProfile } from '../entities/user';
 import { getActiveRuns, getRunHistory, type ActiveRun, type RunHistory } from '../entities/run';
 import { EquipmentHistorySheet } from '../entities/equipment';
 import type { Item } from '../shared/api/types';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { formatKSTTime } from '../shared/lib/date';
 
 export const GaragePage = () => {

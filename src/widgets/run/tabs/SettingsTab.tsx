@@ -1,5 +1,4 @@
 import { FileText, Wrench, Shield, Lock, Info, ScrollText, ShieldAlert, Percent, Target } from 'lucide-react';
-import { useGameStore } from '../../../app/store';
 import { getRunById, type RunDetail } from '../../../entities/run';
 import { useEffect, useState } from 'react';
 
@@ -9,7 +8,7 @@ interface SettingsTabProps {
 
 export const SettingsTab = ({ runId }: SettingsTabProps) => {
   const [runDetail, setRunDetail] = useState<RunDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (runId && runId !== 'temp') {

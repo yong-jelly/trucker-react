@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText,
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
-import { useUserStore, useUserProfile } from '../entities/user';
+import { useUserProfile } from '../entities/user';
 import { sendNotification } from '../shared/lib/notification';
 import { createRun } from '../entities/run';
 import { getOrderById } from '../entities/order';

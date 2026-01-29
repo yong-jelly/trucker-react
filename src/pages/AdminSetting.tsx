@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { 
-  ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike, RefreshCw 
+  ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike 
 } from 'lucide-react';
 import * as adminApi from '../entities/admin/api.ts';
 import * as leaderboardApi from '../entities/leaderboard/api.ts';
@@ -9,7 +9,7 @@ import { BotStatusCard } from '../widgets/admin/ui/BotStatusCard';
 import { BotSettingsTab } from '../widgets/admin/ui/BotSettingsTab';
 import { EnforcementSettingsTab } from '../widgets/admin/ui/EnforcementSettingsTab';
 import { EquipmentSettingsTab } from '../widgets/admin/ui/EquipmentSettingsTab';
-import { useAllEquipmentsAdmin, updateEquipment, type Equipment } from '../entities/equipment';
+import { useAllEquipmentsAdmin, updateEquipment } from '../entities/equipment';
 
 type TabType = 'bot' | 'enforcement' | 'equipment';
 

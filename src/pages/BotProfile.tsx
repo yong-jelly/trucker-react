@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { 
-  ArrowLeft, Bot, Package, History, PlayCircle, 
-  ChevronRight, Loader2, Bike, Truck, Car, Plane, MapPin, Clock
+  ArrowLeft, Bot, History, PlayCircle, 
+  Loader2, Bike, Truck, Car, Plane, MapPin, Clock
 } from 'lucide-react';
 import { getLeaderboard, type LeaderboardEntry } from '../entities/leaderboard/api';
 import { getActiveRuns, type ActiveRun, getRunHistory, type RunHistory } from '../entities/run';

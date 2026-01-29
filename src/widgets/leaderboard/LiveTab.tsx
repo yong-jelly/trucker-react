@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router';
 import { Activity, Users } from 'lucide-react';
 import { ActiveRunCard, ActiveRunCardSkeleton } from './ui/ActiveRunCard';
 import { RankingItemSkeleton } from './ui/RankingItem';
-import { Bot, Trophy } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import type { ActiveRunEntry } from '../../entities/leaderboard/api';
 
 // 상대 시간 표시 함수 (ActiveRunCard에서 사용하지만 여기서도 필요할 수 있음)

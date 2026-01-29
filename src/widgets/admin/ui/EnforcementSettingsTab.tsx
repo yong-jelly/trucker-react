@@ -1,4 +1,4 @@
-import { ShieldAlert, DollarSign, Percent, Info, Server, MousePointer2 } from 'lucide-react';
+import { ShieldAlert, Percent, Info, Server, MousePointer2 } from 'lucide-react';
 
 interface EnforcementSettingsTabProps {
   enforcementSettings: {
