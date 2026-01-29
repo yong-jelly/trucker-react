@@ -7,12 +7,40 @@ export const userKeys = {
   profile: () => [...userKeys.all, "profile"] as const,
 };
 
+// 프로필 타입 정의
+export interface UserProfile {
+  auth_user_id: string;
+  public_profile_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  balance: number;
+  reputation: number;
+  bio: string | null;
+  telegram_chat_id: string | null;
+  slack_webhook_url: string | null;
+  notification_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// 프로필 데이터가 null인지 확인하는 타입 가드
+function isValidProfile(data: unknown): data is UserProfile {
+  return (
+    data !== null &&
+    data !== undefined &&
+    typeof data === 'object' &&
+    'balance' in data &&
+    'reputation' in data &&
+    'nickname' in data
+  );
+}
+
 export function useUserProfile() {
   const { user } = useUserStore();
   
   return useQuery({
     queryKey: userKeys.profile(),
-    queryFn: async () => {
+    queryFn: async (): Promise<UserProfile | null> => {
       if (!user) return null;
       
       const { data, error } = await rpcTrucker("v1_get_user_profile", { p_auth_user_id: user.id });
@@ -22,15 +50,16 @@ export function useUserProfile() {
         throw error;
       }
       
+      // 유효한 프로필이 아니면 null 반환 (신규 유저)
+      if (!isValidProfile(data)) {
+        return null;
+      }
+      
       return data;
     },
     enabled: !!user,
-    retry: (failureCount) => {
-      // 프로필이 아직 생성되지 않은 경우(406 또는 null) 최대 5번 재시도
-      if (failureCount < 5) return true;
-      return false;
-    },
-    retryDelay: 1000,
+    retry: false, // 프로필이 없는 건 정상 케이스이므로 재시도 안 함
+    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
   });
 }
 

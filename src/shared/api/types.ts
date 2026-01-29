@@ -89,4 +89,43 @@ export interface Slot {
   activeRunId?: string;
   reservedOrderId?: string;
   isLocked: boolean;
+  driverId?: string; // 고용된 드라이버 ID
+}
+
+// 7. 드라이버 페르소나 (Driver Persona)
+export interface DriverStat {
+  label: string;
+  value: string;
+  description?: string;
+}
+
+export interface DriverPersona {
+  id: string;
+  name: string;
+  avatarFilename: string; // 파일명만 저장 (예: '01_jack_harlow.png')
+  appearance: string;
+  bio: string;
+  archetype: string;
+  age: string;
+  outfit: string;
+  palette: string;
+  prop: string;
+  mood: string;
+  shot: string;
+  baseCommissionMin: number;
+  baseCommissionMax: number;
+  stats: DriverStat[];
+  createdAt: number;
+  updatedAt: number;
+}
+
+// 8. 드라이버 (Driver)
+export interface Driver {
+  id: string;
+  personaId?: string; // NPC 드라이버일 경우 참조
+  name: string;
+  commission: number;
+  hiredAt: number;
+  totalRuns: number;
+  status: 'IDLE' | 'BUSY' | 'RESTING';
 }

@@ -2,21 +2,13 @@ import { useNavigate } from 'react-router';
 import { Package, ChevronRight, HelpCircle, Settings, Users, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { OrderCard } from '../entities/order/OrderCard';
-import { useUserProfile, useUpsertProfile } from '../entities/user/queries';
+import { useUserProfile, useUpsertProfile, type UserProfile } from '../entities/user/queries';
 import { useUserStore } from '../entities/user';
 import { useEffect, useState, useCallback } from 'react';
 import { getOrders } from '../entities/order';
 import { getUserSlots } from '../entities/slot';
 import { getActiveRuns, type ActiveRun } from '../entities/run';
 import type { Order } from '../shared/api/types';
-
-// 프로필 타입 정의
-interface UserProfile {
-  balance: number;
-  reputation: number;
-  nickname: string;
-  avatar_url?: string | null;
-}
 
 // 로딩 컴포넌트
 const LoadingScreen = ({ message }: { message: string }) => (
@@ -38,6 +30,11 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
   const [isOrdersLoading, setIsOrdersLoading] = useState(true);
   const [isSlotsLoading, setIsSlotsLoading] = useState(true);
   const [isActiveRunsLoading, setIsActiveRunsLoading] = useState(true);
+
+  // 최후의 방어선: profile이 null이면 로딩 화면 표시
+  if (!profile || typeof profile.balance !== 'number') {
+    return <LoadingScreen message="프로필 로딩 중..." />;
+  }
 
   // 슬롯 목록 로드 함수
   const fetchSlots = useCallback(async () => {
