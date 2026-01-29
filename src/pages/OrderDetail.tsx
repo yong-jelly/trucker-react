@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor, ChevronRight, Check } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from '../shared/ui/Dialog';
 import { createRun } from '../entities/run';
 import { getOrderById } from '../entities/order';
 import type { Order } from '../shared/api/types';
+import { EQUIPMENTS, type Equipment } from '../shared/api/equipment';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
 // ...
@@ -25,11 +26,16 @@ export const OrderDetailPage = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
   const { slots } = useGameStore();
-  const { data: _profile } = useUserProfile();
+  const { data: profile } = useUserProfile();
   const { user } = useUserStore();
   const [isContractOpen, setIsContractOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedEquipment, setSelectedEquipment] = useState<Equipment>(EQUIPMENTS[0]); // 기본 자전거
+  const [isEquipmentSheetOpen, setIsEquipmentSheetOpen] = useState(false);
+  
+  // public_profile_id 사용 (auth 테이블과 독립적)
+  const profileId = profile?.public_profile_id;
 
   // 페이지 진입 시 스크롤을 최상단으로 이동 및 데이터 로드
   useEffect(() => {
@@ -83,21 +89,21 @@ export const OrderDetailPage = () => {
   };
 
   const handleConfirmContract = async () => {
-    if (!user || !order || !availableSlot) return;
+    if (!profileId || !order || !availableSlot) return;
 
     try {
-      // 실제 DB에 Run 생성
+      // 실제 DB에 Run 생성 (public_profile_id 사용)
       const newRun = await createRun({
-        userId: user.id,
+        userId: profileId,
         orderId: order.id,
         slotId: availableSlot.id,
         selectedItems: {
-          // TODO: 실제 선택된 아이템 ID 연동 필요
+          equipmentId: selectedEquipment.id,
           documentId: order.requiredDocumentId || undefined,
         }
       });
 
-      sendNotification(user.id, {
+      sendNotification(profileId, {
         title: "🚚 운행 시작 안내",
         message: `[${order.cargoName}] 운행을 시작합니다.\n목적지까지 안전하게 운행하세요!`,
         type: "info"
@@ -213,17 +219,28 @@ export const OrderDetailPage = () => {
             </div>
 
             {/* 장비 선택 */}
-            <button className="flex w-full items-center justify-between rounded-xl border border-dashed border-surface-300 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/30">
+            <button 
+              onClick={() => setIsEquipmentSheetOpen(true)}
+              className="flex w-full items-center justify-between rounded-xl border border-surface-200 p-3 transition-colors hover:border-primary-300 hover:bg-primary-50/30"
+            >
               <div className="flex items-center gap-3">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-100">
-                  <Wrench className="h-4 w-4 text-surface-400" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-50">
+                  {(() => {
+                    const Icon = EQUIPMENT_ICONS[selectedEquipment.type] || Bike;
+                    return <Icon className="h-4 w-4 text-primary-600" />;
+                  })()}
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-surface-900">장비 선택</p>
-                  <p className="text-xs text-surface-500">선택 안함 (기본)</p>
+                  <p className="text-sm font-medium text-surface-900">{selectedEquipment.name}</p>
+                  <p className="text-xs text-primary-600 font-medium">
+                    예상 소요: {Math.round((order.distance / selectedEquipment.speedKmH) * 60)}분
+                  </p>
                 </div>
               </div>
-              <span className="text-xs text-primary-500">선택</span>
+              <div className="flex items-center gap-1 text-xs text-primary-500 font-medium">
+                <span>변경</span>
+                <ChevronRight className="h-3 w-3" />
+              </div>
             </button>
 
             {/* 보험 선택 */}
@@ -320,9 +337,13 @@ export const OrderDetailPage = () => {
                     <span className="font-medium text-surface-900">{order.cargoName}</span>
                   </div>
                   <div className="flex justify-between text-sm">
+                    <span className="text-surface-600">선택 장비</span>
+                    <span className="font-medium text-surface-900">{selectedEquipment.name}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
                     <span className="text-surface-600">예상 소요</span>
-                    <span className="font-medium text-surface-900">
-                      {order.distance < 1 ? Math.round(order.distance * 60) + '초' : Math.round(order.distance) + '분'} (ETA)
+                    <span className="font-medium text-primary-600">
+                      {Math.round((order.distance / selectedEquipment.speedKmH) * 60)}분 (ETA)
                     </span>
                   </div>
                   <div className="flex justify-between text-sm border-t border-surface-100 pt-2 mt-2">
@@ -363,6 +384,105 @@ export const OrderDetailPage = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 장비 선택 바텀시트 */}
+      {isEquipmentSheetOpen && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm p-4" 
+          onClick={() => setIsEquipmentSheetOpen(false)}
+        >
+          <div 
+            className="w-full max-w-lg rounded-t-[32px] bg-white p-6 shadow-2xl animate-slide-up max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-surface-200 shrink-0" />
+            
+            <div className="flex items-center justify-between mb-6 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
+                  <Wrench className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-medium text-surface-900">내 장비 선택</h2>
+                  <p className="text-xs text-surface-500">현재 운행에 사용할 장비를 선택하세요.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsEquipmentSheetOpen(false)}
+                className="text-sm font-medium text-surface-400 hover:text-surface-600"
+              >
+                닫기
+              </button>
+            </div>
+
+            <div className="overflow-y-auto flex-1 space-y-3 pr-1 pb-4">
+              {EQUIPMENTS.map((eq) => {
+                const isSelected = selectedEquipment.id === eq.id;
+                const isAllowed = eq.allowedCategories.includes(order.category);
+                const isTooHeavy = order.weight > eq.maxWeight;
+                const isTooLarge = order.volume > eq.maxVolume;
+                const isDisabled = !isAllowed || isTooHeavy || isTooLarge;
+                
+                const etaMinutes = Math.round((order.distance / eq.speedKmH) * 60);
+
+                return (
+                  <button
+                    key={eq.id}
+                    disabled={isDisabled}
+                    onClick={() => {
+                      setSelectedEquipment(eq);
+                      setIsEquipmentSheetOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between rounded-2xl border p-4 transition-all ${
+                      isSelected 
+                        ? 'border-primary-500 bg-primary-50/50 ring-1 ring-primary-500' 
+                        : isDisabled
+                          ? 'border-surface-100 bg-surface-50 opacity-60 grayscale'
+                          : 'border-surface-100 bg-white hover:border-primary-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${
+                        isSelected ? 'bg-primary-600 text-white' : 'bg-surface-100 text-surface-500'
+                      }`}>
+                        {(() => {
+                          const Icon = EQUIPMENT_ICONS[eq.type] || Bike;
+                          return <Icon className="h-6 w-6" />;
+                        })()}
+                      </div>
+                      <div className="text-left">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-surface-900">{eq.name}</h3>
+                          {isDisabled && (
+                            <span className="text-[10px] font-medium text-accent-rose bg-accent-rose/10 px-1.5 py-0.5 rounded">
+                              {!isAllowed ? '제한된 카테고리' : '용량 초과'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 flex items-center gap-3 text-[11px] text-surface-500">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {etaMinutes}분
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            {eq.maxWeight.toLocaleString()}kg
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {isSelected && (
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-600 text-white">
+                        <Check className="h-4 w-4" />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
