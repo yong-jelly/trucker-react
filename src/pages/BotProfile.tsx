@@ -108,7 +108,13 @@ export const BotProfilePage = () => {
         <section className="bg-white rounded-2xl p-6 border border-surface-100 shadow-soft-sm flex flex-col items-center text-center">
           <div className="h-20 w-20 rounded-full bg-amber-100 flex items-center justify-center mb-4 overflow-hidden">
             {botInfo.avatarUrl ? (
-              <img src={botInfo.avatarUrl} alt={botInfo.nickname} className="h-full w-full object-cover" />
+              <img 
+                src={botInfo.avatarUrl} 
+                alt={botInfo.nickname} 
+                className="h-full w-full object-cover" 
+                loading="lazy"
+                decoding="async"
+              />
             ) : (
               <Bot className="h-10 w-10 text-amber-600" />
             )}

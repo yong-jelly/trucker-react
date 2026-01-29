@@ -242,7 +242,10 @@ BEGIN
         'REWARD',
         v_final_reward,
         v_new_balance,
-        format('🤖 봇 운행 완료: %s (패널티: $%s)', v_order.title, v_penalty)
+        CASE 
+            WHEN v_penalty > 0 THEN format('🤖 봇 운행 완료: %s (패널티: $%s)', v_order.title, v_penalty)
+            ELSE format('🤖 봇 운행 완료: %s', v_order.title)
+        END
     );
 
     -- 10. 완료 이벤트 로그

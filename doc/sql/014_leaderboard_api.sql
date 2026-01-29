@@ -59,7 +59,11 @@ BEGIN
             (SELECT COUNT(*)::integer FROM trucker.tbl_runs r WHERE r.user_id = u.public_profile_id AND r.status = 'COMPLETED') as total_runs,
             COALESCE((SELECT SUM(t.amount) FROM trucker.tbl_transactions t WHERE t.user_id = u.public_profile_id AND t.type = 'REWARD'), 0)::bigint as total_earnings,
             COALESCE((SELECT SUM(t.amount) FROM trucker.tbl_transactions t WHERE t.user_id = u.public_profile_id AND t.type = 'REWARD' AND t.created_at >= v_start_date), 0)::bigint as period_earnings,
-            bs.status as bot_status,
+            -- 봇 상태: 봇이지만 tbl_bot_status에 레코드가 없으면 기본값 'IDLE' 반환
+            CASE 
+                WHEN u.is_bot THEN COALESCE(bs.status, 'IDLE')
+                ELSE NULL
+            END as bot_status,
             bs.next_available_at as bot_next_available_at
         FROM trucker.tbl_user_profile u
         LEFT JOIN trucker.tbl_bot_status bs ON u.public_profile_id = bs.bot_id

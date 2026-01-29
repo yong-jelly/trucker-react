@@ -1,4 +1,4 @@
-import { Trophy, HelpCircle, X, Zap } from 'lucide-react';
+import { Trophy, HelpCircle, X, Zap, Bot, Clock } from 'lucide-react';
 
 export const HelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   if (!isOpen) return null;
@@ -43,6 +43,40 @@ export const HelpModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
                   <p className="text-sm font-medium text-surface-800">완료 횟수</p>
                   <p className="text-xs text-surface-500 leading-relaxed">지금까지 완료한 총 배달 횟수입니다.</p>
                 </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-3">
+            <h4 className="text-sm font-medium text-surface-900 flex items-center gap-2">
+              <Bot className="h-4 w-4 text-amber-500" />
+              봇(Bot) 상태 안내
+            </h4>
+            <div className="space-y-3">
+              <div className="flex gap-3">
+                <div className="mt-0.5 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-medium shrink-0 h-fit">
+                  운행 중
+                </div>
+                <p className="text-xs text-surface-500 leading-relaxed">
+                  봇이 현재 배송을 진행하고 있는 상태입니다. 배송이 완료되면 자동으로 휴식 상태로 전환됩니다.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <div className="mt-0.5 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-medium shrink-0 h-fit">
+                  대기 중
+                </div>
+                <p className="text-xs text-surface-500 leading-relaxed">
+                  봇이 현재 배송 가능한 주문을 탐색하고 있는 상태입니다. 관리자가 설정한 확률에 따라 주문을 수락하고 운행을 시작합니다.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <div className="mt-0.5 px-2 py-0.5 rounded-full bg-surface-500 text-white text-[10px] font-medium flex items-center gap-1 shrink-0 h-fit">
+                  <Clock className="h-3 w-3" />
+                  N분 후 복귀
+                </div>
+                <p className="text-xs text-surface-500 leading-relaxed">
+                  배송을 완료한 봇이 휴식을 취하고 있는 상태입니다. 휴식 시간은 배송 완료 후 랜덤하게 결정되며(최소 10분~최대 60분), 표시된 시간이 지나면 자동으로 대기 상태로 복귀합니다.
+                </p>
               </div>
             </div>
           </section>

@@ -34,22 +34,22 @@ export const OrderCard = ({ order, onClick, disabled, disabledReason }: OrderCar
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full rounded-2xl bg-white p-4 text-left shadow-soft-sm transition-all ${
+      className={`w-full bg-white p-4 text-left border border-surface-100 transition-all rounded-2xl ${
         disabled 
           ? 'opacity-60 cursor-not-allowed' 
-          : 'hover:shadow-soft-md active:scale-[0.98]'
+          : 'active:bg-surface-50'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 space-y-3">
           <div className="flex items-center justify-between">
             {/* 카테고리 배지 */}
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${CATEGORY_COLORS[order.category]}`}>
+            <span className={`inline-flex items-center border px-2.5 py-0.5 text-xs font-medium rounded-full ${CATEGORY_COLORS[order.category]}`}>
               {CATEGORY_LABELS[order.category]}
             </span>
 
             {/* 최소 가용 장비 표시 */}
-            <div className="flex items-center gap-1.5 rounded-lg bg-surface-50 px-2 py-1 text-[10px] font-medium text-surface-600 border border-surface-100">
+            <div className="flex items-center gap-1.5 bg-surface-50 px-2 py-1 text-[10px] font-medium text-surface-600 border border-surface-100 rounded-full">
               <EquipmentIcon className="h-3 w-3" />
               <span>{order.requiredEquipmentType ? EQUIPMENT_LABELS[order.requiredEquipmentType] : '자전거'}</span>
             </div>
@@ -60,8 +60,8 @@ export const OrderCard = ({ order, onClick, disabled, disabledReason }: OrderCar
 
           {/* 대륙간 운송 가이드 (아이콘/메시지) */}
           {order.category === 'INTERNATIONAL' && (
-            <div className="flex items-center gap-2 rounded-xl bg-primary-50/50 p-2 border border-primary-100">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-100">
+            <div className="flex items-center gap-2 bg-primary-50/50 p-2 border border-primary-100 rounded-xl">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center bg-primary-100 rounded-full">
                 <Plane className="h-3.5 w-3.5 text-primary-600" />
               </div>
               <p className="text-[10px] font-medium text-primary-700 leading-tight">
@@ -97,7 +97,7 @@ export const OrderCard = ({ order, onClick, disabled, disabledReason }: OrderCar
         </div>
 
         {/* 화살표 */}
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${disabled ? 'bg-surface-100' : 'bg-primary-50'}`}>
+        <div className={`flex h-8 w-8 items-center justify-center border rounded-full ${disabled ? 'bg-surface-100 border-surface-200' : 'bg-primary-50 border-primary-100'}`}>
           <ChevronRight className={`h-4 w-4 ${disabled ? 'text-surface-400' : 'text-primary-500'}`} />
         </div>
       </div>

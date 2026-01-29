@@ -130,7 +130,13 @@ export const PublicProfilePage = () => {
             profileInfo.isBot ? 'bg-amber-100' : 'bg-primary-100'
           }`}>
             {profileInfo.avatarUrl ? (
-              <img src={profileInfo.avatarUrl} alt={profileInfo.nickname} className="h-full w-full object-cover" />
+              <img 
+                src={profileInfo.avatarUrl} 
+                alt={profileInfo.nickname} 
+                className="h-full w-full object-cover" 
+                loading="lazy"
+                decoding="async"
+              />
             ) : profileInfo.isBot ? (
               <Bot className="h-10 w-10 text-amber-600" />
             ) : (

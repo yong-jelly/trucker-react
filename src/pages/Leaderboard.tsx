@@ -221,145 +221,147 @@ export const LeaderboardPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-50 pb-12">
-      {/* 헤더 */}
-      <header className="sticky top-0 z-50 bg-white border-b border-surface-100 shadow-soft-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/')} 
-              className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5 text-surface-700" />
-            </button>
-            <div>
-              <h1 className="text-lg font-medium text-surface-900">리더보드</h1>
-              <p className="text-xs text-surface-500">실시간 경쟁 현황</p>
+      <div className="mx-auto max-w-2xl bg-white min-h-screen shadow-xl relative">
+        {/* 헤더 */}
+        <header className="sticky top-0 z-50 bg-white border-b border-surface-100 shadow-soft-sm">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/')} 
+                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 text-surface-700" />
+              </button>
+              <div>
+                <h1 className="text-lg font-medium text-surface-900">리더보드</h1>
+                <p className="text-xs text-surface-500">실시간 경쟁 현황</p>
+              </div>
+            </div>
+            
+            <div className="flex gap-1">
+              <button
+                onClick={() => setIsHelpOpen(true)}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors"
+              >
+                <HelpCircle className="h-5 w-5 text-surface-600" />
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors"
+              >
+                <RefreshCw className={`h-5 w-5 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
             </div>
           </div>
-          
-          <div className="flex gap-1">
-            <button
-              onClick={() => setIsHelpOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors"
+
+          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+
+          {/* 탭 */}
+          <div 
+            className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide"
+            style={{ 
+              willChange: 'scroll-position',
+              WebkitOverflowScrolling: 'touch',
+              transform: 'translateZ(0)',
+            }}
+          >
+            <TabButton 
+              active={activeTab === 'live'} 
+              onClick={() => handleTabChange('live')}
             >
-              <HelpCircle className="h-5 w-5 text-surface-600" />
-            </button>
-            <button
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors"
+              실시간
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'ranking'} 
+              onClick={() => handleTabChange('ranking')}
             >
-              <RefreshCw className={`h-5 w-5 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
+              랭킹
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'competitors'} 
+              onClick={() => handleTabChange('competitors')}
+            >
+              경쟁자들
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'activity'} 
+              onClick={() => handleTabChange('activity')}
+            >
+              활동
+            </TabButton>
           </div>
-        </div>
+        </header>
 
-        <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+        <main className="px-4 py-4 space-y-6">
+          {/* 통계 요약 */}
+          {isStatsLoading ? (
+            <StatCardSkeleton />
+          ) : (
+            <div className="grid grid-cols-4 gap-2">
+              <StatCard 
+                label="활성 운행" 
+                value={stats?.activeRuns || 0} 
+                color="emerald" 
+              />
+              <StatCard 
+                label="오늘 완료" 
+                value={stats?.completedRunsToday || 0} 
+                color="primary" 
+              />
+              <StatCard 
+                label="참여자" 
+                value={`${stats?.totalUsers || 0} + ${stats?.totalBots || 0}`} 
+                color="amber" 
+              />
+              <StatCard 
+                label="오늘 총 수익" 
+                value={`$${(stats?.totalEarningsToday || 0).toLocaleString()}`} 
+                color="rose" 
+              />
+            </div>
+          )}
 
-        {/* 탭 */}
-        <div 
-          className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide"
-          style={{ 
-            willChange: 'scroll-position',
-            WebkitOverflowScrolling: 'touch',
-            transform: 'translateZ(0)',
-          }}
-        >
-          <TabButton 
-            active={activeTab === 'live'} 
-            onClick={() => handleTabChange('live')}
-          >
-            실시간
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'ranking'} 
-            onClick={() => handleTabChange('ranking')}
-          >
-            랭킹
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'competitors'} 
-            onClick={() => handleTabChange('competitors')}
-          >
-            경쟁자들
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'activity'} 
-            onClick={() => handleTabChange('activity')}
-          >
-            활동
-          </TabButton>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-2xl px-4 py-4 space-y-6">
-        {/* 통계 요약 */}
-        {isStatsLoading ? (
-          <StatCardSkeleton />
-        ) : (
-          <div className="grid grid-cols-4 gap-2">
-            <StatCard 
-              label="활성 운행" 
-              value={stats?.activeRuns || 0} 
-              color="emerald" 
+          {/* 탭 콘텐츠 */}
+          {activeTab === 'live' && (
+            <LiveTab 
+              isLoading={isLiveLoading}
+              activeRuns={activeRuns}
+              recentRuns={recentRuns}
+              userProfileId={profile?.public_profile_id}
+              userNickname={profile?.nickname ?? undefined}
+              userAvatarUrl={profile?.avatar_url ?? undefined}
             />
-            <StatCard 
-              label="오늘 완료" 
-              value={stats?.completedRunsToday || 0} 
-              color="primary" 
+          )}
+
+          {activeTab === 'ranking' && (
+            <RankingTab 
+              isLoading={isRankingLoading}
+              leaderboard={leaderboard}
+              period={period}
+              setPeriod={setPeriod}
+              userProfileId={profile?.public_profile_id}
             />
-            <StatCard 
-              label="참여자" 
-              value={`${stats?.totalUsers || 0} + ${stats?.totalBots || 0}`} 
-              color="amber" 
+          )}
+
+          {activeTab === 'competitors' && (
+            <CompetitorsTab 
+              isLoading={isRankingLoading}
+              leaderboard={leaderboard}
+              activeRuns={activeRuns}
+              userProfileId={profile?.public_profile_id}
             />
-            <StatCard 
-              label="오늘 총 수익" 
-              value={`$${(stats?.totalEarningsToday || 0).toLocaleString()}`} 
-              color="rose" 
+          )}
+
+          {activeTab === 'activity' && (
+            <ActivityTab 
+              isLoading={isActivityLoading}
+              heatmap={heatmap}
+              transactions={transactions}
             />
-          </div>
-        )}
-
-        {/* 탭 콘텐츠 */}
-        {activeTab === 'live' && (
-          <LiveTab 
-            isLoading={isLiveLoading}
-            activeRuns={activeRuns}
-            recentRuns={recentRuns}
-            userProfileId={profile?.public_profile_id}
-            userNickname={profile?.nickname ?? undefined}
-            userAvatarUrl={profile?.avatar_url ?? undefined}
-          />
-        )}
-
-        {activeTab === 'ranking' && (
-          <RankingTab 
-            isLoading={isRankingLoading}
-            leaderboard={leaderboard}
-            period={period}
-            setPeriod={setPeriod}
-            userProfileId={profile?.public_profile_id}
-          />
-        )}
-
-        {activeTab === 'competitors' && (
-          <CompetitorsTab 
-            isLoading={isRankingLoading}
-            leaderboard={leaderboard}
-            activeRuns={activeRuns}
-            userProfileId={profile?.public_profile_id}
-          />
-        )}
-
-        {activeTab === 'activity' && (
-          <ActivityTab 
-            isLoading={isActivityLoading}
-            heatmap={heatmap}
-            transactions={transactions}
-          />
-        )}
-      </main>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

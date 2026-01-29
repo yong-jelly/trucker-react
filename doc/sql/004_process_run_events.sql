@@ -113,8 +113,8 @@ BEGIN
                             event_type := 'PENALTY';
                             event_title := '단속 적발 (돌파 실패)';
                             event_desc := '도주에 실패하여 현장에서 벌금이 부과되었습니다.';
-                            -- 계약서에 명시된 벌금 비율(fine_rate) 적용
-                            penalty_amount := (run_record.current_reward * run_record.fine_rate)::bigint;
+                            -- 계약서에 명시된 벌금 비율(fine_rate) 적용 (기본값 0.1 = 10%)
+                            penalty_amount := (run_record.current_reward * COALESCE(run_record.fine_rate, 0.1))::bigint;
                         END IF;
                     END IF;
                 END IF;

@@ -12,8 +12,8 @@ export const HelpPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-white px-4 py-4 shadow-soft-sm border-b border-surface-100">
+    <div className="min-h-screen bg-white pb-12">
+      <header className="sticky top-0 z-50 flex items-center gap-3 bg-white px-4 py-4 border-b border-surface-100">
         <button 
           onClick={() => navigate(-1)} 
           className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
@@ -32,7 +32,7 @@ export const HelpPage = () => {
           
           <div className="space-y-6">
             {/* 드라이버 고용 및 예치금 */}
-            <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
+            <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-4">
               <h3 className="text-sm font-medium text-surface-900 flex items-center gap-2">
                 <Users className="h-4 w-4 text-primary-500" />
                 드라이버 고용 및 예치금(Deposit)
@@ -99,7 +99,7 @@ export const HelpPage = () => {
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">거래 내역 (Transaction History)</h2>
           </div>
           
-          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
+          <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-6">
             {/* 내용은 추후 추가 예정 */}
           </div>
         </section>
@@ -110,7 +110,7 @@ export const HelpPage = () => {
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">주문 생성 및 계약 알고리즘</h2>
           </div>
           
-          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
+          <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-6">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-surface-900">1. 오퍼 생성 프로세스 (Generation)</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
@@ -171,7 +171,7 @@ export const HelpPage = () => {
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">평판 및 오퍼 해금</h2>
           </div>
           
-          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
+          <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-6">
             <div className="space-y-2">
               <h3 className="text-sm font-medium text-surface-900">1. 평판 지수(Reputation)의 역할</h3>
               <p className="text-xs text-surface-600 leading-relaxed">
@@ -236,7 +236,7 @@ export const HelpPage = () => {
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">과속 및 단속 시스템</h2>
           </div>
           
-          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
+          <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-4">
             <p className="text-xs text-surface-600 leading-relaxed">
               <span className="font-medium text-accent-rose uppercase">Boost</span> 모드 활성화 시 속도는 빨라지지만 단속 위험도가 급증합니다.
             </p>
@@ -290,7 +290,7 @@ export const HelpPage = () => {
             <h2 className="text-xl font-medium text-surface-900 tracking-tight">서버사이드 이벤트 시스템</h2>
           </div>
           
-          <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
+          <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-4">
             <p className="text-xs text-surface-600 leading-relaxed">
               운행 중 발생하는 모든 이벤트는 서버에서 <span className="font-medium text-purple-600">1분 주기</span>로 자동 체크됩니다. 앱을 켜두지 않아도 결과는 동일하게 처리됩니다.
             </p>
@@ -335,7 +335,7 @@ export const HelpPage = () => {
           
           <div className="space-y-6">
             {/* 티어별 스펙 테이블 */}
-            <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100">
+            <div className="rounded-3xl bg-white p-6 border border-surface-100">
               <div className="overflow-x-auto -mx-2">
                 <table className="w-full text-left text-[11px] border-collapse">
                   <thead>
@@ -379,7 +379,7 @@ export const HelpPage = () => {
             </div>
 
             {/* 연료 시스템 */}
-            <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-4">
+            <div className="rounded-3xl bg-white p-6 border border-surface-100 space-y-4">
               <h3 className="text-sm font-medium text-surface-900 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-accent-amber" />
                 속도 및 연료 매커니즘
@@ -416,7 +416,7 @@ export const HelpPage = () => {
         </section>
 
         {/* 하단 팁 */}
-        <div className="rounded-3xl bg-surface-900 p-8 text-white shadow-soft-xl relative overflow-hidden">
+        <div className="rounded-3xl bg-surface-900 p-8 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4 opacity-10">
             <Info className="h-24 w-24" />
           </div>

@@ -6,7 +6,11 @@
 --   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/008_v1_get_run_by_id.sql
 -- =====================================================
 
+-- 기존 함수 삭제 (반환 타입 변경을 위해)
+DROP FUNCTION IF EXISTS trucker.v1_get_run_by_id(uuid);
+
 -- 특정 운행 상세 조회 (주문 정보 포함)
+-- 조회 시점에 완료 시간이 지난 경우 자동으로 완료 처리합니다.
 CREATE OR REPLACE FUNCTION trucker.v1_get_run_by_id(p_run_id uuid)
 RETURNS TABLE (
     run_id uuid,
@@ -15,6 +19,7 @@ RETURNS TABLE (
     slot_id uuid,
     status text,
     start_at timestamp with time zone,
+    completed_at timestamp with time zone,
     eta_seconds integer,
     deadline_at timestamp with time zone,
     selected_equipment_id text,
@@ -45,7 +50,70 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = trucker, public
 AS $$
+DECLARE
+    v_run RECORD;
+    v_user RECORD;
+    v_is_bot boolean;
+    v_elapsed_seconds integer;
+    v_delay_seconds integer;
+    v_penalty_amount bigint;
+    v_final_reward bigint;
 BEGIN
+    -- 1. 운행 정보 조회 (FOR UPDATE로 잠금)
+    SELECT r.* INTO v_run
+    FROM trucker.tbl_runs r
+    WHERE r.id = p_run_id
+    FOR UPDATE;
+    
+    -- 운행이 없으면 빈 결과 반환
+    IF NOT FOUND THEN
+        RETURN;
+    END IF;
+    
+    -- 2. 완료 시간이 지났고 아직 IN_TRANSIT 상태인 경우 자동 완료 처리
+    IF v_run.status = 'IN_TRANSIT' AND now() >= (v_run.start_at + (v_run.eta_seconds || ' seconds')::interval) THEN
+        -- 사용자 정보 조회 (봇 여부 확인)
+        SELECT u.is_bot INTO v_is_bot
+        FROM trucker.tbl_user_profile u
+        WHERE u.public_profile_id = v_run.user_id;
+        
+        IF v_is_bot THEN
+            -- 봇인 경우: bot_complete_run 호출
+            PERFORM trucker.bot_complete_run(p_run_id);
+        ELSE
+            -- 일반 사용자인 경우: 패널티 계산 후 v1_complete_run 호출
+            v_elapsed_seconds := EXTRACT(EPOCH FROM (now() - v_run.start_at))::integer;
+            v_penalty_amount := v_run.accumulated_penalty;
+            
+            -- 지연 페널티 계산
+            IF now() > (v_run.start_at + (v_run.eta_seconds || ' seconds')::interval) THEN
+                -- 지연 시간(초) 계산
+                v_delay_seconds := EXTRACT(EPOCH FROM (now() - (v_run.start_at + (v_run.eta_seconds || ' seconds')::interval)))::integer;
+                -- 1분당 0.2% 페널티, 최대 보상의 50%까지 차감
+                v_penalty_amount := v_penalty_amount + LEAST(
+                    (v_run.current_reward * 0.5)::bigint,
+                    (FLOOR(v_delay_seconds / 60) * (v_run.current_reward * 0.002))::bigint
+                );
+            END IF;
+            
+            v_final_reward := v_run.current_reward - (v_penalty_amount - v_run.accumulated_penalty);
+            
+            -- 운행 완료 처리
+            PERFORM trucker.v1_complete_run(
+                p_run_id,
+                v_final_reward,
+                v_penalty_amount,
+                v_elapsed_seconds
+            );
+        END IF;
+        
+        -- 완료 처리 후 최신 데이터 다시 조회
+        SELECT r.* INTO v_run
+        FROM trucker.tbl_runs r
+        WHERE r.id = p_run_id;
+    END IF;
+    
+    -- 3. 최종 결과 반환
     RETURN QUERY
     SELECT 
         r.id as run_id,
@@ -54,6 +122,7 @@ BEGIN
         r.slot_id,
         r.status,
         r.start_at,
+        r.completed_at,
         r.eta_seconds,
         r.deadline_at,
         r.selected_equipment_id,

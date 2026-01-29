@@ -97,7 +97,14 @@ export const RunSheet = ({ order, elapsedSeconds, etaSeconds, runId }: RunSheetP
           </div>
 
           {/* 탭 콘텐츠 */}
-          <div className="h-[calc(100%-5.5rem)] overflow-y-auto px-4 py-3 scrollbar-hide">
+          <div 
+            className="h-[calc(100%-5.5rem)] overflow-y-auto px-4 py-3 scrollbar-hide"
+            style={{ 
+              willChange: 'scroll-position',
+              WebkitOverflowScrolling: 'touch',
+              transform: 'translateZ(0)',
+            }}
+          >
             {activeTab === 'settlement' && (
               <SettlementTab order={order} elapsedSeconds={elapsedSeconds} etaSeconds={etaSeconds} runId={runId} />
             )}

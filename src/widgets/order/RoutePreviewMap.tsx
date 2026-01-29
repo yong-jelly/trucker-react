@@ -136,7 +136,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
         {/* 확대 버튼 */}
         <button
           onClick={() => setIsExpanded(true)}
-          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 backdrop-blur-sm shadow-soft-lg border border-surface-100 active:scale-95"
+          className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-xl bg-white/90 shadow-soft-lg border border-surface-100 active:scale-95"
         >
           <Maximize2 className="h-4 w-4 text-surface-600" />
         </button>
@@ -146,7 +146,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
       {isExpanded && (
         <div className="fixed inset-0 z-[100] flex flex-col bg-white animate-in fade-in duration-200">
           {/* 모달 헤더 */}
-          <div className="flex items-center justify-between px-4 py-4 border-b border-surface-100 bg-white/95 backdrop-blur-md">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-surface-100 bg-white">
             <div className="flex flex-col">
               <h3 className="text-sm font-medium text-surface-900">{order.title}</h3>
               <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">경로 미리보기 • {order.distance}km</p>
@@ -201,7 +201,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
             </Map>
 
             {/* 안내 팁 */}
-            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-surface-900/80 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 shadow-2xl">
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 bg-surface-900/90 px-4 py-2 rounded-full border border-white/10 shadow-2xl">
               <p className="text-white text-[10px] font-medium whitespace-nowrap">지도를 드래그하거나 확대하여 상세 경로를 확인하세요</p>
             </div>
           </div>

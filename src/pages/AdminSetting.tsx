@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { 
-  ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike 
+  ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike, RefreshCw 
 } from 'lucide-react';
 import * as adminApi from '../entities/admin/api.ts';
+import * as leaderboardApi from '../entities/leaderboard/api.ts';
 import { BotStatusCard } from '../widgets/admin/ui/BotStatusCard';
 import { BotSettingsTab } from '../widgets/admin/ui/BotSettingsTab';
 import { EnforcementSettingsTab } from '../widgets/admin/ui/EnforcementSettingsTab';
@@ -59,6 +60,7 @@ export const AdminSettingPage = () => {
 
   // 봇 상태 목록
   const [botStatuses, setBotStatuses] = useState<adminApi.BotStatus[]>([]);
+  const [isTriggering, setIsTriggering] = useState(false);
 
   // 데이터 로드
   useEffect(() => {
@@ -170,6 +172,20 @@ export const AdminSettingPage = () => {
     }
   };
 
+  const handleTriggerBots = async () => {
+    setIsTriggering(true);
+    try {
+      await leaderboardApi.triggerBotActivities();
+      const bots = await adminApi.getBotStatuses();
+      setBotStatuses(bots);
+    } catch (error) {
+      console.error('Failed to trigger bots:', error);
+      alert('봇 활동 트리거 중 오류가 발생했습니다.');
+    } finally {
+      setIsTriggering(false);
+    }
+  };
+
   // 장비 업데이트 핸들러
   const handleUpdateEquipment = async (params: Parameters<typeof updateEquipment>[0]) => {
     await updateEquipment(params);
@@ -178,7 +194,7 @@ export const AdminSettingPage = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-50">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-primary-500" />
       </div>
     );
@@ -186,72 +202,81 @@ export const AdminSettingPage = () => {
 
   return (
     <div className="min-h-screen bg-surface-50 pb-12">
-      <header className="sticky top-0 z-50 flex items-center justify-between bg-surface-900 px-4 py-4 text-white shadow-lg">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate('/')} 
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-medium uppercase tracking-tighter">System Admin</h1>
+      <div className="mx-auto max-w-2xl bg-white min-h-screen relative">
+        <header className="sticky top-0 z-50 bg-white border-b border-surface-100">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={() => navigate('/')} 
+                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5 text-surface-700" />
+              </button>
+              <div>
+                <h1 className="text-lg font-medium text-surface-900">System Admin</h1>
+                <p className="text-xs text-surface-500">시스템 설정 및 관리</p>
+              </div>
+            </div>
+            <button 
+              onClick={handleSave}
+              disabled={isSaving}
+              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+                isSaved 
+                  ? 'bg-accent-emerald text-white' 
+                  : 'bg-primary-600 text-white hover:bg-primary-700'
+              } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {isSaved ? '저장됨!' : '저장'}
+            </button>
           </div>
-        </div>
-        <button 
-          onClick={handleSave}
-          disabled={isSaving}
-          className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-            isSaved 
-              ? 'bg-accent-emerald' 
-              : 'bg-primary-600 hover:bg-primary-700'
-          } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          {isSaved ? '저장됨!' : '저장'}
-        </button>
-      </header>
 
-      {/* 탭 네비게이션 */}
-      <div className="sticky top-[72px] z-40 bg-surface-50 px-4 pt-4 pb-2">
-        <div className="flex p-1 bg-white rounded-xl border border-surface-200 shadow-sm">
-          <button
-            onClick={() => setActiveTab('bot')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'bot' 
-                ? 'bg-surface-900 text-white shadow-sm' 
-                : 'text-surface-500 hover:bg-surface-50'
-            }`}
+          {/* 탭 네비게이션 */}
+          <div 
+            className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide"
+            style={{ 
+              willChange: 'scroll-position',
+              WebkitOverflowScrolling: 'touch',
+              transform: 'translateZ(0)',
+            }}
           >
-            <Bot className="h-4 w-4" />
-            봇
-          </button>
-          <button
-            onClick={() => setActiveTab('enforcement')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'enforcement' 
-                ? 'bg-surface-900 text-white shadow-sm' 
-                : 'text-surface-500 hover:bg-surface-50'
-            }`}
-          >
-            <ShieldAlert className="h-4 w-4" />
-            단속
-          </button>
-          <button
-            onClick={() => setActiveTab('equipment')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-medium rounded-lg transition-all ${
-              activeTab === 'equipment' 
-                ? 'bg-surface-900 text-white shadow-sm' 
-                : 'text-surface-500 hover:bg-surface-50'
-            }`}
-          >
-            <Bike className="h-4 w-4" />
-            장비
-          </button>
-        </div>
-      </div>
+            <button
+              onClick={() => setActiveTab('bot')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
+                activeTab === 'bot' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+              }`}
+            >
+              <Bot className="h-4 w-4" />
+              봇 설정
+            </button>
+            <button
+              onClick={() => setActiveTab('enforcement')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
+                activeTab === 'enforcement' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+              }`}
+            >
+              <ShieldAlert className="h-4 w-4" />
+              단속 설정
+            </button>
+            <button
+              onClick={() => setActiveTab('equipment')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
+                activeTab === 'equipment' 
+                  ? 'bg-primary-600 text-white' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+              }`}
+            >
+              <Bike className="h-4 w-4" />
+              장비 설정
+            </button>
+          </div>
+        </header>
 
-      <div className="mx-auto max-w-2xl p-4 space-y-6">
+        <main className="px-4 py-6 space-y-6">
         {/* 봇 설정 탭 */}
         {activeTab === 'bot' && (
           <BotSettingsTab 
@@ -260,7 +285,14 @@ export const AdminSettingPage = () => {
             botStatuses={botStatuses}
             isResetting={isResetting}
             handleResetBots={handleResetBots}
-            renderBotCard={(bot) => <BotStatusCard key={bot.botId} bot={bot} />}
+            renderBotCard={(bot) => (
+              <BotStatusCard 
+                key={bot.botId} 
+                bot={bot} 
+                onTrigger={handleTriggerBots}
+                isTriggering={isTriggering}
+              />
+            )}
           />
         )}
 
@@ -280,6 +312,7 @@ export const AdminSettingPage = () => {
             onUpdateEquipment={handleUpdateEquipment}
           />
         )}
+        </main>
       </div>
     </div>
   );

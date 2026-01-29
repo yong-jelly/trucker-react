@@ -142,14 +142,33 @@ export const OrderDetailPage = () => {
 // ...
     <div className="min-h-screen bg-surface-50">
       {/* 헤더 */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-4 py-3 shadow-soft-xs">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50"
-        >
-          <ArrowLeft className="h-5 w-5 text-surface-700" />
-        </button>
-        <h1 className="text-lg font-medium text-surface-900">주문 상세</h1>
+      <header className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-soft-xs">
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate(-1)} 
+            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50"
+          >
+            <ArrowLeft className="h-5 w-5 text-surface-700" />
+          </button>
+          <h1 className="text-lg font-medium text-surface-900">주문 상세</h1>
+        </div>
+
+        {availableSlot ? (
+          <button
+            onClick={handleStartDelivery}
+            className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-soft-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
+          >
+            <Play className="h-4 w-4 fill-current" />
+            운행 시작
+          </button>
+        ) : (
+          <button
+            disabled
+            className="flex items-center gap-1.5 rounded-xl bg-surface-100 px-4 py-2 text-sm font-medium text-surface-400"
+          >
+            슬롯 없음
+          </button>
+        )}
       </header>
 
       <div className="mx-auto max-w-2xl space-y-4 p-4">
@@ -317,35 +336,8 @@ export const OrderDetailPage = () => {
         </div>
       </div>
 
-      {/* 하단 고정 버튼 */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-surface-100 bg-white p-4">
-        <div className="mx-auto max-w-2xl">
-          {availableSlot ? (
-            <button
-              onClick={handleStartDelivery}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary-600 py-4 text-base font-medium text-white shadow-soft-md transition-colors hover:bg-primary-700 active:bg-primary-800"
-            >
-              <Play className="h-5 w-5" />
-              운행 시작
-            </button>
-          ) : (
-            <div className="space-y-2">
-              <button
-                disabled
-                className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-200 py-4 text-base font-medium text-surface-400"
-              >
-                슬롯 없음
-              </button>
-              <p className="text-center text-xs text-surface-500">
-                사용 가능한 슬롯이 없습니다. 운행이 완료되면 다시 시도해 주세요.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 하단 여백 */}
-      <div className="h-24" />
+      {/* 하단 여백 제거 */}
+      <div className="h-8" />
 
       {/* 계약서 확인 다이얼로그 */}
       {order && (
@@ -361,7 +353,7 @@ export const OrderDetailPage = () => {
       {/* 장비 선택 바텀시트 */}
       {isEquipmentSheetOpen && (
         <div 
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 backdrop-blur-sm p-4" 
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/40 p-4" 
           onClick={() => setIsEquipmentSheetOpen(false)}
         >
           <div 

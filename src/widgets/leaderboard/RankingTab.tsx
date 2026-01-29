@@ -1,6 +1,6 @@
 import { Trophy } from 'lucide-react';
 import { RankingItem, RankingItemSkeleton } from './ui/RankingItem';
-import type { LeaderboardEntry, LeaderboardPeriod } from '../entities/leaderboard/api';
+import type { LeaderboardEntry, LeaderboardPeriod } from '../../entities/leaderboard/api';
 
 interface RankingTabProps {
   isLoading: boolean;

@@ -1,6 +1,6 @@
 import { Users } from 'lucide-react';
 import { CompetitorCard, CompetitorCardSkeleton } from './ui/CompetitorCard';
-import type { LeaderboardEntry, ActiveRunEntry } from '../entities/leaderboard/api';
+import type { LeaderboardEntry, ActiveRunEntry } from '../../entities/leaderboard/api';
 
 interface CompetitorsTabProps {
   isLoading: boolean;
@@ -19,9 +19,23 @@ export const CompetitorsTab = ({
     <div className="space-y-6">
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-surface-900 flex items-center gap-2">
-            경쟁자들
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-medium text-surface-900 flex items-center gap-2">
+              경쟁자들
+            </h2>
+            {!isLoading && (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-amber-500"></div>
+                  <span className="text-xs text-surface-600">봇</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="h-3 w-3 rounded-full bg-primary-500"></div>
+                  <span className="text-xs text-surface-600">유저</span>
+                </div>
+              </div>
+            )}
+          </div>
           {!isLoading && (
             <span className="text-xs text-surface-500">
               {leaderboard.filter(e => e.isBot).length}명의 봇 + {leaderboard.filter(e => !e.isBot).length}명의 유저

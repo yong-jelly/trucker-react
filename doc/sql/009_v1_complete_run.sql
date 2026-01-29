@@ -78,7 +78,10 @@ BEGIN
         'REWARD',
         p_final_reward,
         v_new_balance,
-        format('운행 완료 정산 (패널티: $%s)', p_penalty_amount)
+        CASE 
+            WHEN p_penalty_amount > 0 THEN format('운행 완료 정산 (패널티: $%s)', p_penalty_amount)
+            ELSE '운행 완료 정산'
+        END
     );
 
     -- 6. 결과 반환

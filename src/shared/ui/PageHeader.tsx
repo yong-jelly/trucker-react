@@ -19,8 +19,8 @@ export function PageHeader({ tabs, activeTab, onTabChange, title, showBackButton
   const navigate = useNavigate();
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-surface-100">
-      <div className="mx-auto max-w-lg px-4 pt-4">
+    <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-[480px] z-40 bg-white border-b border-surface-100">
+      <div className="px-4 pt-4">
         <div className="flex items-center gap-3 mb-4">
           {showBackButton && (
             <button 

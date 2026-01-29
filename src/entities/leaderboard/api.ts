@@ -53,6 +53,16 @@ export interface ActivityDay {
 }
 
 /**
+ * 시간대별 활동 데이터
+ */
+export interface HourlyActivity {
+  hour: number;
+  runs_count: number;
+  earnings: number;
+  level: number;
+}
+
+/**
  * 거래 내역 엔트리
  */
 export interface TransactionEntry {
@@ -194,6 +204,27 @@ export async function getActivityHeatmap(userId?: string): Promise<ActivityDay[]
   return (data || []).map((row: any) => ({
     date: row.date,
     runsCount: row.runs_count,
+    earnings: row.earnings,
+    level: row.level,
+  }));
+}
+
+/**
+ * 시간대별 활동 데이터 조회
+ */
+export async function getHourlyActivity(userId?: string): Promise<HourlyActivity[]> {
+  const { data, error } = await rpcTrucker('v1_get_hourly_activity', { 
+    p_user_id: userId || null 
+  });
+
+  if (error) {
+    console.error('Failed to fetch hourly activity:', error);
+    throw new Error('Failed to fetch hourly activity');
+  }
+
+  return (data || []).map((row: any) => ({
+    hour: row.hour,
+    runs_count: row.runs_count,
     earnings: row.earnings,
     level: row.level,
   }));

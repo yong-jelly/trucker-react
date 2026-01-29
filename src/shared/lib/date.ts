@@ -66,15 +66,13 @@ export const formatDate = (timestamp: number | string | Date): string => {
 };
 
 /**
- * KST 기준 시간 포맷팅 (HH:mm)
+ * KST 기준 시간 포맷팅 (HH시 mm분)
  */
 export const formatKSTTime = (timestamp: number | string | Date): string => {
   const date = new Date(timestamp);
-  return date.toLocaleTimeString('ko-KR', { 
-    hour: '2-digit', 
-    minute: '2-digit',
-    hour12: false 
-  });
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${hours}시 ${minutes}분`;
 };
 
 /**

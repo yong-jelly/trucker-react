@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router';
-import { Package, ChevronRight, HelpCircle, Settings, Users, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane, History, Trophy } from 'lucide-react';
+import { Package, ChevronRight, HelpCircle, Settings, UserCircle, Loader2, RefreshCw, PlayCircle, Bike, Truck, Car, Plane, History, Trophy } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { OrderCard } from '../entities/order/OrderCard';
 import { useUserProfile, useUpsertProfile, type UserProfile } from '../entities/user/queries';
@@ -132,109 +132,129 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-24">
-      <div className="mx-auto max-w-2xl">
+    <div className="min-h-screen bg-white pb-24">
+      <div className="mx-auto">
         {/* 헤더 */}
-        <header className="sticky top-0 z-10 bg-surface-50 px-4 pt-4">
-          <div className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-soft-md">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest mb-1">보유 잔액</p>
-                <span className="text-3xl font-medium text-surface-900">
-                  ${profile.balance.toLocaleString()}
-                </span>
-              </div>
-              <div className="flex flex-col items-end gap-2">
-                <div className="flex gap-2">
-                  <button 
-                    onClick={() => navigate('/help')}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                  </button>
-                  <button 
-                    onClick={() => navigate('/super/admin/setting')}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </button>
-                  <button 
-                    onClick={() => navigate('/profile')}
-                    className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-100 text-primary-600 hover:bg-primary-200 transition-colors"
-                  >
-                    <UserCircle className="h-5 w-5" />
-                  </button>
+        <header className="sticky top-0 z-10 bg-white px-4 py-4 border-b border-surface-100">
+          <div className="flex flex-col gap-6 bg-white p-6 border border-surface-100 rounded-2xl">
+            {/* 상단: 프로필 정보 */}
+            <div className="flex items-center justify-between gap-3">
+              <button 
+                onClick={() => navigate('/profile')}
+                className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+              >
+                <div className="relative shrink-0">
+                  <div className="flex h-14 w-14 items-center justify-center bg-primary-50 text-primary-600 rounded-full overflow-hidden">
+                    {profile.avatar_url ? (
+                      <img 
+                        src={profile.avatar_url} 
+                        alt={profile.nickname} 
+                        className="h-full w-full object-cover" 
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <UserCircle className="h-8 w-8" />
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center bg-white border border-surface-100 rounded-full">
+                    <Trophy className="h-3 w-3 text-amber-500" />
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">평판</p>
-                  <span className="text-2xl font-medium text-primary-600 leading-none">{profile.reputation.toLocaleString()}</span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-bold text-surface-900 truncate">{profile.nickname}</h2>
+                    <span className="rounded-full bg-surface-100 px-2 py-0.5 text-[10px] font-bold text-surface-500 uppercase tracking-tight shrink-0">Level 1</span>
+                  </div>
+                  <div className="mt-1 flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <p className="text-[10px] font-medium text-surface-400 uppercase tracking-wider">평판</p>
+                      <span className="text-xs font-bold text-primary-600">{profile.reputation.toLocaleString()}</span>
+                    </div>
+                  </div>
                 </div>
+              </button>
+              
+              <div className="flex gap-2 shrink-0">
+                <button 
+                  onClick={() => navigate('/help')}
+                  className="flex h-10 w-10 items-center justify-center bg-surface-50 text-surface-500 border border-surface-100 rounded-full"
+                >
+                  <HelpCircle className="h-5 w-5" />
+                </button>
+                <button 
+                  onClick={() => navigate('/super/admin/setting')}
+                  className="flex h-10 w-10 items-center justify-center bg-surface-50 text-surface-500 border border-surface-100 rounded-full"
+                >
+                  <Settings className="h-5 w-5" />
+                </button>
               </div>
             </div>
-            
-            {/* 슬롯 상태 */}
-            <div className="flex items-center gap-2 border-t border-surface-100 pt-4">
-              <span className="text-sm font-medium text-surface-600">슬롯</span>
-              <div className="flex gap-1.5 flex-1 overflow-x-auto scrollbar-hide">
-                {slots.map((slot) => {
-                  const isMVPDisabled = slot.index > 0;
-                  const isLocked = slot.isLocked || isMVPDisabled;
-                  
-                  return (
-                    <div 
-                      key={slot.id} 
-                      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors shrink-0 ${
-                        isLocked 
-                          ? 'bg-surface-100 text-surface-400 border border-surface-200 opacity-60' 
-                          : slot.activeRunId
-                            ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
-                            : 'bg-primary-50 text-primary-600 border border-primary-100'
-                      }`}
-                    >
-                      <div className={`h-1.5 w-1.5 rounded-full ${
-                        isLocked 
-                          ? 'bg-surface-300' 
-                          : slot.activeRunId 
-                            ? 'bg-accent-emerald animate-pulse' 
-                            : 'bg-primary-500'
-                      }`} />
-                      {slot.index + 1}
-                      {isMVPDisabled && <span className="ml-1 text-[8px] opacity-50">MVP</span>}
-                    </div>
-                  );
-                })}
+
+            {/* 중단: 잔액 정보 */}
+            <div className="flex items-end justify-between border-t border-surface-50 pt-6">
+              <div>
+                <p className="text-[10px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-1">보유 잔액</p>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-sm font-bold text-surface-400">$</span>
+                  <span className="text-4xl font-black text-surface-900 tracking-tight">
+                    {profile.balance.toLocaleString()}
+                  </span>
+                </div>
               </div>
-              
-              {/* 창고/상점 바로가기 */}
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => navigate('/hire')}
-                  className="flex items-center gap-1 rounded-xl bg-primary-50 px-3 py-1.5 text-xs font-medium text-primary-600 border border-primary-100 shadow-soft-xs active:scale-95 transition-all"
-                >
-                  <Users className="h-3.5 w-3.5" />
-                  고용
-                </button>
-                <button 
-                  onClick={() => navigate('/garage')}
-                  className="flex items-center gap-1 rounded-xl bg-surface-900 px-3 py-1.5 text-xs font-medium text-white shadow-soft-sm active:scale-95 transition-all"
-                >
-                  <Package className="h-3.5 w-3.5" />
-                  창고
-                </button>
-                <button 
-                  onClick={() => navigate('/transactions')}
-                  className="flex items-center gap-1 rounded-xl bg-surface-100 px-3 py-1.5 text-xs font-medium text-surface-700 border border-surface-200 shadow-soft-xs active:scale-95 transition-all"
-                >
-                  <History className="h-3.5 w-3.5" />
-                  거래 내역
-                </button>
-                <button 
-                  onClick={() => navigate('/leaderboard')}
-                  className="flex items-center gap-1 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-200 shadow-soft-xs active:scale-95 transition-all"
-                >
-                  <Trophy className="h-3.5 w-3.5" />
-                  랭킹
-                </button>
+              <button 
+                onClick={() => navigate('/transactions')}
+                className="mb-1 flex items-center gap-1.5 bg-surface-900 px-4 py-2 text-xs font-bold text-white rounded-xl"
+              >
+                <History className="h-3.5 w-3.5" />
+                내역
+              </button>
+            </div>
+            
+            {/* 하단: 슬롯 및 주요 액션 버튼 */}
+            <div className="space-y-4 border-t border-surface-50 pt-6">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-surface-900 uppercase tracking-wider whitespace-nowrap">운행 슬롯</span>
+                  <div className="flex gap-1.5">
+                    {slots.map((slot) => {
+                      const isMVPDisabled = slot.index > 0;
+                      const isLocked = slot.isLocked || isMVPDisabled;
+                      return (
+                        <div 
+                          key={slot.id} 
+                          className={`h-2 w-6 rounded-full transition-all ${
+                            isLocked 
+                              ? 'bg-surface-100' 
+                              : slot.activeRunId
+                                ? 'bg-accent-emerald animate-pulse w-8'
+                                : 'bg-primary-500'
+                          }`}
+                        />
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => navigate('/hire')}
+                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
+                  >
+                    고용
+                  </button>
+                  <button 
+                    onClick={() => navigate('/garage')}
+                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
+                  >
+                    창고
+                  </button>
+                  <button 
+                    onClick={() => navigate('/leaderboard')}
+                    className="flex items-center gap-1.5 bg-surface-50 px-4 py-2.5 text-xs font-bold text-surface-700 border border-surface-100 rounded-xl"
+                  >
+                    랭킹
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -256,7 +276,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                   <button
                     key={activeRun.run.id}
                     onClick={() => navigate(`/run/${activeRun.run.id}`)}
-                    className="w-full text-left overflow-hidden rounded-2xl bg-white border border-accent-emerald/30 shadow-soft-md hover:shadow-soft-lg transition-all active:scale-[0.98]"
+                    className="w-full text-left overflow-hidden bg-white border border-accent-emerald/30 rounded-2xl"
                   >
                     <div className="bg-accent-emerald/5 px-4 py-2 flex items-center justify-between border-b border-accent-emerald/10">
                       <div className="flex items-center gap-2">
@@ -268,12 +288,14 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                         <span>{getEquipmentName(activeRun.run.selectedItems.equipmentId)}</span>
                       </div>
                     </div>
-                    <div className="p-4 flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-surface-900 leading-tight">{activeRun.order.title}</h3>
-                        <p className="text-[10px] font-medium text-surface-400 mt-1">{activeRun.order.cargoName} · {activeRun.order.distance}km</p>
+                    <div className="p-4 flex items-center justify-between gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm font-medium text-surface-900 leading-tight truncate">{activeRun.order.title}</h3>
+                        <p className="text-[10px] font-medium text-surface-400 mt-1 truncate">
+                          {activeRun.order.cargoName} · {activeRun.order.distance}km
+                        </p>
                       </div>
-                      <div className="text-right">
+                      <div className="text-right shrink-0">
                         <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">현재 보상</p>
                         <p className="text-sm font-medium text-accent-emerald">${activeRun.run.currentReward.toLocaleString()}</p>
                       </div>
@@ -309,13 +331,13 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                   />
                 ))
               ) : (
-                <div className="rounded-2xl bg-white p-12 text-center border border-surface-100 shadow-soft-sm">
+                <div className="bg-white p-12 text-center border border-surface-100 rounded-2xl">
                   <Package className="h-12 w-12 text-surface-200 mx-auto mb-4" />
                   <p className="text-sm font-medium text-surface-400">현재 사용 가능한 주문이 없습니다</p>
                   <p className="text-xs text-surface-300 mt-1 mb-6">잠시 후 다시 확인해주세요</p>
                   <button 
                     onClick={fetchOrders}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-50 text-primary-600 rounded-2xl text-sm font-medium hover:bg-primary-100 active:scale-95 transition-all shadow-soft-xs"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary-50 text-primary-600 border border-primary-100 text-sm font-medium rounded-xl"
                   >
                     <RefreshCw className={`h-4 w-4 ${isOrdersLoading ? 'animate-spin' : ''}`} />
                     새로고침
@@ -326,7 +348,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
           </section>
 
           {/* 추가 오퍼 안내 */}
-          <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-surface-200 bg-white py-8 px-6 text-center">
+          <div className="flex flex-col items-center justify-center border-2 border-dashed border-surface-200 bg-white py-8 px-6 text-center rounded-2xl">
             <p className="text-sm text-surface-500">
               더 많은 오퍼는 평판을 올리면 해금됩니다
             </p>
@@ -383,8 +405,8 @@ export const HomePage = () => {
   // 4. 프로필 없음 (신규 유저)
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-surface-50">
-        <div className="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-6 shadow-soft-md">
+      <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center bg-white">
+        <div className="w-20 h-20 bg-primary-50 border border-primary-100 flex items-center justify-center mb-6 rounded-full">
           <UserCircle className="h-10 w-10 text-primary-600" />
         </div>
         <h2 className="text-2xl font-medium text-surface-900 mb-2 leading-tight">새로운 트럭커를 환영합니다!</h2>
@@ -395,7 +417,7 @@ export const HomePage = () => {
         <button
           onClick={handleCreateProfile}
           disabled={isCreating}
-          className="w-full max-w-xs py-4 bg-primary-600 text-white rounded-2xl font-medium text-lg shadow-soft-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+          className="w-full max-w-xs py-4 bg-primary-600 text-white font-medium text-lg flex items-center justify-center gap-2 disabled:opacity-50 rounded-xl"
         >
           {isCreating ? <Loader2 className="h-5 w-5 animate-spin" /> : '프로필 생성하고 시작하기'}
           {!isCreating && <ChevronRight className="h-5 w-5" />}

@@ -51,7 +51,7 @@ export const CompetitorCard = ({
             : 'bg-gradient-to-br from-primary-50 to-blue-50 border border-primary-200'
       }`}
     >
-      {/* 활성 표시 */}
+      {/* 활성 표시 (운행 중) - 봇과 유저 모두 */}
       {isActive && (
         <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px] font-medium">
           <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
@@ -59,19 +59,31 @@ export const CompetitorCard = ({
         </div>
       )}
 
-      {/* 휴식 중 표시 */}
-      {entry.isBot && entry.botStatus === 'RESTING' && entry.botNextAvailableAt && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-500 text-white text-[10px] font-medium">
-          <Clock className="h-3 w-3" />
-          {getRestTimeDisplay(entry.botNextAvailableAt)}
-        </div>
+      {/* 봇 전용 상태 표시 (실제 운행이 없는 경우) */}
+      {entry.isBot && !isActive && (
+        <>
+          {/* 휴식 중 표시 (복귀 시간 표시) - RESTING 상태이고 복귀 시간이 있을 때만 */}
+          {entry.botStatus === 'RESTING' && entry.botNextAvailableAt && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-500 text-white text-[10px] font-medium">
+              <Clock className="h-3 w-3" />
+              {getRestTimeDisplay(entry.botNextAvailableAt)}
+            </div>
+          )}
+          {/* 대기 중 표시 - RESTING이 아니거나, RESTING이지만 복귀 시간이 없는 경우 */}
+          {!(entry.botStatus === 'RESTING' && entry.botNextAvailableAt) && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-medium">
+              <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
+              대기 중
+            </div>
+          )}
+        </>
       )}
 
-      {/* 대기 중 표시 (주문서 확인 중) */}
-      {entry.isBot && !isActive && entry.botStatus !== 'RESTING' && (
-        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-medium">
+      {/* 유저 대기 중 표시 */}
+      {!entry.isBot && !isActive && (
+        <div className="absolute top-2 right-2 flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-500 text-white text-[10px] font-medium">
           <div className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
-          주문서 확인 중
+          대기 중
         </div>
       )}
       
@@ -103,14 +115,11 @@ export const CompetitorCard = ({
         </div>
         
         {/* 정보 */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pr-16">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-surface-900">{entry.nickname}</span>
-            {entry.isBot && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-200 text-amber-800">BOT</span>
-            )}
+            <span className="text-sm font-medium text-surface-900 truncate">{entry.nickname}</span>
           </div>
-          <p className="text-xs text-surface-600 mt-0.5">{getBotDescription(entry.nickname)}</p>
+          <p className="text-xs text-surface-600 mt-0.5 truncate">{getBotDescription(entry.nickname)}</p>
         </div>
       </div>
       
