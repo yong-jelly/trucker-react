@@ -24,6 +24,7 @@ interface RunSheetProps {
   order: OrderInfo;
   elapsedSeconds: number;
   etaSeconds: number;
+  estimatedRemainingSeconds: number;
   runId: string;
 }
 
@@ -34,7 +35,7 @@ const TABS = [
   { id: 'settings' as const, label: '세팅', icon: Settings },
 ];
 
-export const RunSheet = ({ order, elapsedSeconds, etaSeconds, runId }: RunSheetProps) => {
+export const RunSheet = ({ order, elapsedSeconds, etaSeconds, estimatedRemainingSeconds, runId }: RunSheetProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('settlement');
   const [sheetHeight, setSheetHeight] = useState<SheetHeight>('medium');
 
@@ -113,7 +114,7 @@ export const RunSheet = ({ order, elapsedSeconds, etaSeconds, runId }: RunSheetP
                 order={order} 
                 elapsedSeconds={elapsedSeconds} 
                 etaSeconds={etaSeconds} 
-                remainingSeconds={Math.max(etaSeconds - elapsedSeconds, 0)} 
+                remainingSeconds={estimatedRemainingSeconds} 
               />
             )}
             {activeTab === 'events' && (

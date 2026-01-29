@@ -105,6 +105,7 @@ INSERT INTO trucker.tbl_equipments (
 -- =====================================================
 -- 5. handle_new_user() 트리거 수정
 -- 신규 유저에게 기본 장비 자동 지급
+-- 참고: tbl_slots.user_id는 tbl_user_profile.public_profile_id를 참조함
 -- =====================================================
 CREATE OR REPLACE FUNCTION trucker.handle_new_user()
 RETURNS trigger
@@ -133,11 +134,11 @@ BEGIN
     VALUES (NEW.id, final_nickname)
     RETURNING public_profile_id INTO new_public_profile_id;
 
-    -- 3. 기본 슬롯 3개 생성 (첫 번째만 해금)
+    -- 3. 기본 슬롯 3개 생성 (첫 번째만 해금) - public_profile_id 사용
     INSERT INTO trucker.tbl_slots (user_id, index, is_locked) VALUES
-        (NEW.id, 0, false),
-        (NEW.id, 1, true),
-        (NEW.id, 2, true);
+        (new_public_profile_id, 0, false),
+        (new_public_profile_id, 1, true),
+        (new_public_profile_id, 2, true);
 
     -- 4. 기본 장비 자동 지급 (is_default = true인 장비들)
     FOR default_equipment IN 

@@ -19,9 +19,8 @@ interface OverviewTabProps {
   remainingSeconds: number;
 }
 
-export const OverviewTab = ({ order, elapsedSeconds, etaSeconds }: OverviewTabProps) => {
+export const OverviewTab = ({ order, elapsedSeconds, etaSeconds, remainingSeconds }: OverviewTabProps) => {
   const progress = Math.min((elapsedSeconds / etaSeconds) * 100, 100);
-  const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

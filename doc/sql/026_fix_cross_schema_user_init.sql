@@ -1,14 +1,23 @@
 -- =====================================================
--- 003_v1_get_user_profile.sql
--- 사용자 프로필(User Profile) 관련 API
+-- 026_fix_cross_schema_user_init.sql
+-- 다른 스키마에서 가입한 유저가 trucker 프로젝트 접속 시
+-- 프로필/슬롯/장비가 올바르게 초기화되도록 수정
 -- 
+-- 문제: auth.users는 Supabase 전체에서 공유되므로,
+-- 다른 프로젝트(mmcheck 등)에서 이미 가입한 유저가 trucker 접속 시
+-- handle_new_user 트리거가 실행되지 않음
+-- 
+-- 해결: v1_get_user_profile, v1_upsert_user_profile 함수에서
+-- 신규 프로필 생성 시 슬롯과 기본 장비도 함께 생성
+--
 -- 실행 방법:
---   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/003_v1_get_user_profile.sql
+--   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/026_fix_cross_schema_user_init.sql
 -- =====================================================
 
--- 1. 사용자 프로필 조회 (프로필이 없으면 자동 생성)
+-- =====================================================
+-- 1. v1_get_user_profile 수정 - 장비 지급 로직 추가
+-- =====================================================
 -- 참고: tbl_slots.user_id는 tbl_user_profile.public_profile_id를 참조함
--- 다른 Supabase 스키마(mmcheck 등)에서 가입한 유저도 trucker 접속 시 자동 초기화됨
 CREATE OR REPLACE FUNCTION trucker.v1_get_user_profile(p_auth_user_id uuid)
 RETURNS trucker.tbl_user_profile
 LANGUAGE plpgsql
@@ -87,9 +96,10 @@ END;
 $$;
 
 COMMENT ON FUNCTION trucker.v1_get_user_profile IS '특정 사용자의 프로필 정보를 조회합니다. 프로필이 없으면 슬롯/장비와 함께 자동 생성됩니다.';
-GRANT EXECUTE ON FUNCTION trucker.v1_get_user_profile TO authenticated;
 
--- 2. 사용자 프로필 생성 또는 수정 (Upsert)
+-- =====================================================
+-- 2. v1_upsert_user_profile 수정 - 신규 INSERT 시 슬롯/장비 생성
+-- =====================================================
 -- 참고: tbl_slots.user_id는 tbl_user_profile.public_profile_id를 참조함
 CREATE OR REPLACE FUNCTION trucker.v1_upsert_user_profile(
     p_auth_user_id uuid,
@@ -186,4 +196,69 @@ END;
 $$;
 
 COMMENT ON FUNCTION trucker.v1_upsert_user_profile IS '사용자 프로필을 생성하거나 수정합니다. 신규 생성 시 슬롯과 기본 장비도 함께 생성됩니다.';
-GRANT EXECUTE ON FUNCTION trucker.v1_upsert_user_profile TO authenticated;
+
+-- =====================================================
+-- 3. 기존 문제 유저 복구 (슬롯/장비 누락 유저)
+-- 참고: tbl_slots.user_id는 tbl_user_profile.public_profile_id를 참조함
+-- =====================================================
+
+-- 3-1. 슬롯이 없는 유저에게 슬롯 생성 (public_profile_id 사용)
+INSERT INTO trucker.tbl_slots (user_id, index, is_locked)
+SELECT p.public_profile_id, 0, false
+FROM trucker.tbl_user_profile p
+WHERE NOT EXISTS (
+    SELECT 1 FROM trucker.tbl_slots s WHERE s.user_id = p.public_profile_id
+)
+ON CONFLICT (user_id, index) DO NOTHING;
+
+INSERT INTO trucker.tbl_slots (user_id, index, is_locked)
+SELECT p.public_profile_id, 1, true
+FROM trucker.tbl_user_profile p
+WHERE NOT EXISTS (
+    SELECT 1 FROM trucker.tbl_slots s WHERE s.user_id = p.public_profile_id AND s.index = 1
+)
+ON CONFLICT (user_id, index) DO NOTHING;
+
+INSERT INTO trucker.tbl_slots (user_id, index, is_locked)
+SELECT p.public_profile_id, 2, true
+FROM trucker.tbl_user_profile p
+WHERE NOT EXISTS (
+    SELECT 1 FROM trucker.tbl_slots s WHERE s.user_id = p.public_profile_id AND s.index = 2
+)
+ON CONFLICT (user_id, index) DO NOTHING;
+
+-- 3-2. 기본 장비가 없는 유저에게 장비 지급
+INSERT INTO trucker.tbl_user_equipments (user_id, equipment_id, is_equipped)
+SELECT 
+    p.public_profile_id,
+    e.id,
+    true
+FROM trucker.tbl_user_profile p
+CROSS JOIN trucker.tbl_equipments e
+WHERE e.is_default = true AND e.is_active = true
+AND NOT EXISTS (
+    SELECT 1 FROM trucker.tbl_user_equipments ue 
+    WHERE ue.user_id = p.public_profile_id AND ue.equipment_id = e.id
+)
+ON CONFLICT (user_id, equipment_id) DO NOTHING;
+
+-- =====================================================
+-- 완료 메시지
+-- =====================================================
+DO $$
+DECLARE
+    v_fixed_slots integer;
+    v_fixed_equipments integer;
+BEGIN
+    SELECT COUNT(*) INTO v_fixed_slots 
+    FROM trucker.tbl_user_profile p
+    WHERE EXISTS (SELECT 1 FROM trucker.tbl_slots s WHERE s.user_id = p.auth_user_id);
+    
+    SELECT COUNT(*) INTO v_fixed_equipments 
+    FROM trucker.tbl_user_profile p
+    WHERE EXISTS (SELECT 1 FROM trucker.tbl_user_equipments ue WHERE ue.user_id = p.public_profile_id);
+    
+    RAISE NOTICE '=== 크로스 스키마 유저 초기화 버그 수정 완료 ===';
+    RAISE NOTICE '슬롯 보유 유저: % 명', v_fixed_slots;
+    RAISE NOTICE '장비 보유 유저: % 명', v_fixed_equipments;
+END $$;

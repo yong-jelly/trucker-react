@@ -7,6 +7,15 @@ import { ArrowLeft, MapPin, Loader2, Package, Clock, Bike, Car, Truck, Plane, Re
 import { MAPBOX_TOKEN } from '../shared/lib/mockData';
 import { getRunById, type RunDetail } from '../entities/run';
 import { formatDuration } from '../shared/lib/date';
+import { 
+  getSpeedFromSnapshot, 
+  speedToKmPerSecond, 
+  interpolatePositionOnRoute,
+  fetchMapboxRoute,
+  routeToGeoJSON,
+  getEquipmentName,
+  type RouteCoordinate
+} from '../shared/lib/run';
 
 export const PublicRunPage = () => {
   const { runId } = useParams();
@@ -63,6 +72,12 @@ export const PublicRunPage = () => {
   const etaSeconds = runDetail?.run.etaSeconds || 0;
   const totalDistanceKm = order?.distance || 0;
 
+  // 장비 속도 정보 (스냅샷 우선)
+  const { baseSpeed } = getSpeedFromSnapshot(
+    runDetail?.run.equipmentSnapshot,
+    runDetail?.run.selectedItems?.equipmentId
+  );
+
   // 경과 시간 계산
   const elapsedSeconds = useMemo(() => {
     if (!runDetail) return 0;
@@ -72,19 +87,26 @@ export const PublicRunPage = () => {
     return Math.floor((Date.now() - runDetail.run.startAt) / 1000);
   }, [runDetail, tick]);
 
+  // 실제 이동 거리 추정 (장비 속도 기반)
+  const distanceCovered = useMemo(() => {
+    if (runDetail?.run.status === 'COMPLETED') return totalDistanceKm;
+    if (!baseSpeed || !elapsedSeconds) return 0;
+    const estimatedDistance = speedToKmPerSecond(baseSpeed) * elapsedSeconds;
+    return Math.min(estimatedDistance, totalDistanceKm);
+  }, [runDetail, baseSpeed, elapsedSeconds, totalDistanceKm]);
+
   // 진행률 계산
   const progress = useMemo(() => {
     if (runDetail?.run.status === 'COMPLETED') return 100;
-    if (!etaSeconds) return 0;
-    return Math.min((elapsedSeconds / etaSeconds) * 100, 100);
-  }, [runDetail, elapsedSeconds, etaSeconds]);
+    if (totalDistanceKm <= 0) return 0;
+    return Math.min((distanceCovered / totalDistanceKm) * 100, 100);
+  }, [runDetail, distanceCovered, totalDistanceKm]);
 
-  const distanceCovered = (totalDistanceKm * progress) / 100;
-  const distanceRemaining = totalDistanceKm - distanceCovered;
+  const distanceRemaining = Math.max(totalDistanceKm - distanceCovered, 0);
   const isOvertime = elapsedSeconds > etaSeconds;
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
-  // 장비 아이콘/이름
+  // 장비 아이콘
   const getEquipmentIcon = (equipmentId: string | null | undefined) => {
     switch (equipmentId) {
       case 'VAN': return <Car className="h-4 w-4" />;
@@ -95,93 +117,46 @@ export const PublicRunPage = () => {
     }
   };
 
-  const getEquipmentName = (equipmentId: string | null | undefined) => {
-    switch (equipmentId) {
-      case 'VAN': return '소형 밴';
-      case 'TRUCK': return '대형 트럭';
-      case 'HEAVY_TRUCK': return '헤비 트럭';
-      case 'PLANE': return '화물기';
-      default: return '배달 자전거';
-    }
-  };
-
-  // Mapbox 라우팅 데이터 가져오기
+  // Mapbox 라우팅 데이터 가져오기 (공통 함수 사용)
   useEffect(() => {
     if (!order) return;
 
-    const fetchRoute = async () => {
-      if (order.category === 'INTERNATIONAL') {
-        const fallbackGeometry = {
-          type: 'LineString',
-          coordinates: [
-            [order.startPoint[1], order.startPoint[0]],
-            [order.endPoint[1], order.endPoint[0]]
-          ]
-        };
-        setRouteData(fallbackGeometry);
-        setCurrentPos(order.startPoint);
-        
-        if (mapRef.current) {
-          mapRef.current.fitBounds(
-            [[order.startPoint[1], order.startPoint[0]], [order.endPoint[1], order.endPoint[0]]],
-            { padding: 100, duration: 1000 }
-          );
-        }
-        return;
-      }
-
+    const loadRoute = async () => {
       try {
-        const profile = order.category === 'HEAVY_DUTY' ? 'driving' : 'cycling';
-        const query = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/${profile}/${order.startPoint[1]},${order.startPoint[0]};${order.endPoint[1]},${order.endPoint[0]}?steps=true&geometries=geojson&access_token=${MAPBOX_TOKEN}`,
-          { method: 'GET' }
-        );
-        const json = await query.json();
-        const data = json.routes[0];
-        setRouteData(data.geometry);
+        const route = await fetchMapboxRoute({
+          startPoint: order.startPoint,
+          endPoint: order.endPoint,
+          category: order.category
+        });
+        setRouteData(route);
         setCurrentPos(order.startPoint);
 
-        if (mapRef.current) {
-          const coordinates = data.geometry.coordinates;
-          const lats = coordinates.map((c: number[]) => c[1]);
-          const lngs = coordinates.map((c: number[]) => c[0]);
+        // 지도 영역 조정
+        if (mapRef.current && route.coordinates?.length) {
+          const lats = route.coordinates.map(c => c[1]);
+          const lngs = route.coordinates.map(c => c[0]);
           mapRef.current.fitBounds(
             [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
             { padding: 100, duration: 1000 }
           );
         }
       } catch (error) {
-        console.error('라우팅 실패, 직선으로 대체:', error);
-        setRouteData({
-          type: 'LineString',
-          coordinates: [[order.startPoint[1], order.startPoint[0]], [order.endPoint[1], order.endPoint[0]]]
-        });
+        console.error('라우팅 실패:', error);
       }
     };
 
-    fetchRoute();
+    loadRoute();
   }, [order]);
 
-  // 경로 위의 현재 위치 계산
+  // 경로 위의 현재 위치 계산 (공통 함수 사용)
   useEffect(() => {
-    if (!routeData || !routeData.coordinates) return;
-    
-    const coords = routeData.coordinates;
-    const pointIndex = Math.floor((coords.length - 1) * (progress / 100));
-    const nextPointIndex = Math.min(pointIndex + 1, coords.length - 1);
-    
-    const segmentProgress = ((progress / 100) * (coords.length - 1)) - pointIndex;
-    const currentLng = coords[pointIndex][0] + (coords[nextPointIndex][0] - coords[pointIndex][0]) * segmentProgress;
-    const currentLat = coords[pointIndex][1] + (coords[nextPointIndex][1] - coords[pointIndex][1]) * segmentProgress;
-    
-    setCurrentPos([currentLat, currentLng]);
+    const pos = interpolatePositionOnRoute(routeData as RouteCoordinate, progress);
+    if (pos) {
+      setCurrentPos(pos);
+    }
   }, [progress, routeData]);
 
-  const geojson = useMemo(() => ({
-    type: 'Feature',
-    properties: {},
-    geometry: routeData
-  }), [routeData]);
+  const geojson = useMemo(() => routeToGeoJSON(routeData), [routeData]);
 
   // 로딩 상태
   if (isLoading) {

@@ -5,69 +5,46 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { MapPin, Maximize2, X } from 'lucide-react';
 import { MAPBOX_TOKEN } from '../../shared/lib/mockData';
 import type { Order } from '../../shared/api/types';
+import { fetchMapboxRoute, routeToGeoJSON, calculateRouteBounds, type RouteCoordinate } from '../../shared/lib/run';
 
 interface RoutePreviewMapProps {
   order: Order;
 }
 
 export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
-  const [routeData, setRouteData] = useState<any>(null);
+  const [routeData, setRouteData] = useState<RouteCoordinate | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const inlineMapRef = useRef<MapRef>(null);
   const fullMapRef = useRef<MapRef>(null);
 
-  // 경로에 맞춰 지도 영역 조정 함수
+  // 경로에 맞춰 지도 영역 조정 함수 (공통 함수 사용)
   const fitToRoute = (mapRef: React.RefObject<MapRef | null>, padding = 40) => {
-    if (!mapRef.current || !routeData) return;
+    if (!mapRef.current || !routeData?.coordinates?.length) return;
     
-    const coordinates = routeData.coordinates;
-    if (!coordinates || coordinates.length === 0) return;
-
-    const lats = coordinates.map((c: number[]) => c[1]);
-    const lngs = coordinates.map((c: number[]) => c[0]);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-
+    const bounds = calculateRouteBounds(routeData.coordinates);
     mapRef.current.fitBounds(
-      [[minLng, minLat], [maxLng, maxLat]],
+      [[bounds.minLng, bounds.minLat], [bounds.maxLng, bounds.maxLat]],
       { padding, duration: 1000 }
     );
   };
 
+  // 경로 데이터 가져오기 (공통 함수 사용)
   useEffect(() => {
-    const fetchRoute = async () => {
-      // 대륙간 운송은 도로 라우팅을 건너뛰고 바로 직선 경로 생성
-      if (order.category === 'INTERNATIONAL') {
-        const geometry = {
-          type: 'LineString',
-          coordinates: [
-            [order.startPoint[1], order.startPoint[0]],
-            [order.endPoint[1], order.endPoint[0]]
-          ]
-        };
-        setRouteData(geometry);
-        return;
-      }
-
+    const loadRoute = async () => {
       try {
-        const profile = order.category === 'HEAVY_DUTY' ? 'driving' : 'cycling';
-        const query = await fetch(
-          `https://api.mapbox.com/directions/v5/mapbox/${profile}/${order.startPoint[1]},${order.startPoint[0]};${order.endPoint[1]},${order.endPoint[0]}?geometries=geojson&access_token=${MAPBOX_TOKEN}`,
-          { method: 'GET' }
-        );
-        const json = await query.json();
-        if (json.routes && json.routes[0]) {
-          setRouteData(json.routes[0].geometry);
-        }
+        const route = await fetchMapboxRoute({
+          startPoint: order.startPoint,
+          endPoint: order.endPoint,
+          category: order.category
+        });
+        setRouteData(route);
       } catch (error) {
         console.error('미리보기 경로 로드 실패:', error);
       }
     };
 
-    fetchRoute();
+    loadRoute();
   }, [order]);
 
   // 데이터 로드 및 지도 로드 완료 시 인라인 지도 fit
@@ -88,11 +65,7 @@ export const RoutePreviewMap = ({ order }: RoutePreviewMapProps) => {
     }
   }, [isExpanded, routeData]);
 
-  const geojson = useMemo(() => ({
-    type: 'Feature',
-    properties: {},
-    geometry: routeData
-  }), [routeData]);
+  const geojson = useMemo(() => routeToGeoJSON(routeData), [routeData]);
 
   return (
     <>

@@ -5,6 +5,7 @@ interface BotSettingsTabProps {
     restMinMinutes: number;
     restMaxMinutes: number;
     acceptProbability: number;
+    isAggressiveMode: boolean;
   };
   setBotSettings: (settings: any) => void;
   botStatuses: any[];
@@ -82,6 +83,25 @@ export const BotSettingsTab = ({
               className="w-full h-2 bg-surface-100 rounded-lg appearance-none cursor-pointer accent-primary-600"
             />
             <p className="text-[10px] text-surface-400 mt-1">매 분마다 봇이 새로운 주문을 수락할 확률입니다.</p>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-surface-50">
+            <div>
+              <label className="text-sm font-medium text-surface-700">공격적 모드 활성화</label>
+              <p className="text-[10px] text-surface-400 mt-0.5">휴식 중 조기 복귀 및 중복 주문 수락을 허용합니다.</p>
+            </div>
+            <button
+              onClick={() => setBotSettings({...botSettings, isAggressiveMode: !botSettings.isAggressiveMode})}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                botSettings.isAggressiveMode ? 'bg-primary-600' : 'bg-surface-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  botSettings.isAggressiveMode ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
         </div>
       </section>

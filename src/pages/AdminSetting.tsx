@@ -43,6 +43,7 @@ export const AdminSettingPage = () => {
     restMinMinutes: 10,
     restMaxMinutes: 60,
     acceptProbability: 0.5,
+    isAggressiveMode: false,
   });
 
   // 단속 설정 상태
@@ -80,6 +81,7 @@ export const AdminSettingPage = () => {
           restMinMinutes: Number(configMap.get('bot_rest_min_minutes') || 10),
           restMaxMinutes: Number(configMap.get('bot_rest_max_minutes') || 60),
           acceptProbability: Number(configMap.get('bot_accept_probability') || 0.5),
+          isAggressiveMode: configMap.get('bot_aggressive_mode') === true,
         });
 
         setEnforcementSettings({
@@ -115,6 +117,7 @@ export const AdminSettingPage = () => {
         'bot_rest_min_minutes': botSettings.restMinMinutes,
         'bot_rest_max_minutes': botSettings.restMaxMinutes,
         'bot_accept_probability': botSettings.acceptProbability,
+        'bot_aggressive_mode': botSettings.isAggressiveMode,
         'enforcement_base_rate': enforcementSettings.baseEnforcementRate,
         'enforcement_speeding_multiplier': enforcementSettings.speedingEnforcementMultiplier,
         'enforcement_base_fine': enforcementSettings.baseFineAmount,

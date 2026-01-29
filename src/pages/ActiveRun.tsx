@@ -9,6 +9,14 @@ import { RunSheet } from '../widgets/run/RunSheet';
 import { useGameStore } from '../app/store';
 import { getRunById, completeRun, type RunDetail } from '../entities/run';
 import { formatDuration, formatKSTTime } from '../shared/lib/date';
+import { 
+  getSpeedFromSnapshot, 
+  applyFuelPenalty, 
+  speedToKmPerSecond,
+  interpolatePositionOnRoute,
+  routeToGeoJSON,
+  type RouteCoordinate
+} from '../shared/lib/run';
 
 type ViewMode = 'map' | 'info';
 
@@ -26,6 +34,7 @@ export const ActiveRunPage = () => {
   const [currentSpeedKmh, setCurrentSpeedKmh] = useState(0);
   const [fuel, setFuel] = useState(100);
   const [tick, setTick] = useState(0); // 실시간 갱신용
+  const [traveledDistanceKm, setTraveledDistanceKm] = useState(0); // 실제 이동 거리 (누적)
   const mapRef = useRef<MapRef>(null);
 
   // DB에서 운행 데이터 로드
@@ -67,52 +76,49 @@ export const ActiveRunPage = () => {
   // 실제 도로 거리
   const totalDistanceKm = order?.distance || 0;
   
-  // 장비별 기본 속도 (km/h)
-  const EQUIPMENT_SPEEDS: Record<string, number> = {
-    'BICYCLE': 15,      // 자전거
-    'VAN': 60,          // 밴
-    'TRUCK': 80,        // 트럭
-    'HEAVY_TRUCK': 70,  // 헤비트럭
-    'PLANE': 500,       // 비행기
-  };
+  // 장비 기반 속도 설정 (공통 함수 사용)
+  const { baseSpeed: equipmentBaseSpeed, maxSpeed: equipmentMaxSpeed } = getSpeedFromSnapshot(
+    runDetail?.run.equipmentSnapshot,
+    runDetail?.run.selectedItems?.equipmentId || order?.requiredEquipmentType
+  );
   
-  // 현재 장비 유형 (없으면 기본 자전거)
-  const equipmentType = runDetail?.run.selectedItems?.equipmentId || order?.requiredEquipmentType || 'BICYCLE';
-  
-  // 장비 기반 속도 설정 (스냅샷이 있으면 스냅샷 값 우선 사용)
-  const equipmentBaseSpeed = runDetail?.run.equipmentSnapshot?.base_speed || EQUIPMENT_SPEEDS[equipmentType] || 15;
-  const equipmentMaxSpeed = runDetail?.run.equipmentSnapshot?.max_speed || (equipmentBaseSpeed * 1.5);
-  
-  const fuelPenaltyMultiplier = fuel <= 0 ? 0.2 : 1.0; // 연료 고갈 시 80% 감속
-  const baseSpeedKmh = equipmentBaseSpeed * fuelPenaltyMultiplier;
-  const maxSpeedKmh = equipmentMaxSpeed * fuelPenaltyMultiplier;
+  // 연료 패널티 적용
+  const baseSpeedKmh = applyFuelPenalty(equipmentBaseSpeed, fuel);
+  const maxSpeedKmh = applyFuelPenalty(equipmentMaxSpeed, fuel);
   const acceleration = 2.0; // 초당 가속도 (빠르게 목표 속도 도달)
 
-  // 경과 시간 기반 이동 거리 계산
-  const distanceCovered = useMemo(() => {
-    if (!totalDistanceKm || !etaSeconds) return 0;
-    // 기본 속도로 이동한 거리 (과속 상태 고려하지 않은 단순 계산)
-    const baseDistance = (elapsedSeconds / etaSeconds) * totalDistanceKm;
-    return Math.min(baseDistance, totalDistanceKm);
-  }, [elapsedSeconds, etaSeconds, totalDistanceKm]);
+  // 실제 이동 거리 (속도 기반 누적) - 최대값은 총 거리로 제한
+  const distanceCovered = Math.min(traveledDistanceKm, totalDistanceKm);
 
   // 현재 진행률 계산
   const progress = totalDistanceKm > 0 ? Math.min((distanceCovered / totalDistanceKm) * 100, 100) : 0;
   
-  // 거리 정보 계산
-  const distanceRemaining = (totalDistanceKm - distanceCovered).toFixed(2);
+  // 남은 거리 (숫자)
+  const distanceRemainingNum = Math.max(totalDistanceKm - distanceCovered, 0);
+  
+  // 거리 정보 계산 (표시용 문자열)
+  const distanceRemaining = distanceRemainingNum.toFixed(2);
   
   // 현재 속도 기준 도착 예상 시간 (ETA)
-  const estimatedRemainingSeconds = currentSpeedKmh > 0 
-    ? (parseFloat(distanceRemaining) / currentSpeedKmh) * 3600 
-    : etaSeconds - elapsedSeconds;
+  const estimatedRemainingSeconds = useMemo(() => {
+    return currentSpeedKmh > 0 
+      ? (distanceRemainingNum / currentSpeedKmh) * 3600 
+      : etaSeconds - elapsedSeconds;
+  }, [distanceRemainingNum, currentSpeedKmh, etaSeconds, elapsedSeconds]);
 
-  // 운행 데이터 로드 시 속도 초기화
+  // 운행 데이터 로드 시 속도 및 초기 위치 설정
   useEffect(() => {
     if (runDetail && currentSpeedKmh === 0) {
       setCurrentSpeedKmh(baseSpeedKmh);
+      
+      // 페이지 새로고침 시: 경과 시간 기반으로 초기 이동 거리 추정
+      // (기본 속도로 이동했다고 가정)
+      if (traveledDistanceKm === 0 && elapsedSeconds > 0 && totalDistanceKm > 0) {
+        const estimatedDistance = (baseSpeedKmh / 3600) * elapsedSeconds;
+        setTraveledDistanceKm(Math.min(estimatedDistance, totalDistanceKm));
+      }
     }
-  }, [runDetail, baseSpeedKmh, currentSpeedKmh]);
+  }, [runDetail, baseSpeedKmh, currentSpeedKmh, elapsedSeconds, totalDistanceKm, traveledDistanceKm]);
 
   const isOvertime = elapsedSeconds > etaSeconds;
 
@@ -221,13 +227,13 @@ export const ActiveRunPage = () => {
     fetchRoute();
   }, [order]);
 
-  // 실시간 갱신 타이머 (1초마다 tick 증가로 경과 시간 재계산)
+  // 실시간 갱신 타이머 (1초마다 속도에 따라 거리 누적)
   useEffect(() => {
     if (!runDetail || runDetail.run.status !== 'IN_TRANSIT') return;
 
     const timer = setInterval(() => {
       // 이미 도착한 경우 타이머 중지 및 자동 완료 처리
-      if (progress >= 100) {
+      if (traveledDistanceKm >= totalDistanceKm && totalDistanceKm > 0) {
         clearInterval(timer);
         handleComplete();
         return;
@@ -237,12 +243,12 @@ export const ActiveRunPage = () => {
       
       // 연료 소모 로직
       setFuel(prev => {
-        if (progress >= 100) return prev;
+        if (traveledDistanceKm >= totalDistanceKm) return prev;
         const consumption = isSpeeding ? 0.15 : 0.05; // 과속 시 3배 소모
         return Math.max(0, prev - consumption);
       });
 
-      // 가속/감속 로직
+      // 가속/감속 로직 (먼저 속도 계산)
       setCurrentSpeedKmh(prev => {
         const targetSpeed = isSpeeding ? maxSpeedKmh : baseSpeedKmh;
         if (prev < targetSpeed) return Math.min(prev + acceleration, targetSpeed);
@@ -250,39 +256,32 @@ export const ActiveRunPage = () => {
         return prev;
       });
 
-      // NOTE: 클라이언트 사이드 단속 로직 제거됨.
-      // 이제 모든 단속 및 정산은 서버(Cron)에서 백엔드 로직으로 처리됩니다.
-      // 사용자는 운행 중 발생하는 이벤트 로그를 통해 결과를 확인하게 됩니다.
+      // 실제 이동 거리 누적 (현재 속도 기반, 공통 함수 사용)
+      setTraveledDistanceKm(prev => {
+        if (prev >= totalDistanceKm) return prev;
+        const distancePerSecond = speedToKmPerSecond(currentSpeedKmh);
+        return Math.min(prev + distancePerSecond, totalDistanceKm);
+      });
     }, 1000);
     return () => clearInterval(timer);
-  }, [runDetail, isSpeeding, baseSpeedKmh, maxSpeedKmh, elapsedSeconds, progress, runId, addEventLog, handleComplete]);
+  }, [runDetail, isSpeeding, baseSpeedKmh, maxSpeedKmh, totalDistanceKm, traveledDistanceKm, currentSpeedKmh, runId, addEventLog, handleComplete]);
 
-  // 경로 위의 현재 위치 계산 (progress에 따라)
+  // 경로 위의 현재 위치 계산 (공통 함수 사용)
   useEffect(() => {
-    if (!routeData || !routeData.coordinates) return;
-    
-    const coords = routeData.coordinates;
-    const pointIndex = Math.floor((coords.length - 1) * (progress / 100));
-    const nextPointIndex = Math.min(pointIndex + 1, coords.length - 1);
-    
-    // 두 점 사이의 보간 (Interpolation)
-    const segmentProgress = ((progress / 100) * (coords.length - 1)) - pointIndex;
-    const currentLng = coords[pointIndex][0] + (coords[nextPointIndex][0] - coords[pointIndex][0]) * segmentProgress;
-    const currentLat = coords[pointIndex][1] + (coords[nextPointIndex][1] - coords[pointIndex][1]) * segmentProgress;
-    
-    setCurrentPos([currentLat, currentLng]);
+    const pos = interpolatePositionOnRoute(routeData as RouteCoordinate, progress);
+    if (pos) {
+      setCurrentPos(pos);
+    }
   }, [progress, routeData]);
 
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
   // 도착 예정 시각 (현재 시각 + 남은 예상 초)
-  const arrivalTime = new Date(Date.now() + estimatedRemainingSeconds * 1000);
+  const arrivalTime = useMemo(() => {
+    return new Date(Date.now() + estimatedRemainingSeconds * 1000);
+  }, [estimatedRemainingSeconds]);
 
-  const geojson = useMemo(() => ({
-    type: 'Feature',
-    properties: {},
-    geometry: routeData
-  }), [routeData]);
+  const geojson = useMemo(() => routeToGeoJSON(routeData), [routeData]);
 
   // 로딩 상태
   if (isLoading) {
@@ -581,6 +580,7 @@ export const ActiveRunPage = () => {
           order={order} 
           elapsedSeconds={elapsedSeconds}
           etaSeconds={etaSeconds}
+          estimatedRemainingSeconds={estimatedRemainingSeconds}
           runId={runId || 'temp'}
         />
       </div>

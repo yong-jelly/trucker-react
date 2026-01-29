@@ -16,6 +16,44 @@
 
 ## 📂 이슈 목록
 
+### [DB] 크로스 스키마 유저 초기화 버그 (슬롯/장비 미지급)
+- **Status**: ✅ Resolved
+- **Date**: 2026-01-29
+
+#### 🔴 Issue
+다른 Supabase 스키마(mmcheck 등)에서 이미 가입한 유저가 trucker 프로젝트에 처음 접속할 때 슬롯과 기본 장비가 지급되지 않음.
+
+**증상:**
+- 유저 "성용수": auth.users 생성일 2026-01-06, tbl_user_profile 생성일 2026-01-29 (23일 차이)
+- 프로필은 생성되었으나 슬롯 0개, 장비 0개
+
+#### 🔍 Cause
+1. **auth.users 공유 문제**: Supabase에서 하나의 계정으로 여러 스키마를 운영할 때 auth.users는 공유됨
+2. **트리거 미실행**: `handle_new_user` 트리거는 auth.users INSERT 시에만 실행됨. 다른 스키마에서 이미 가입한 유저는 auth.users에 이미 존재하므로 트리거가 실행되지 않음
+3. **API 함수 누락**: `v1_get_user_profile`, `v1_upsert_user_profile` 함수에서 신규 프로필 생성 시 슬롯/장비 지급 로직이 없었음
+4. **FK 참조 오류**: `tbl_slots.user_id`는 `tbl_user_profile.public_profile_id`를 참조하는데, 기존 코드에서 `auth_user_id`를 사용함
+
+```
+[다른 스키마에서 가입한 유저의 흐름]
+
+mmcheck 가입 → auth.users INSERT → trucker.handle_new_user 트리거 실행 X (trucker 스키마 테이블 없음)
+                                        ↓
+trucker 첫 접속 → v1_get_user_profile 호출 → 프로필만 생성, 슬롯/장비 누락!
+```
+
+#### ✅ Solution
+1. **v1_get_user_profile 수정**: 신규 프로필 생성 시 슬롯과 기본 장비도 함께 생성
+2. **v1_upsert_user_profile 수정**: 동일하게 슬롯/장비 생성 로직 추가
+3. **handle_new_user 수정**: `public_profile_id`를 사용하도록 수정
+4. **기존 데이터 복구**: 슬롯/장비가 누락된 유저에게 자동 지급
+
+**수정된 파일:**
+- `doc/sql/003_v1_get_user_profile.sql`
+- `doc/sql/023_create_equipment_tables.sql`
+- `doc/sql/026_fix_cross_schema_user_init.sql` (신규)
+
+---
+
 ### [DB] v1_upsert_user_profile ON CONFLICT 매칭 실패
 - **Status**: ✅ Resolved
 - **Date**: 2026-01-29
@@ -240,6 +278,39 @@ BEGIN
 END;
 $$;
 ```
+
+---
+
+### [UI/Logic] 운행 로직 공통화 및 실시간 데이터 정확도 개선
+- **Status**: ✅ Resolved
+- **Date**: 2026-01-29
+
+#### 🔴 Issue
+1. `ActiveRun.tsx`, `PublicRun.tsx`, `RoutePreviewMap.tsx` 등 여러 곳에서 속도 계산, 경로 보간, Mapbox API 호출 로직이 중복되고 파편화됨.
+2. `PublicRun.tsx`에서 진행률 계산 시 장비의 실제 속도를 반영하지 못하고 단순히 시간 비율로만 계산하여 실제 운행 상태와 괴리가 발생함.
+3. 가속(Overdrive) 시 ETA 및 남은 거리가 실시간으로 갱신되지 않아 사용자 경험 저하.
+
+#### 🔍 Cause
+- 초기 개발 시 각 페이지별로 독립적으로 로직을 구현하여 공통 로직이 부재함.
+- `PublicRun`의 경우 서버 사이드 업데이트가 아닌 클라이언트 사이드 추정 방식을 사용하는데, 이때 장비의 성능(속도) 데이터를 고려하지 않음.
+
+#### 💡 Solution
+운행 관련 핵심 로직을 공통 라이브러리로 분리하고, 모든 관련 컴포넌트에서 이를 참조하도록 구조 개선.
+
+1. **공통 유틸리티 생성**: `src/shared/lib/run.ts` 파일을 생성하여 다음 로직을 통합.
+   - 장비 스냅샷 기반 속도 추출 (`getSpeedFromSnapshot`)
+   - 연료 패널티 적용 (`applyFuelPenalty`)
+   - 초당 이동 거리 계산 (`speedToKmPerSecond`)
+   - 경로 상 위치 보간 (`interpolatePositionOnRoute`)
+   - Mapbox 라우팅 API 호출 통합 (`fetchMapboxRoute`)
+2. **PublicRun 개선**: 시간 비율이 아닌, 장비의 `base_speed`를 기반으로 실제 이동 거리를 추정하여 진행률과 위치를 계산하도록 수정.
+3. **ActiveRun 개선**: 가속 시 실시간으로 변하는 속도를 반영하여 `traveledDistanceKm`를 누적하고, 이를 기반으로 ETA와 남은 거리를 `useMemo`로 실시간 갱신.
+
+#### 📁 수정된 파일
+- `src/shared/lib/run.ts` (신규)
+- `src/pages/ActiveRun.tsx`
+- `src/pages/PublicRun.tsx`
+- `src/widgets/order/RoutePreviewMap.tsx`
 
 ---
 
