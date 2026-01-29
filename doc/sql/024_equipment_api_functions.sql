@@ -236,7 +236,7 @@ COMMENT ON FUNCTION trucker.v1_get_equipment_by_id IS '단일 장비 조회';
 GRANT EXECUTE ON FUNCTION trucker.v1_get_equipment_by_id TO anon, authenticated;
 
 -- =====================================================
--- 6. v1_create_run() 수정 - 장비 스냅샷 저장 로직 추가
+-- 6. v1_create_run() 수정 - 장비 스냅샷 저장 및 단속 로직 통합
 -- =====================================================
 CREATE OR REPLACE FUNCTION trucker.v1_create_run(
     p_user_id uuid,
@@ -257,20 +257,31 @@ DECLARE
     v_deadline_at timestamp with time zone;
     v_equipment_id text;
     v_equipment_snapshot jsonb;
+    v_max_enforcement_limit integer;
+    v_actual_max_enforcement integer;
+    v_prob float;
+    v_fine_rate float;
 BEGIN
-    -- p_user_id는 public_profile_id를 직접 받음
-    -- 프로필 존재 확인
-    IF NOT EXISTS (SELECT 1 FROM trucker.tbl_user_profile WHERE public_profile_id = p_user_id) THEN
-        RAISE EXCEPTION 'User profile not found for public_profile_id: %', p_user_id;
-    END IF;
-
     -- 1. 주문 정보 조회
     SELECT * INTO v_order FROM trucker.tbl_orders WHERE id = p_order_id;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Order not found';
     END IF;
 
-    -- 2. 장비 정보 조회 및 스냅샷 생성
+    -- 2. 관리자 설정 로드 (단속 관련)
+    SELECT (value->>0)::integer INTO v_max_enforcement_limit FROM trucker.tbl_admin_config WHERE key = 'enforcement_max_count';
+    SELECT (value->>0)::float INTO v_prob FROM trucker.tbl_admin_config WHERE key = 'enforcement_check_probability';
+    SELECT (value->>0)::float INTO v_fine_rate FROM trucker.tbl_admin_config WHERE key = 'enforcement_fine_rate';
+
+    -- 기본값 설정 (설정이 없을 경우)
+    v_max_enforcement_limit := COALESCE(v_max_enforcement_limit, 1);
+    v_prob := COALESCE(v_prob, 0.25);
+    v_fine_rate := COALESCE(v_fine_rate, 0.1);
+
+    -- 결정론적 단속 횟수 설정 (0 ~ 관리자 설정값 사이의 랜덤 정수)
+    v_actual_max_enforcement := floor(random() * (v_max_enforcement_limit + 1));
+
+    -- 3. 장비 정보 조회 및 스냅샷 생성
     v_equipment_id := COALESCE(p_selected_items->>'equipmentId', 'basic-bicycle');
     
     SELECT * INTO v_equipment FROM trucker.tbl_equipments WHERE id = v_equipment_id;
@@ -290,12 +301,12 @@ BEGIN
         'max_volume', v_equipment.max_volume
     );
 
-    -- 3. ETA 계산 (장비의 base_speed 기반)
+    -- 4. ETA 계산 (장비의 base_speed 기반)
     -- 거리(km) / 속도(km/h) * 3600 = 초
     v_eta_seconds := ROUND((v_order.distance / v_equipment.base_speed) * 3600);
     v_deadline_at := now() + (v_order.limit_time_minutes * interval '1 minute');
 
-    -- 4. Run 생성 (user_id는 public_profile_id)
+    -- 5. Run 생성
     INSERT INTO trucker.tbl_runs (
         user_id,
         order_id,
@@ -310,7 +321,10 @@ BEGIN
         current_reward,
         current_risk,
         current_durability,
-        current_fuel
+        current_fuel,
+        max_enforcement_count,
+        enforcement_probability,
+        fine_rate
     ) VALUES (
         p_user_id,
         p_order_id,
@@ -325,16 +339,19 @@ BEGIN
         v_order.base_reward,
         0.05, -- 기본 위험도
         100,
-        100
+        100,
+        v_actual_max_enforcement,
+        v_prob,
+        v_fine_rate
     )
     RETURNING * INTO v_run;
 
-    -- 5. 슬롯 상태 업데이트
+    -- 6. 슬롯 상태 업데이트
     UPDATE trucker.tbl_slots 
     SET active_run_id = v_run.id 
     WHERE id = p_slot_id;
 
-    -- 6. 이벤트 로그 추가 (운행 시작)
+    -- 7. 이벤트 로그 추가 (운행 시작)
     INSERT INTO trucker.tbl_event_logs (
         run_id,
         type,
@@ -347,7 +364,7 @@ BEGIN
         v_run.id,
         'SYSTEM',
         '운행 시작',
-        '[' || v_order.title || '] ' || v_equipment.name || '(으)로 운행을 시작합니다. 안전 운전하세요!',
+        '[' || v_order.title || '] ' || v_equipment.name || '(으)로 운행을 시작합니다. (최대 단속: ' || v_actual_max_enforcement || '회)',
         0,
         0,
         false
@@ -357,5 +374,5 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION trucker.v1_create_run IS '운행(Run)을 생성합니다. 장비 스냅샷을 저장하여 진행 중 설정 변경 영향 없음';
+COMMENT ON FUNCTION trucker.v1_create_run IS '운행(Run)을 생성합니다. 장비 스냅샷을 저장하고 단속 설정을 통합합니다.';
 GRANT EXECUTE ON FUNCTION trucker.v1_create_run TO authenticated;
