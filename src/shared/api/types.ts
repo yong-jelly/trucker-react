@@ -71,6 +71,15 @@ export interface Run {
   accumulatedBonus: number;
   currentRisk: number; // 0 ~ 1
   currentDurability: number; // 0 ~ 100
+  equipmentSnapshot?: {
+    id: string;
+    name: string;
+    equipment_type: string;
+    base_speed: number;
+    max_speed: number;
+    max_weight: number;
+    max_volume: number;
+  };
 }
 
 // 5. 이벤트 로그 (영수증 라인 아이템)

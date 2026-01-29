@@ -49,6 +49,15 @@ export async function getActiveRuns(userId: string): Promise<ActiveRun[]> {
       maxEnforcementCount: row.max_enforcement_count || 0,
       enforcementProbability: row.enforcement_probability || 0,
       fineRate: row.fine_rate || 0,
+      equipmentSnapshot: row.equipment_snapshot ? {
+        id: row.equipment_snapshot.id,
+        name: row.equipment_snapshot.name,
+        equipment_type: row.equipment_snapshot.equipment_type,
+        base_speed: row.equipment_snapshot.base_speed,
+        max_speed: row.equipment_snapshot.max_speed,
+        max_weight: row.equipment_snapshot.max_weight,
+        max_volume: row.equipment_snapshot.max_volume,
+      } : undefined,
     },
     order: {
       title: row.order_title,
@@ -120,6 +129,15 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       maxEnforcementCount: row.max_enforcement_count || 0,
       enforcementProbability: row.enforcement_probability || 0,
       fineRate: row.fine_rate || 0,
+      equipmentSnapshot: row.equipment_snapshot ? {
+        id: row.equipment_snapshot.id,
+        name: row.equipment_snapshot.name,
+        equipment_type: row.equipment_snapshot.equipment_type,
+        base_speed: row.equipment_snapshot.base_speed,
+        max_speed: row.equipment_snapshot.max_speed,
+        max_weight: row.equipment_snapshot.max_weight,
+        max_volume: row.equipment_snapshot.max_volume,
+      } : undefined,
     },
     order: {
       title: row.order_title,
@@ -264,10 +282,19 @@ export async function createRun(params: {
     currentReward: run.current_reward,
     accumulatedPenalty: run.accumulated_penalty,
     accumulatedBonus: run.accumulated_bonus,
-      currentRisk: run.current_risk,
-      currentDurability: run.current_durability,
-      maxEnforcementCount: run.max_enforcement_count || 0,
-      enforcementProbability: run.enforcement_probability || 0,
-      fineRate: run.fine_rate || 0,
-    };
+    currentRisk: run.current_risk,
+    currentDurability: run.current_durability,
+    maxEnforcementCount: run.max_enforcement_count || 0,
+    enforcementProbability: run.enforcement_probability || 0,
+    fineRate: run.fine_rate || 0,
+    equipmentSnapshot: run.equipment_snapshot ? {
+      id: run.equipment_snapshot.id,
+      name: run.equipment_snapshot.name,
+      equipment_type: run.equipment_snapshot.equipment_type,
+      base_speed: run.equipment_snapshot.base_speed,
+      max_speed: run.equipment_snapshot.max_speed,
+      max_weight: run.equipment_snapshot.max_weight,
+      max_volume: run.equipment_snapshot.max_volume,
+    } : undefined,
+  };
 }

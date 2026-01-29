@@ -79,11 +79,13 @@ export const ActiveRunPage = () => {
   // 현재 장비 유형 (없으면 기본 자전거)
   const equipmentType = runDetail?.run.selectedItems?.equipmentId || order?.requiredEquipmentType || 'BICYCLE';
   
-  // 장비 기반 속도 설정
-  const equipmentBaseSpeed = EQUIPMENT_SPEEDS[equipmentType] || 15;
+  // 장비 기반 속도 설정 (스냅샷이 있으면 스냅샷 값 우선 사용)
+  const equipmentBaseSpeed = runDetail?.run.equipmentSnapshot?.base_speed || EQUIPMENT_SPEEDS[equipmentType] || 15;
+  const equipmentMaxSpeed = runDetail?.run.equipmentSnapshot?.max_speed || (equipmentBaseSpeed * 1.5);
+  
   const fuelPenaltyMultiplier = fuel <= 0 ? 0.2 : 1.0; // 연료 고갈 시 80% 감속
   const baseSpeedKmh = equipmentBaseSpeed * fuelPenaltyMultiplier;
-  const maxSpeedKmh = baseSpeedKmh * 1.5; // 가속 시 최대 1.5배 (자전거: 22.5km/h)
+  const maxSpeedKmh = equipmentMaxSpeed * fuelPenaltyMultiplier;
   const acceleration = 2.0; // 초당 가속도 (빠르게 목표 속도 도달)
 
   // 경과 시간 기반 이동 거리 계산
