@@ -1,5 +1,5 @@
 import { rpcTrucker } from '../../shared/api/supabase';
-import type { DriverPersona, DriverStat } from '../../shared/api/types';
+import type { DriverPersona } from '../../shared/api/types';
 import { Assets } from '../../shared/assets';
 
 /**

@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getDriverPersonas, getDriverPersonaById, hireDriver } from './api';
-import type { DriverPersona } from '../../shared/api/types';
 import { userKeys } from '../user/queries';
 
 export const driverKeys = {
