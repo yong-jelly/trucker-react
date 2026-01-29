@@ -270,6 +270,12 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                   <PlayCircle className="h-5 w-5 text-accent-emerald" />
                   진행 중인 운행
                 </h2>
+                <button 
+                  onClick={fetchActiveRuns}
+                  className="p-2 text-surface-400 hover:text-surface-600 transition-colors"
+                >
+                  <RefreshCw className={`h-4 w-4 ${isActiveRunsLoading ? 'animate-spin' : ''}`} />
+                </button>
               </div>
               <div className="space-y-3">
                 {activeRuns.map((activeRun) => (
@@ -309,10 +315,18 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
           {/* 사용 가능한 주문 */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-surface-900">사용 가능한 주문</h2>
-              <span className="text-xs font-medium text-surface-500">
-                {isOrdersLoading ? '로딩 중...' : `${orders.length}개`}
-              </span>
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-lg font-medium text-surface-900">사용 가능한 주문</h2>
+                <span className="text-[10px] font-medium text-surface-400">
+                  {isOrdersLoading ? '· 로딩 중...' : `· ${orders.length}개`}
+                </span>
+              </div>
+              <button 
+                onClick={fetchOrders}
+                className="p-2 text-surface-400 hover:text-surface-600 transition-colors"
+              >
+                <RefreshCw className={`h-4 w-4 ${isOrdersLoading ? 'animate-spin' : ''}`} />
+              </button>
             </div>
             
             <div className="space-y-3">

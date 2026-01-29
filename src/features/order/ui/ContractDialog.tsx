@@ -75,13 +75,13 @@ export const ContractDialog = ({
           <div className="flex gap-3">
             <button 
               onClick={() => onOpenChange(false)}
-              className="flex-1 rounded-2xl bg-surface-100 py-3.5 text-sm font-medium text-surface-600 hover:bg-surface-200 transition-colors"
+              className="flex-1 rounded-2xl bg-surface-100 py-3.5 text-sm font-medium text-surface-600 active:bg-surface-200"
             >
               취소
             </button>
             <button 
               onClick={onConfirm}
-              className="flex-[2] rounded-2xl bg-primary-600 py-3.5 text-sm font-medium text-white shadow-soft-md hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
+              className="flex-[2] rounded-2xl bg-primary-600 py-3.5 text-sm font-medium text-white shadow-soft-md active:bg-primary-700 flex items-center justify-center gap-2"
             >
               <FileText className="h-4 w-4" />
               계약 서명 및 출발

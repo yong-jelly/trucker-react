@@ -10,6 +10,7 @@ import { createRun } from '../entities/run';
 import { getOrderById } from '../entities/order';
 import type { Order } from '../shared/api/types';
 import { useUserEquipments, type UserEquipment } from '../entities/equipment';
+import { getActiveRuns } from '../entities/run';
 import { Assets } from '../shared/assets';
 import { ContractDialog } from '../features/order/ui/ContractDialog';
 
@@ -39,6 +40,7 @@ export const OrderDetailPage = () => {
   const [isContractOpen, setIsContractOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeRuns, setActiveRuns] = useState<any[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<UserEquipment | null>(null);
   const [isEquipmentSheetOpen, setIsEquipmentSheetOpen] = useState(false);
   
@@ -53,12 +55,18 @@ export const OrderDetailPage = () => {
     window.scrollTo(0, 0);
     
     if (orderId) {
-      getOrderById(orderId)
-        .then(setOrder)
+      Promise.all([
+        getOrderById(orderId),
+        profileId ? getActiveRuns(profileId) : Promise.resolve([])
+      ])
+        .then(([orderData, runsData]) => {
+          setOrder(orderData);
+          setActiveRuns(runsData);
+        })
         .catch(err => console.error(err))
         .finally(() => setIsLoading(false));
     }
-  }, [orderId]);
+  }, [orderId, profileId]);
 
   // 유저 장비 로드 후 기본 장비 선택
   useEffect(() => {
@@ -70,6 +78,8 @@ export const OrderDetailPage = () => {
   }, [userEquipments, selectedEquipment]);
 
   const availableSlot = slots.find(s => !s.isLocked && !s.activeRunId);
+  const isAlreadyRunning = activeRuns.length > 0;
+  const canStartRun = availableSlot && !isAlreadyRunning;
 
   const formatDuration = (minutes: number) => {
     const h = Math.floor(minutes / 60);
@@ -112,6 +122,18 @@ export const OrderDetailPage = () => {
     if (!profileId || !order || !availableSlot || !selectedEquipment) return;
 
     try {
+      // 최종 중복 체크: 최신 진행 중인 운행 목록 확인
+      const latestActiveRuns = await getActiveRuns(profileId);
+      if (latestActiveRuns.length > 0) {
+        sendNotification(profileId, {
+          title: "⚠️ 운행 시작 불가",
+          message: "이미 진행 중인 운행이 있습니다. 한 번에 하나의 운행만 가능합니다.",
+          type: "error"
+        });
+        navigate('/');
+        return;
+      }
+
       // 실제 DB에 Run 생성 (public_profile_id 사용)
       const newRun = await createRun({
         userId: profileId,
@@ -153,7 +175,7 @@ export const OrderDetailPage = () => {
           <h1 className="text-lg font-medium text-surface-900">주문 상세</h1>
         </div>
 
-        {availableSlot ? (
+        {canStartRun ? (
           <button
             onClick={handleStartDelivery}
             className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-soft-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
@@ -166,7 +188,7 @@ export const OrderDetailPage = () => {
             disabled
             className="flex items-center gap-1.5 rounded-xl bg-surface-100 px-4 py-2 text-sm font-medium text-surface-400"
           >
-            슬롯 없음
+            {isAlreadyRunning ? '이미 운행 중' : '슬롯 없음'}
           </button>
         )}
       </header>
