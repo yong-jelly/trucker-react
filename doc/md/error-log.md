@@ -241,6 +241,46 @@ END;
 $$;
 ```
 
+---
+
+### [UI/API] 자전거 장비의 최대 속도 제한 문제 (22km/h 고정)
+- **Status**: ✅ Resolved
+- **Date**: 2026-01-29
+
+#### 🔴 Issue
+자전거 장비 설정에서 최대 속도를 60km/h로 설정했음에도 불구하고, 실제 운행 중 가속 시 22km/h 부근에서 속도가 더 이상 올라가지 않는 현상 발생.
+
+#### 🔍 Cause
+프론트엔드 로직의 하드코딩과 DB API의 데이터 누락이 결합된 문제.
+
+```text
+[ Logic Flow ]
+      |-- ActiveRun.tsx
+      |     |-- EQUIPMENT_SPEEDS['BICYCLE'] = 15 (하드코딩된 기본값)
+      |     |-- maxSpeedKmh = baseSpeed * 1.5 = 22.5km/h
+      |
+[ Data Flow ]
+      |-- tbl_runs.equipment_snapshot (DB에는 60km/h가 저장되어 있음)
+      |-- v1_get_run_by_id (SQL 함수가 snapshot을 반환하지 않음)
+      |-- RunDetail (인터페이스에 snapshot 필드 부재)
+```
+
+- 운행 페이지(`ActiveRun.tsx`)에서 장비의 실제 설정값이 아닌 하드코딩된 기본값(`15km/h`)에 1.5배를 곱해 최대 속도를 계산하고 있었습니다.
+- DB에는 운행 시작 시점의 장비 설정이 `equipment_snapshot`으로 저장되어 있었으나, 이를 조회하는 API에서 해당 필드를 누락하여 프론트엔드에서 실제 설정값을 알 수 없었습니다.
+
+#### 💡 Solution
+DB 함수부터 프론트엔드 로직까지 데이터 흐름을 연결하여 실제 설정값을 사용하도록 수정.
+
+1. **SQL**: `v1_get_run_by_id` 함수가 `equipment_snapshot` 컬럼을 반환하도록 수정.
+2. **API/Types**: `Run` 인터페이스에 `equipmentSnapshot` 필드를 추가하고 API 매핑 로직 업데이트.
+3. **UI**: `ActiveRun.tsx`에서 속도 계산 시 `equipmentSnapshot`의 `max_speed` 값을 우선적으로 사용하도록 수정.
+
+```typescript
+// ActiveRun.tsx 수정 내용
+const equipmentBaseSpeed = runDetail?.run.equipmentSnapshot?.base_speed || EQUIPMENT_SPEEDS[equipmentType] || 15;
+const equipmentMaxSpeed = runDetail?.run.equipmentSnapshot?.max_speed || (equipmentBaseSpeed * 1.5);
+```
+
 **2. 프론트엔드 수정 (Home.tsx, OrderDetail.tsx, Garage.tsx)**
 ```tsx
 // 수정 전: auth_user_id 사용
