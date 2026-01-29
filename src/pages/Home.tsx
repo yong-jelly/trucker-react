@@ -24,12 +24,15 @@ const LoadingScreen = ({ message }: { message: string }) => (
 const Dashboard = ({ profile }: { profile: UserProfile }) => {
   const navigate = useNavigate();
   const { slots, setSlots } = useGameStore();
-  const { user, isAuthenticated } = useUserStore();
+  const { isAuthenticated } = useUserStore();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [isOrdersLoading, setIsOrdersLoading] = useState(true);
   const [isSlotsLoading, setIsSlotsLoading] = useState(true);
   const [isActiveRunsLoading, setIsActiveRunsLoading] = useState(true);
+
+  // public_profile_id 사용 (auth 테이블과 독립적)
+  const profileId = profile.public_profile_id;
 
   // 최후의 방어선: profile이 null이면 로딩 화면 표시
   if (!profile || typeof profile.balance !== 'number') {
@@ -38,42 +41,55 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
 
   // 슬롯 목록 로드 함수
   const fetchSlots = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !profileId) return;
     
     try {
-      const userSlots = await getUserSlots(user.id);
-      setSlots(userSlots);
+      console.log('Fetching slots for profile:', profileId);
+      const userSlots = await getUserSlots(profileId);
+      console.log('Fetched slots:', userSlots);
+      
+      // MVP 대응: 슬롯이 1개도 없거나 index 0이 없으면 강제로 기본 슬롯 생성 (클라이언트 사이드 보정)
+      let finalSlots = [...userSlots];
+      if (finalSlots.length === 0) {
+        finalSlots = [
+          { id: 'temp-0', index: 0, isLocked: false },
+          { id: 'temp-1', index: 1, isLocked: true },
+          { id: 'temp-2', index: 2, isLocked: true },
+        ];
+      }
+      
+      setSlots(finalSlots);
     } catch (err) {
       console.error('Failed to fetch slots:', err);
     } finally {
       setIsSlotsLoading(false);
     }
-  }, [isAuthenticated, user, setSlots]);
+  }, [isAuthenticated, profileId, setSlots]);
 
   // 진행 중인 운행 목록 로드 함수
   const fetchActiveRuns = useCallback(async () => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !profileId) return;
     
     try {
-      const runs = await getActiveRuns(user.id);
+      const runs = await getActiveRuns(profileId);
       setActiveRuns(runs);
     } catch (err) {
       console.error('Failed to fetch active runs:', err);
     } finally {
       setIsActiveRunsLoading(false);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, profileId]);
 
   // 주문 목록 로드 함수
   const fetchOrders = useCallback(() => {
-    if (!isAuthenticated || !user) return;
+    if (!isAuthenticated || !profileId) return;
     
     setIsOrdersLoading(true);
-    getOrders(user.id)
+    getOrders(profileId)
       .then(setOrders)
       .catch(err => console.error(err))
       .finally(() => setIsOrdersLoading(false));
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, profileId]);
 
   // 슬롯, 주문, 진행 중인 운행 목록 로드
   useEffect(() => {
@@ -88,7 +104,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
     return () => clearInterval(interval);
   }, [fetchSlots, fetchOrders, fetchActiveRuns]);
 
-  const activeSlot = slots.find(s => !s.isLocked && !s.activeRunId);
+  const activeSlot = slots.find(s => s.index === 0 && !s.activeRunId);
 
   const getEquipmentIcon = (equipmentId: string | null | undefined) => {
     switch (equipmentId) {
@@ -123,7 +139,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
           <div className="flex flex-col gap-4 rounded-2xl bg-white p-5 shadow-soft-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-1">Available Balance</p>
+                <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest mb-1">보유 잔액</p>
                 <span className="text-3xl font-medium text-surface-900">
                   ${profile.balance.toLocaleString()}
                 </span>
@@ -150,7 +166,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                   </button>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">Reputation</p>
+                  <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest">평판</p>
                   <span className="text-2xl font-medium text-primary-600 leading-none">{profile.reputation.toLocaleString()}</span>
                 </div>
               </div>
@@ -160,27 +176,33 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
             <div className="flex items-center gap-2 border-t border-surface-100 pt-4">
               <span className="text-sm font-medium text-surface-600">슬롯</span>
               <div className="flex gap-1.5 flex-1 overflow-x-auto scrollbar-hide">
-                {slots.map((slot) => (
-                  <div 
-                    key={slot.id} 
-                    className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors shrink-0 ${
-                      slot.isLocked 
-                        ? 'bg-surface-100 text-surface-400 border border-surface-200' 
-                        : slot.activeRunId
-                          ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
-                          : 'bg-primary-50 text-primary-600 border border-primary-100'
-                    }`}
-                  >
-                    <div className={`h-1.5 w-1.5 rounded-full ${
-                      slot.isLocked 
-                        ? 'bg-surface-300' 
-                        : slot.activeRunId 
-                          ? 'bg-accent-emerald animate-pulse' 
-                          : 'bg-primary-500'
-                    }`} />
-                    {slot.index + 1}
-                  </div>
-                ))}
+                {slots.map((slot) => {
+                  const isMVPDisabled = slot.index > 0;
+                  const isLocked = slot.isLocked || isMVPDisabled;
+                  
+                  return (
+                    <div 
+                      key={slot.id} 
+                      className={`flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors shrink-0 ${
+                        isLocked 
+                          ? 'bg-surface-100 text-surface-400 border border-surface-200 opacity-60' 
+                          : slot.activeRunId
+                            ? 'bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20'
+                            : 'bg-primary-50 text-primary-600 border border-primary-100'
+                      }`}
+                    >
+                      <div className={`h-1.5 w-1.5 rounded-full ${
+                        isLocked 
+                          ? 'bg-surface-300' 
+                          : slot.activeRunId 
+                            ? 'bg-accent-emerald animate-pulse' 
+                            : 'bg-primary-500'
+                      }`} />
+                      {slot.index + 1}
+                      {isMVPDisabled && <span className="ml-1 text-[8px] opacity-50">MVP</span>}
+                    </div>
+                  );
+                })}
               </div>
               
               {/* 창고/상점 바로가기 */}
@@ -228,7 +250,6 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
                   <PlayCircle className="h-5 w-5 text-accent-emerald" />
                   진행 중인 운행
                 </h2>
-                <span className="text-xs font-medium text-accent-emerald uppercase tracking-widest animate-pulse">ON AIR</span>
               </div>
               <div className="space-y-3">
                 {activeRuns.map((activeRun) => (
@@ -268,7 +289,7 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-surface-900">사용 가능한 주문</h2>
               <span className="text-xs font-medium text-surface-500">
-                {isOrdersLoading ? '로딩 중...' : `${orders.length}개 오퍼`}
+                {isOrdersLoading ? '로딩 중...' : `${orders.length}개`}
               </span>
             </div>
             

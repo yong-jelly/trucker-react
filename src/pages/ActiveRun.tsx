@@ -8,6 +8,7 @@ import { MAPBOX_TOKEN } from '../shared/lib/mockData';
 import { RunSheet } from '../widgets/run/RunSheet';
 import { useGameStore } from '../app/store';
 import { getRunById, completeRun, type RunDetail } from '../entities/run';
+import { formatDuration, formatKSTTime } from '../shared/lib/date';
 
 type ViewMode = 'map' | 'info';
 
@@ -220,7 +221,7 @@ export const ActiveRunPage = () => {
 
   // 실시간 갱신 타이머 (1초마다 tick 증가로 경과 시간 재계산)
   useEffect(() => {
-    if (!runDetail) return;
+    if (!runDetail || runDetail.run.status !== 'IN_TRANSIT') return;
 
     const timer = setInterval(() => {
       // 이미 도착한 경우 타이머 중지 및 자동 완료 처리
@@ -247,56 +248,9 @@ export const ActiveRunPage = () => {
         return prev;
       });
 
-      // 단속 로직 (매 15초마다 확률 체크) - 서버에서 처리하도록 변경 예정
-      if (elapsedSeconds > 0 && elapsedSeconds % 15 === 0 && progress < 100) {
-        const baseProb = 0.05; // 기본 5%
-        const multiplier = isSpeeding ? 4 : 1; // 과속 시 4배 (20%)
-        
-        if (Math.random() < (baseProb * multiplier)) {
-          const choices = ['DOCUMENT', 'BYPASS', 'EVASION'];
-          const choice = choices[Math.floor(Math.random() * choices.length)];
-          
-          let title = '';
-          let description = '';
-          let amount = 0;
-          let etaChange = 0;
-          let type: any = 'SYSTEM';
-
-          if (choice === 'DOCUMENT') {
-            title = '단속 회피 성공 (서류 제시)';
-            description = '필수 서류 확인 완료. 무사 통과.';
-            etaChange = 300;
-          } else if (choice === 'BYPASS') {
-            title = '단속 회피 성공 (우회)';
-            description = '경찰을 피해 우회로 진입.';
-            etaChange = 720;
-          } else {
-            const isCaught = Math.random() > 0.4;
-            if (isCaught) {
-              title = '과속 단속됨 (돌파 실패)';
-              description = '벌금 부과 및 평판 하락.';
-              amount = -1200;
-              type = 'PENALTY';
-            } else {
-              title = '단속 돌파 성공';
-              description = '경찰의 추격을 따돌림.';
-              type = 'BONUS';
-            }
-          }
-          
-          addEventLog(runId || 'temp', {
-            id: `enforcement-${elapsedSeconds}`,
-            runId: runId || 'temp',
-            type: type,
-            title: title,
-            description: description,
-            amount: amount,
-            etaChangeSeconds: etaChange,
-            isEstimated: false,
-            timestamp: Date.now(),
-          });
-        }
-      }
+      // NOTE: 클라이언트 사이드 단속 로직 제거됨.
+      // 이제 모든 단속 및 정산은 서버(Cron)에서 백엔드 로직으로 처리됩니다.
+      // 사용자는 운행 중 발생하는 이벤트 로그를 통해 결과를 확인하게 됩니다.
     }, 1000);
     return () => clearInterval(timer);
   }, [runDetail, isSpeeding, baseSpeedKmh, maxSpeedKmh, elapsedSeconds, progress, runId, addEventLog, handleComplete]);
@@ -317,32 +271,10 @@ export const ActiveRunPage = () => {
     setCurrentPos([currentLat, currentLng]);
   }, [progress, routeData]);
 
-  const formatDuration = (seconds: number) => {
-    const d = Math.floor(seconds / (3600 * 24));
-    const h = Math.floor((seconds % (3600 * 24)) / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-
-    const parts = [];
-    if (d > 0) parts.push(`${d.toLocaleString()}일`);
-    if (h > 0) parts.push(`${h.toLocaleString()}시간`);
-    if (m > 0) parts.push(`${m.toLocaleString()}분`);
-    parts.push(`${s.toLocaleString()}초`);
-
-    return parts.join(' ');
-  };
-
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
   // 도착 예정 시각 (현재 시각 + 남은 예상 초)
   const arrivalTime = new Date(Date.now() + estimatedRemainingSeconds * 1000);
-  const formatArrivalTime = (date: Date) => {
-    return date.toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
 
   const geojson = useMemo(() => ({
     type: 'Feature',
@@ -436,7 +368,7 @@ export const ActiveRunPage = () => {
           <div className="flex flex-col">
             <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest text-center">남은 시간</span>
             <span className={`text-base font-medium tabular-nums ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
-              {isOvertime ? '지연 ' : ''}{formatDuration(isOvertime ? elapsedSeconds - etaSeconds : remainingSeconds)}
+              {isOvertime ? '지연 ' : ''}{formatDuration(Math.abs(isOvertime ? elapsedSeconds - etaSeconds : remainingSeconds), true)}
             </span>
           </div>
           
@@ -484,13 +416,13 @@ export const ActiveRunPage = () => {
           </div>
           <div className="flex items-center gap-1">
             <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">도착 예정:</span>
-            <span className="text-[10px] font-medium text-primary-600">{formatArrivalTime(arrivalTime)}</span>
+            <span className="text-[10px] font-medium text-primary-600">{formatKSTTime(arrivalTime)}</span>
           </div>
         </div>
       </div>
 
       {/* 과속 및 연료 버튼 (우측 하단) */}
-      <div className="absolute right-4 bottom-80 z-40 flex flex-col items-center gap-3">
+      <div className="absolute right-4 bottom-20 z-40 flex flex-col items-center gap-3">
         <div className={`text-[10px] font-medium px-2 py-0.5 rounded bg-white shadow-soft-sm border border-surface-100 transition-opacity duration-300 ${isSpeeding ? 'opacity-100 text-accent-rose' : 'opacity-0'}`}>
           과속 운행 중
         </div>
@@ -524,7 +456,7 @@ export const ActiveRunPage = () => {
 
       {/* 메인 콘텐츠 영역 */}
       {viewMode === 'map' ? (
-        <div className="h-full w-full pt-[130px]">
+        <div className="h-full w-full pt-[185px] pb-72 relative">
           <Map
             ref={mapRef}
             initialViewState={{
@@ -536,7 +468,9 @@ export const ActiveRunPage = () => {
             mapStyle="mapbox://styles/mapbox/light-v11"
             mapboxAccessToken={MAPBOX_TOKEN}
           >
-            <NavigationControl position="top-left" />
+            <div className="absolute right-4 bottom-4 z-10">
+              <NavigationControl showCompass={false} />
+            </div>
             
             {routeData && (
               <Source id="route" type="geojson" data={geojson as any}>

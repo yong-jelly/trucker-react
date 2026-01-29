@@ -54,99 +54,74 @@ export const SettlementPage = () => {
   return (
     <div className="min-h-screen bg-surface-50 pb-24">
       {/* 성공 헤더 */}
-      <div className="bg-white px-4 pt-12 pb-8 text-center shadow-soft-sm">
-        <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-accent-emerald/10">
-          <CheckCircle2 className="h-10 w-10 text-accent-emerald" />
+      <div className="bg-white px-4 pt-10 pb-6 text-center">
+        <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-accent-emerald/10">
+          <CheckCircle2 className="h-8 w-8 text-accent-emerald" />
         </div>
-        <h1 className="text-2xl font-medium text-surface-900">운행 완료!</h1>
-        <p className="mt-2 text-surface-500">수고하셨습니다. 정산이 완료되었습니다.</p>
+        <h1 className="text-xl font-medium text-surface-900">운행 완료</h1>
+        <p className="mt-1 text-sm text-surface-500">수고하셨습니다. 정산이 완료되었습니다.</p>
       </div>
 
-      <div className="mx-auto max-w-2xl space-y-4 p-4">
-        {/* 최종 수익 카드 */}
-        <div className="rounded-3xl bg-primary-600 p-8 text-center text-white shadow-soft-lg">
-          <p className="text-sm font-medium opacity-80">최종 정산 금액</p>
-          <h2 className="mt-2 text-5xl font-medium">${finalReward.toFixed(2)}</h2>
-          <div className="mt-6 flex justify-center gap-4 border-t border-white/20 pt-6">
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider opacity-70">기본 보상</p>
-              <p className="text-lg font-medium">${order.baseReward}</p>
+      <div className="mx-auto max-w-md space-y-4 p-4">
+        {/* 최종 수익 카드 (영수증 스타일로 변경) */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft-sm border border-surface-100 relative overflow-hidden">
+          {/* 영수증 상단 장식선 */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-primary-600/20" />
+          
+          <div className="text-center">
+            <p className="text-xs font-medium text-surface-400 uppercase tracking-wider">Total Settlement</p>
+            <h2 className="mt-2 text-4xl font-medium text-surface-900">${finalReward.toFixed(2)}</h2>
+          </div>
+
+          <div className="mt-6 space-y-3 border-t border-dashed border-surface-200 pt-6">
+            <div className="flex justify-between text-sm">
+              <span className="text-surface-500">보상</span>
+              <span className="text-surface-900">${order.baseReward.toFixed(2)}</span>
             </div>
-            <div className="h-10 w-px bg-white/20" />
-            <div className="text-center">
-              <p className="text-[10px] uppercase tracking-wider opacity-70">패널티</p>
-              <p className="text-lg font-medium text-accent-rose">-${penalty.toFixed(2)}</p>
+            <div className="flex justify-between text-sm">
+              <span className="text-surface-500">지각 패널티</span>
+              <span className="text-accent-rose">-${penalty.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between border-t border-surface-100 pt-3">
+              <span className="text-sm font-medium text-surface-500">획득 평판</span>
+              <span className="text-sm font-medium text-accent-emerald">+{penalty > 0 ? 5 : 10} LP</span>
             </div>
           </div>
         </div>
 
-        {/* 운행 요약 영수증 */}
-        <div className="rounded-2xl bg-white p-6 shadow-soft-sm">
-          <h3 className="text-base font-medium text-surface-900">운행 상세 영수증</h3>
-          <div className="mt-6 space-y-4">
-            <div className="flex justify-between border-b border-surface-50 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50">
-                  <Clock className="h-5 w-5 text-surface-400" />
-                </div>
+        {/* 운행 상세 내역 */}
+        <div className="rounded-2xl bg-white p-6 shadow-soft-sm border border-surface-100">
+          <h3 className="text-xs font-medium text-surface-400 uppercase tracking-wider">Delivery Details</h3>
+          
+          <div className="mt-4 space-y-4">
+            <div className="flex items-start justify-between">
+              <div className="flex gap-3">
+                <Clock className="h-4 w-4 text-surface-400 mt-0.5" />
                 <div>
-                  <p className="text-xs text-surface-500">총 운행 시간</p>
-                  <p className="text-sm font-medium text-surface-900">{formatDuration(elapsedSeconds)}</p>
+                  <p className="text-xs text-surface-500">운행 시간</p>
+                  <p className="text-sm text-surface-900">{formatDuration(elapsedSeconds)}</p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-xs text-surface-500">제한 시간</p>
-                <p className="text-sm font-medium text-surface-900">{order.limitTimeMinutes}분</p>
+                <p className="text-sm text-surface-900">{order.limitTimeMinutes}분</p>
               </div>
             </div>
 
-            <div className="flex justify-between border-b border-surface-50 pb-4">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50">
-                  <MapPin className="h-5 w-5 text-surface-400" />
-                </div>
+            <div className="flex items-start justify-between">
+              <div className="flex gap-3">
+                <MapPin className="h-4 w-4 text-surface-400 mt-0.5" />
                 <div>
                   <p className="text-xs text-surface-500">운행 거리</p>
-                  <p className="text-sm font-medium text-surface-900">{order.distance}km</p>
+                  <p className="text-sm text-surface-900">{order.distance}km</p>
                 </div>
               </div>
               <div className="text-right">
                 <p className="text-xs text-surface-500">카테고리</p>
-                <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium ${CATEGORY_COLORS[order.category]}`}>
-                  {CATEGORY_LABELS[order.category]}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <div className="flex items-center justify-between py-2 text-sm">
-                <span className="text-surface-500">기본 배송료</span>
-                <span className="font-medium text-surface-900">${order.baseReward.toFixed(2)}</span>
-              </div>
-              <div className="flex items-center justify-between py-2 text-sm">
-                <span className="text-surface-500">지각 패널티</span>
-                <span className="font-medium text-accent-rose">-${penalty.toFixed(2)}</span>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-surface-100 pt-4">
-                <span className="text-base font-medium text-surface-900">합계</span>
-                <span className="text-xl font-medium text-primary-600">${finalReward.toFixed(2)}</span>
+                <p className="text-sm text-surface-900">{CATEGORY_LABELS[order.category]}</p>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* 획득 평판 */}
-        <div className="flex items-center justify-between rounded-2xl bg-accent-emerald/10 p-5 border border-accent-emerald/20">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-              <TrendingUp className="h-5 w-5 text-accent-emerald" />
-            </div>
-            <div>
-              <p className="text-xs text-accent-emerald font-medium uppercase tracking-wider">획득 평판</p>
-              <p className="text-lg font-medium text-surface-900">+{penalty > 0 ? 5 : 10}</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 text-accent-emerald opacity-50" />
         </div>
       </div>
 

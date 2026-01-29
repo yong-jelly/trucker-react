@@ -46,6 +46,9 @@ export async function getActiveRuns(userId: string): Promise<ActiveRun[]> {
       accumulatedBonus: row.accumulated_bonus,
       currentRisk: row.current_risk,
       currentDurability: row.current_durability,
+      maxEnforcementCount: row.max_enforcement_count || 0,
+      enforcementProbability: row.enforcement_probability || 0,
+      fineRate: row.fine_rate || 0,
     },
     order: {
       title: row.order_title,
@@ -101,6 +104,7 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       slotId: row.slot_id,
       status: row.status,
       startAt: new Date(row.start_at).getTime(),
+      completedAt: row.completed_at ? new Date(row.completed_at).getTime() : null,
       etaSeconds: row.eta_seconds,
       deadlineAt: new Date(row.deadline_at).getTime(),
       selectedItems: {
@@ -113,6 +117,9 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       accumulatedBonus: row.accumulated_bonus,
       currentRisk: row.current_risk,
       currentDurability: row.current_durability,
+      maxEnforcementCount: row.max_enforcement_count || 0,
+      enforcementProbability: row.enforcement_probability || 0,
+      fineRate: row.fine_rate || 0,
     },
     order: {
       title: row.order_title,
@@ -257,7 +264,10 @@ export async function createRun(params: {
     currentReward: run.current_reward,
     accumulatedPenalty: run.accumulated_penalty,
     accumulatedBonus: run.accumulated_bonus,
-    currentRisk: run.current_risk,
-    currentDurability: run.current_durability,
-  };
+      currentRisk: run.current_risk,
+      currentDurability: run.current_durability,
+      maxEnforcementCount: run.max_enforcement_count || 0,
+      enforcementProbability: run.enforcement_probability || 0,
+      fineRate: run.fine_rate || 0,
+    };
 }

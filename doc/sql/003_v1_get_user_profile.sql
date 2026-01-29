@@ -85,7 +85,7 @@ BEGIN
         COALESCE((p_profile->>'notification_enabled')::boolean, true),
         now()
     )
-    ON CONFLICT (auth_user_id) DO UPDATE SET
+    ON CONFLICT (auth_user_id) WHERE auth_user_id IS NOT NULL DO UPDATE SET
         nickname = EXCLUDED.nickname,
         bio = EXCLUDED.bio,
         avatar_url = EXCLUDED.avatar_url,

@@ -52,6 +52,7 @@ export const PublicRunPage = () => {
     if (!runDetail || runDetail.run.status !== 'IN_TRANSIT') return;
 
     const timer = setInterval(() => {
+      fetchRunDetail(true);
       setTick(prev => prev + 1);
     }, 10000);
 
@@ -65,14 +66,18 @@ export const PublicRunPage = () => {
   // 경과 시간 계산
   const elapsedSeconds = useMemo(() => {
     if (!runDetail) return 0;
+    if (runDetail.run.status === 'COMPLETED' && runDetail.run.completedAt) {
+      return Math.floor((runDetail.run.completedAt - runDetail.run.startAt) / 1000);
+    }
     return Math.floor((Date.now() - runDetail.run.startAt) / 1000);
   }, [runDetail, tick]);
 
   // 진행률 계산
   const progress = useMemo(() => {
+    if (runDetail?.run.status === 'COMPLETED') return 100;
     if (!etaSeconds) return 0;
     return Math.min((elapsedSeconds / etaSeconds) * 100, 100);
-  }, [elapsedSeconds, etaSeconds]);
+  }, [runDetail, elapsedSeconds, etaSeconds]);
 
   const distanceCovered = (totalDistanceKm * progress) / 100;
   const distanceRemaining = totalDistanceKm - distanceCovered;
@@ -261,16 +266,18 @@ export const PublicRunPage = () => {
         <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
           <div className="flex flex-col items-center">
             <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">
-              {isCompleted || isCancelled ? '소요 시간' : '남은 시간'}
+              {isCompleted ? '소요 시간' : isCancelled ? '취소 시각' : '남은 시간'}
             </span>
             <div className="flex items-center gap-1">
               <Timer className={`h-3 w-3 ${isOvertime && !isCompleted ? 'text-accent-rose' : 'text-surface-400'}`} />
               <span className={`text-base font-medium tabular-nums ${isOvertime && !isCompleted ? 'text-accent-rose' : 'text-surface-900'}`}>
-                {isCompleted || isCancelled 
+                {isCompleted 
                   ? formatDuration(elapsedSeconds, true)
-                  : isOvertime 
-                    ? `지연 ${formatDuration(elapsedSeconds - etaSeconds, true)}`
-                    : formatDuration(remainingSeconds, true)
+                  : isCancelled 
+                    ? '취소됨'
+                    : isOvertime 
+                      ? `지연 ${formatDuration(elapsedSeconds - etaSeconds, true)}`
+                      : formatDuration(remainingSeconds, true)
                 }
               </span>
             </div>
@@ -321,7 +328,7 @@ export const PublicRunPage = () => {
       </div>
 
       {/* 지도 */}
-      <div className="h-full w-full pt-[130px]">
+      <div className="h-full w-full pt-[185px] pb-[180px] relative">
         <Map
           ref={mapRef}
           initialViewState={{
@@ -333,7 +340,9 @@ export const PublicRunPage = () => {
           mapStyle="mapbox://styles/mapbox/light-v11"
           mapboxAccessToken={MAPBOX_TOKEN}
         >
-          <NavigationControl position="top-left" />
+          <div className="absolute right-4 bottom-4 z-10">
+            <NavigationControl showCompass={false} />
+          </div>
           
           {routeData && (
             <Source id="route" type="geojson" data={geojson as any}>
@@ -409,7 +418,7 @@ export const PublicRunPage = () => {
               </p>
             </div>
             <div className="text-center">
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">기본 보상</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">보상</p>
               <p className="text-sm font-medium text-emerald-600">${order.baseReward.toLocaleString()}</p>
             </div>
           </div>

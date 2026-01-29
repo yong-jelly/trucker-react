@@ -113,7 +113,7 @@ export const RunSheet = ({ order, elapsedSeconds, etaSeconds, runId }: RunSheetP
               <EventsTab />
             )}
             {activeTab === 'settings' && (
-              <SettingsTab />
+              <SettingsTab runId={runId} />
             )}
           </div>
         </>

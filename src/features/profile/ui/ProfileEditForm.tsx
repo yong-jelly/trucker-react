@@ -168,7 +168,7 @@ export const ProfileEditForm = forwardRef((_, ref) => {
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[13px] font-medium text-surface-700 ml-1">
                 <Send className="w-3.5 h-3.5 text-[#229ED9]" />
-                Telegram Chat ID
+                텔레그램 알림 ID
               </label>
               <Input
                 value={telegramChatId}
@@ -177,7 +177,7 @@ export const ProfileEditForm = forwardRef((_, ref) => {
                 className="h-12 px-4 rounded-xl bg-surface-50 border-transparent focus:bg-white focus:border-primary-500 transition-all text-[15px] font-medium"
               />
               <p className="text-[9px] text-surface-400 ml-1">
-                @userinfobot 등을 통해 확인한 본인의 Chat ID를 입력하세요.
+                @userinfobot 등을 통해 확인한 본인의 숫자로 된 ID를 입력하세요.
               </p>
             </div>
 
@@ -185,7 +185,7 @@ export const ProfileEditForm = forwardRef((_, ref) => {
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-[13px] font-medium text-surface-700 ml-1">
                 <MessageSquare className="w-3.5 h-3.5 text-[#4A154B]" />
-                Slack Webhook URL
+                슬랙 Webhook URL
               </label>
               <Input
                 value={slackWebhookUrl}

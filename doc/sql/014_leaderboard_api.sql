@@ -24,7 +24,9 @@ CREATE TYPE trucker.leaderboard_entry AS (
     reputation integer,
     total_runs integer,
     total_earnings bigint,
-    period_earnings bigint
+    period_earnings bigint,
+    bot_status text,
+    bot_next_available_at timestamp with time zone
 );
 
 -- 2. 전체 랭킹 조회 (period: 'all', 'weekly', 'daily')
@@ -54,13 +56,13 @@ BEGIN
             u.is_bot,
             u.balance,
             u.reputation,
-            COUNT(DISTINCT r.id) FILTER (WHERE r.status = 'COMPLETED') as total_runs,
-            COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'REWARD'), 0) as total_earnings,
-            COALESCE(SUM(t.amount) FILTER (WHERE t.type = 'REWARD' AND t.created_at >= v_start_date), 0) as period_earnings
+            (SELECT COUNT(*)::integer FROM trucker.tbl_runs r WHERE r.user_id = u.public_profile_id AND r.status = 'COMPLETED') as total_runs,
+            COALESCE((SELECT SUM(t.amount) FROM trucker.tbl_transactions t WHERE t.user_id = u.public_profile_id AND t.type = 'REWARD'), 0)::bigint as total_earnings,
+            COALESCE((SELECT SUM(t.amount) FROM trucker.tbl_transactions t WHERE t.user_id = u.public_profile_id AND t.type = 'REWARD' AND t.created_at >= v_start_date), 0)::bigint as period_earnings,
+            bs.status as bot_status,
+            bs.next_available_at as bot_next_available_at
         FROM trucker.tbl_user_profile u
-        LEFT JOIN trucker.tbl_runs r ON r.user_id = u.public_profile_id
-        LEFT JOIN trucker.tbl_transactions t ON t.user_id = u.public_profile_id
-        GROUP BY u.public_profile_id, u.nickname, u.avatar_url, u.is_bot, u.balance, u.reputation
+        LEFT JOIN trucker.tbl_bot_status bs ON u.public_profile_id = bs.bot_id
     )
     SELECT 
         ROW_NUMBER() OVER (ORDER BY period_earnings DESC, reputation DESC, total_runs DESC)::integer as rank,
@@ -70,9 +72,11 @@ BEGIN
         is_bot,
         balance,
         reputation,
-        total_runs::integer,
+        total_runs,
         total_earnings,
-        period_earnings
+        period_earnings,
+        bot_status,
+        bot_next_available_at
     FROM user_stats
     ORDER BY period_earnings DESC, reputation DESC, total_runs DESC
     LIMIT 100;
@@ -253,6 +257,7 @@ CREATE TYPE trucker.transaction_entry AS (
     id uuid,
     user_id uuid,
     nickname text,
+    avatar_url text,
     is_bot boolean,
     run_id uuid,
     order_title text,
@@ -280,6 +285,7 @@ BEGIN
         t.id,
         u.public_profile_id as user_id,
         u.nickname,
+        u.avatar_url,
         u.is_bot,
         t.run_id,
         COALESCE(o.title, '') as order_title,

@@ -49,6 +49,7 @@ export interface Run {
   slotId: string;
   status: RunStatus;
   startAt: number; // timestamp
+  completedAt?: number | null; // 완료 시각
   etaSeconds: number; // 최초 계산된 예상 소요 시간
   deadlineAt: number; // 마감 시각 (startAt + limitTime)
   
@@ -58,6 +59,11 @@ export interface Run {
     documentId?: string;
     insuranceId?: string;
   };
+
+  // 단속 관련 결정론적 설정
+  maxEnforcementCount: number;
+  enforcementProbability: number;
+  fineRate: number;
 
   // 실시간 변동 수치
   currentReward: number;

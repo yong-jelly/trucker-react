@@ -45,7 +45,7 @@ export const SettlementTab = ({ order, elapsedSeconds, etaSeconds, runId }: Sett
       {
         id: 'base',
         type: 'base',
-        title: '기본 보상',
+        title: '보상',
         amount: baseReward,
         isEstimated: false,
         timestamp: new Date(Date.now() - elapsedSeconds * 1000),
@@ -125,7 +125,7 @@ export const SettlementTab = ({ order, elapsedSeconds, etaSeconds, runId }: Sett
             </p>
           </div>
           <div className="text-right text-xs text-surface-500">
-            <p>기본 보상: ${baseReward}</p>
+            <p>보상: ${baseReward}</p>
             {totalPenalty > 0 && <p className="text-accent-rose">패널티: -${totalPenalty.toFixed(2)}</p>}
           </div>
         </div>

@@ -1,17 +1,17 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, Anchor, ChevronRight, Check, Truck, Plane, Ship, Car, Loader2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, ChevronRight, Check, Truck, Plane, Ship, Car, Loader2 } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
 import { useUserStore, useUserProfile } from '../entities/user';
 import { sendNotification } from '../shared/lib/notification';
-import { Dialog, DialogContent, DialogTitle } from '../shared/ui/Dialog';
 import { createRun } from '../entities/run';
 import { getOrderById } from '../entities/order';
 import type { Order } from '../shared/api/types';
-import { useUserEquipments, type UserEquipment, getEquipmentImagePath } from '../entities/equipment';
+import { useUserEquipments, type UserEquipment } from '../entities/equipment';
 import { Assets } from '../shared/assets';
+import { ContractDialog } from '../features/order/ui/ContractDialog';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
   BICYCLE: Bike,
@@ -36,7 +36,6 @@ export const OrderDetailPage = () => {
   const navigate = useNavigate();
   const { slots } = useGameStore();
   const { data: profile } = useUserProfile();
-  const { user } = useUserStore();
   const [isContractOpen, setIsContractOpen] = useState(false);
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -206,7 +205,7 @@ export const OrderDetailPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-primary-600">
                   <DollarSign className="h-5 w-5" />
-                  <span className="text-xs font-medium uppercase tracking-wider">기본 보상</span>
+                  <span className="text-xs font-medium uppercase tracking-wider">보상</span>
                 </div>
                 <p className="text-2xl font-medium text-primary-600">${(order.baseReward || 0).toLocaleString()}</p>
               </div>
@@ -311,7 +310,7 @@ export const OrderDetailPage = () => {
               <p className="text-sm font-medium text-surface-900">리스크 안내</p>
               <p className="mt-1 text-xs text-surface-600">
                 제한시간 초과 시 분당 2%씩 패널티가 적용됩니다. 
-                패널티가 기본 보상의 50%에 도달하면 운행이 자동 종료됩니다.
+                패널티가 보상의 50%에 도달하면 운행이 자동 종료됩니다.
               </p>
             </div>
           </div>
@@ -349,70 +348,15 @@ export const OrderDetailPage = () => {
       <div className="h-24" />
 
       {/* 계약서 확인 다이얼로그 */}
-      <Dialog open={isContractOpen} onOpenChange={setIsContractOpen}>
-        <DialogContent className="rounded-3xl max-w-[340px] p-0 overflow-hidden border-none bg-surface-50">
-          <div className="bg-primary-600 p-6 text-white">
-            <DialogTitle className="text-center font-medium text-xl tracking-tight">운송 계약 체결</DialogTitle>
-            <p className="text-center text-primary-100 text-xs mt-1">Contract Confirmation</p>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            <div className="space-y-4">
-              <div className="rounded-2xl bg-white p-4 shadow-sm border border-surface-100">
-                <h4 className="text-xs font-medium text-surface-400 uppercase tracking-widest mb-3">주문 요약</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-surface-600">화물명</span>
-                    <span className="font-medium text-surface-900">{order.cargoName}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-surface-600">선택 장비</span>
-                    <span className="font-medium text-surface-900">{selectedEquipment?.name || '없음'}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-surface-600">예상 소요</span>
-                    <span className="font-medium text-primary-600">
-                      {selectedEquipment ? Math.round((order.distance / selectedEquipment.baseSpeed) * 60) : '-'}분 (ETA)
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm border-t border-surface-100 pt-2 mt-2">
-                    <span className="text-surface-600">최종 보상금</span>
-                    <span className="font-medium text-primary-600">${order.baseReward.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-2xl bg-accent-amber/5 p-4 border border-accent-amber/20">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle className="h-4 w-4 text-accent-amber" />
-                  <h4 className="text-xs font-medium text-accent-amber uppercase tracking-widest">주의사항</h4>
-                </div>
-                <ul className="text-xs text-surface-600 space-y-1 list-disc pl-4">
-                  <li>운행 중 <strong>단속 이벤트</strong>가 발생할 수 있습니다.</li>
-                  <li>제한시간 초과 시 패널티가 부과됩니다.</li>
-                  <li>중도 포기 시 평판이 하락합니다.</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button 
-                onClick={() => setIsContractOpen(false)}
-                className="flex-1 rounded-2xl bg-surface-200 py-3.5 text-sm font-medium text-surface-600 hover:bg-surface-300 transition-colors"
-              >
-                취소
-              </button>
-              <button 
-                onClick={handleConfirmContract}
-                className="flex-[2] rounded-2xl bg-primary-600 py-3.5 text-sm font-medium text-white shadow-soft-md hover:bg-primary-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <FileText className="h-4 w-4" />
-                계약 서명 및 출발
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {order && (
+        <ContractDialog
+          isOpen={isContractOpen}
+          onOpenChange={setIsContractOpen}
+          order={order}
+          selectedEquipment={selectedEquipment}
+          onConfirm={handleConfirmContract}
+        />
+      )}
 
       {/* 장비 선택 바텀시트 */}
       {isEquipmentSheetOpen && (

@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router';
 import { Package, Wrench, Shield, FileText, ArrowLeft, Info, ChevronRight, PlayCircle, Clock, Bike, Loader2, History } from 'lucide-react';
 import { COMING_SOON_ITEMS } from '../shared/lib/constants';
 import { Assets } from '../shared/assets';
-import { useUserStore, useUserProfile } from '../entities/user';
+import { useUserProfile } from '../entities/user';
 import { getActiveRuns, getRunHistory, type ActiveRun, type RunHistory } from '../entities/run';
 import type { Item } from '../shared/api/types';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
+import { formatDate, formatKSTTime } from '../shared/lib/date';
 
 export const GaragePage = () => {
   const navigate = useNavigate();
   const { data: profile } = useUserProfile();
-  const { user } = useUserStore();
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,19 +19,22 @@ export const GaragePage = () => {
   const [isHistoryLoading, setIsHistoryLoading] = useState(false);
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<string | null>(null);
 
+  // public_profile_id 사용 (auth 테이블과 독립적)
+  const profileId = profile?.public_profile_id;
+
   // 진행 중인 운행 조회
   const fetchActiveRuns = useCallback(async () => {
-    if (!user) return;
+    if (!profileId) return;
     
     try {
-      const runs = await getActiveRuns(user.id);
+      const runs = await getActiveRuns(profileId);
       setActiveRuns(runs);
     } catch (err) {
       console.error('Failed to fetch active runs:', err);
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [profileId]);
 
   useEffect(() => {
     fetchActiveRuns();
@@ -39,13 +42,13 @@ export const GaragePage = () => {
 
   // 장비 히스토리 조회
   const fetchEquipmentHistory = useCallback(async (equipmentId: string) => {
-    if (!user) return;
+    if (!profileId) return;
     
     setIsHistoryLoading(true);
     setSelectedEquipmentId(equipmentId);
     try {
       const history = await getRunHistory({
-        userId: user.id,
+        userId: profileId,
         equipmentId: equipmentId === 'BICYCLE' ? 'BICYCLE' : equipmentId, // 기본 자전거 처리
       });
       setEquipmentHistory(history);
@@ -54,7 +57,7 @@ export const GaragePage = () => {
     } finally {
       setIsHistoryLoading(false);
     }
-  }, [user]);
+  }, [profileId]);
 
   // 기본 자전거 사용 여부 확인 (selected_equipment_id가 null 또는 'BICYCLE'인 운행)
   const bicycleInUse = activeRuns.find(
@@ -66,15 +69,6 @@ export const GaragePage = () => {
     { id: 'DOCUMENT', label: '서류', icon: FileText, color: 'text-accent-amber', char: Assets.images.characters.driver },
     { id: 'INSURANCE', label: '보험', icon: Shield, color: 'text-accent-rose', char: Assets.images.characters.trucker },
   ];
-
-  const formatDateTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString('ko-KR', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
 
   return (
     <div className="min-h-screen bg-surface-50 pb-24">
@@ -112,9 +106,6 @@ export const GaragePage = () => {
                 <PlayCircle className="h-5 w-5 text-primary-500" />
                 실시간 운행 정보
               </h2>
-              <span className="text-[10px] font-medium text-primary-500 bg-primary-50 px-2 py-0.5 rounded-full animate-pulse">
-                ON AIR
-              </span>
             </div>
             
             <div className="grid gap-3">
@@ -143,7 +134,7 @@ export const GaragePage = () => {
                         </div>
                         <p className="text-xs text-surface-500 flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          운행 시작: {new Date(run.startAt).toLocaleTimeString()}
+                          운행 시작: {formatKSTTime(run.startAt)}
                         </p>
                       </div>
                       
@@ -368,7 +359,7 @@ export const GaragePage = () => {
                       <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${CATEGORY_COLORS[h.orderCategory]}`}>
                         {CATEGORY_LABELS[h.orderCategory]}
                       </span>
-                      <span className="text-[10px] text-surface-400">{formatDateTime(h.completedAt || h.startAt)}</span>
+                      <span className="text-[10px] text-surface-400">{formatDate(h.completedAt || h.startAt)} {formatKSTTime(h.completedAt || h.startAt)}</span>
                     </div>
                     <h4 className="text-sm font-medium text-surface-900 mb-3">{h.orderTitle}</h4>
                     <div className="grid grid-cols-3 gap-2">

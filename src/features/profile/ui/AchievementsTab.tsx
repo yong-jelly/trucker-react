@@ -44,7 +44,7 @@ export function AchievementsTab() {
   return (
     <div className="space-y-4 px-4 py-2">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-medium text-surface-900 uppercase tracking-widest">Unlocked Achievements</h3>
+        <h3 className="text-sm font-medium text-surface-900 uppercase tracking-widest">획득한 업적</h3>
         <span className="text-[10px] font-medium text-primary-600 bg-primary-50 px-2 py-0.5 rounded-full">2 / 4</span>
       </div>
 
@@ -78,7 +78,7 @@ export function AchievementsTab() {
                 {!achievement.unlocked && achievement.progress !== undefined && (
                   <div className="mt-3">
                     <div className="flex justify-between text-[9px] font-medium text-surface-400 mb-1 uppercase">
-                      <span>Progress</span>
+                      <span>진행도</span>
                       <span>{achievement.progress}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-surface-200 rounded-full overflow-hidden">

@@ -1,19 +1,51 @@
 -- =====================================================
--- 001_v1_create_run.sql
--- 운행(Run) 생성 및 관련 테이블 업데이트 API
+-- 021_unify_to_public_profile_id.sql
+-- 모든 API를 public_profile_id 기반으로 통일
 -- 
--- 인자:
---   @p_user_id: 사용자 ID (UUID)
---   @p_order_id: 주문 ID (UUID)
---   @p_slot_id: 슬롯 ID (UUID)
---   @p_selected_items: 선택된 아이템 정보 (JSONB)
+-- 목적:
+--   auth.users 테이블과의 의존성을 제거하고,
+--   trucker.tbl_user_profile을 독립적으로 운영할 수 있도록 함
 -- 
 -- 실행 방법:
---   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/001_v1_create_run.sql
+--   psql "postgresql://postgres.xyqpggpilgcdsawuvpzn:ZNDqDunnaydr0aFQ@aws-0-ap-northeast-2.pooler.supabase.com:5432/postgres" -f doc/sql/021_unify_to_public_profile_id.sql
 -- =====================================================
 
--- 실제 함수: trucker 스키마에 정의
--- NOTE: p_user_id는 public_profile_id를 직접 받습니다 (auth_user_id 아님)
+-- =====================================================
+-- 1. v1_get_user_slots: public_profile_id를 직접 받도록 수정
+-- =====================================================
+CREATE OR REPLACE FUNCTION trucker.v1_get_user_slots(p_user_id uuid)
+RETURNS SETOF trucker.tbl_slots
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = trucker, public
+AS $$
+BEGIN
+    -- p_user_id는 이제 public_profile_id를 직접 받음
+    -- 프로필이 없으면 빈 결과 반환
+    IF NOT EXISTS (SELECT 1 FROM trucker.tbl_user_profile WHERE public_profile_id = p_user_id) THEN
+        RETURN;
+    END IF;
+
+    -- 슬롯이 없으면 자동 생성 (public_profile_id 기준)
+    IF NOT EXISTS (SELECT 1 FROM trucker.tbl_slots WHERE user_id = p_user_id) THEN
+        INSERT INTO trucker.tbl_slots (user_id, index, is_locked) VALUES
+            (p_user_id, 0, false),
+            (p_user_id, 1, true),
+            (p_user_id, 2, true);
+    END IF;
+
+    RETURN QUERY
+    SELECT * FROM trucker.tbl_slots
+    WHERE user_id = p_user_id
+    ORDER BY index ASC;
+END;
+$$;
+
+COMMENT ON FUNCTION trucker.v1_get_user_slots IS '유저의 슬롯 목록을 조회합니다. p_user_id는 public_profile_id입니다. 슬롯이 없으면 자동 생성합니다.';
+
+-- =====================================================
+-- 2. v1_create_run: public_profile_id를 직접 받도록 수정
+-- =====================================================
 CREATE OR REPLACE FUNCTION trucker.v1_create_run(
     p_user_id uuid,
     p_order_id uuid,
@@ -31,7 +63,7 @@ DECLARE
     v_eta_seconds integer;
     v_deadline_at timestamp with time zone;
 BEGIN
-    -- p_user_id는 public_profile_id를 직접 받음
+    -- p_user_id는 이제 public_profile_id를 직접 받음
     -- 프로필 존재 확인
     IF NOT EXISTS (SELECT 1 FROM trucker.tbl_user_profile WHERE public_profile_id = p_user_id) THEN
         RAISE EXCEPTION 'User profile not found for public_profile_id: %', p_user_id;
@@ -109,4 +141,14 @@ END;
 $$;
 
 COMMENT ON FUNCTION trucker.v1_create_run IS '운행(Run)을 생성합니다. p_user_id는 public_profile_id입니다.';
-GRANT EXECUTE ON FUNCTION trucker.v1_create_run TO authenticated;
+
+-- =====================================================
+-- 확인: 변경된 함수 목록
+-- =====================================================
+SELECT 
+    routine_name,
+    routine_type
+FROM information_schema.routines
+WHERE routine_schema = 'trucker'
+  AND routine_name IN ('v1_get_user_slots', 'v1_create_run')
+ORDER BY routine_name;

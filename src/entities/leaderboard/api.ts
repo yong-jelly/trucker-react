@@ -14,6 +14,8 @@ export interface LeaderboardEntry {
   totalRuns: number;
   totalEarnings: number;
   periodEarnings: number;
+  botStatus?: string;
+  botNextAvailableAt?: number;
 }
 
 /**
@@ -57,6 +59,7 @@ export interface TransactionEntry {
   id: string;
   userId: string;
   nickname: string;
+  avatarUrl: string | null;
   isBot: boolean;
   runId: string | null;
   orderTitle: string;
@@ -104,6 +107,8 @@ export async function getLeaderboard(period: LeaderboardPeriod = 'weekly'): Prom
     totalRuns: row.total_runs,
     totalEarnings: row.total_earnings,
     periodEarnings: row.period_earnings,
+    botStatus: row.bot_status,
+    botNextAvailableAt: row.bot_next_available_at ? new Date(row.bot_next_available_at).getTime() : undefined,
   }));
 }
 
@@ -219,6 +224,7 @@ export async function getTransactions(params?: {
     id: row.id,
     userId: row.user_id,
     nickname: row.nickname,
+    avatarUrl: row.avatar_url,
     isBot: row.is_bot,
     runId: row.run_id,
     orderTitle: row.order_title,

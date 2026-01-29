@@ -55,12 +55,13 @@ BEGIN
     -- 평판 계산: 패널티가 없으면 +10, 있으면 +5 (임시 로직)
     v_reputation_gain := CASE WHEN p_penalty_amount > 0 THEN 5 ELSE 10 END;
 
+    -- NOTE: tbl_runs.user_id는 public_profile_id입니다 (auth_user_id 아님)
     UPDATE trucker.tbl_user_profile
     SET 
         balance = balance + p_final_reward,
         reputation = reputation + v_reputation_gain,
         updated_at = now()
-    WHERE auth_user_id = v_user_id
+    WHERE public_profile_id = v_user_id
     RETURNING balance, reputation INTO v_new_balance, v_new_reputation;
 
     -- 5. 거래 내역 기록

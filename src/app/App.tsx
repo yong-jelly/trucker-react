@@ -13,6 +13,8 @@ import { ProfilePage } from '../pages/Profile';
 import { ProfileEditPage } from '../pages/ProfileEdit';
 import { TransactionHistoryPage } from '../pages/TransactionHistory';
 import { LeaderboardPage } from '../pages/Leaderboard';
+import { PublicProfilePage } from '../pages/PublicProfile';
+import { PublicRunPage } from '../pages/PublicRun';
 
 export const App = () => {
   return (
@@ -33,6 +35,9 @@ export const App = () => {
         <Route path="/hire" element={<HireDriverPage />} />
         <Route path="/transactions" element={<TransactionHistoryPage />} />
         <Route path="/leaderboard" element={<LeaderboardPage />} />
+        {/* 공개 페이지 (p = public) */}
+        <Route path="/p/status/:id" element={<PublicProfilePage />} />
+        <Route path="/p/run/:runId" element={<PublicRunPage />} />
       </Routes>
     </BrowserRouter>
   );

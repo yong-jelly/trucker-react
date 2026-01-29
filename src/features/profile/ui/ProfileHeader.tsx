@@ -68,7 +68,7 @@ export function ProfileHeader() {
         {/* 업적 요약 섹션 */}
         <div className="mb-8">
           <div className="text-[11px] font-medium text-surface-400 uppercase tracking-[0.2em] mb-4 px-1">
-            Achievements Summary
+            활동 요약
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-surface-50 rounded-2xl p-4 text-center">
@@ -80,7 +80,7 @@ export function ProfileHeader() {
               <p className="text-lg font-medium text-surface-900">92%</p>
             </div>
             <div className="bg-surface-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">최대 수익</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase mb-1">최고 수익</p>
               <p className="text-lg font-medium text-surface-900">$12k</p>
             </div>
           </div>
@@ -89,7 +89,7 @@ export function ProfileHeader() {
         {/* 설정 메뉴 */}
         <div className="space-y-2">
           <div className="text-[11px] font-medium text-surface-400 uppercase tracking-[0.2em] mb-3 px-1">
-            Account Settings
+            계정 설정
           </div>
           <button
             onClick={() => logout()}
