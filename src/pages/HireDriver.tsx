@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Users, DollarSign, Info, AlertCircle, ChevronLeft, ChevronRight, Zap, Target, Shield, Briefcase, Palette, Loader2 } from 'lucide-react';
 import { useUserProfile } from '../entities/user';

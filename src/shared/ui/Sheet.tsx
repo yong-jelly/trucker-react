@@ -1,33 +1,38 @@
 import * as React from "react"
-import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { Drawer } from "vaul"
 import { cn } from "../lib/utils"
 
-const Sheet = DialogPrimitive.Root
+const Sheet = ({
+  children,
+  ...props
+}: React.ComponentProps<typeof Drawer.Root>) => (
+  <Drawer.Root shouldScaleBackground={false} {...props}>
+    {children}
+  </Drawer.Root>
+)
+Sheet.displayName = "Sheet"
 
-const SheetTrigger = DialogPrimitive.Trigger
+const SheetTrigger = Drawer.Trigger
 
-const SheetClose = DialogPrimitive.Close
+const SheetClose = Drawer.Close
 
-const SheetPortal = DialogPrimitive.Portal
+const SheetPortal = Drawer.Portal
 
 const SheetOverlay = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Overlay>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+  React.ElementRef<typeof Drawer.Overlay>,
+  React.ComponentPropsWithoutRef<typeof Drawer.Overlay>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    className={cn(
-      "fixed inset-0 z-50 bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
-      className
-    )}
-    {...props}
+  <Drawer.Overlay
     ref={ref}
+    className={cn("fixed inset-0 z-50 bg-black/60", className)}
+    {...props}
   />
 ))
-SheetOverlay.displayName = DialogPrimitive.Overlay.displayName
+SheetOverlay.displayName = "SheetOverlay"
 
 const SheetContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+  React.ElementRef<typeof Drawer.Content>,
+  React.ComponentPropsWithoutRef<typeof Drawer.Content> & {
     maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full"
     hideHandle?: boolean
   }
@@ -47,24 +52,26 @@ const SheetContent = React.forwardRef<
   return (
     <SheetPortal>
       <SheetOverlay />
-      <DialogPrimitive.Content
+      <Drawer.Content
         ref={ref}
         className={cn(
-          "fixed z-50 gap-4 bg-white shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500 bottom-0 inset-x-0 mx-auto w-full border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom rounded-t-[32px] max-h-[90vh] overflow-y-auto",
+          "fixed bottom-0 inset-x-0 z-50 mx-auto flex h-auto max-h-[96%] flex-col rounded-t-[32px] border-t bg-white outline-none",
           maxWidthClass,
           className
         )}
         {...props}
       >
         {!hideHandle && (
-          <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-surface-200 shrink-0" />
+          <div className="mx-auto mt-4 h-1.5 w-12 shrink-0 rounded-full bg-surface-200" />
         )}
-        {children}
-      </DialogPrimitive.Content>
+        <div className="flex-1 overflow-y-auto">
+          {children}
+        </div>
+      </Drawer.Content>
     </SheetPortal>
   )
 })
-SheetContent.displayName = DialogPrimitive.Content.displayName
+SheetContent.displayName = "SheetContent"
 
 const SheetHeader = ({
   className,
@@ -95,28 +102,28 @@ const SheetFooter = ({
 SheetFooter.displayName = "SheetFooter"
 
 const SheetTitle = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Title>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+  React.ElementRef<typeof Drawer.Title>,
+  React.ComponentPropsWithoutRef<typeof Drawer.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
+  <Drawer.Title
     ref={ref}
-    className={cn("text-lg font-semibold text-surface-900", className)}
+    className={cn("text-lg font-medium text-surface-900", className)}
     {...props}
   />
 ))
-SheetTitle.displayName = DialogPrimitive.Title.displayName
+SheetTitle.displayName = "SheetTitle"
 
 const SheetDescription = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+  React.ElementRef<typeof Drawer.Description>,
+  React.ComponentPropsWithoutRef<typeof Drawer.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
+  <Drawer.Description
     ref={ref}
-    className={cn("text-sm text-surface-500", className)}
+    className={cn("text-sm text-surface-600 font-medium", className)}
     {...props}
   />
 ))
-SheetDescription.displayName = DialogPrimitive.Description.displayName
+SheetDescription.displayName = "SheetDescription"
 
 export {
   Sheet,

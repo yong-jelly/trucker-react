@@ -13,6 +13,7 @@ interface PageHeaderProps {
   onTabChange?: (tabId: string) => void;
   title?: React.ReactNode;
   showBackButton?: boolean;
+  onBack?: () => void;
   rightElement?: React.ReactNode;
 }
 
@@ -22,6 +23,7 @@ export function PageHeader({
   onTabChange, 
   title, 
   showBackButton = true,
+  onBack,
   rightElement
 }: PageHeaderProps) {
   const navigate = useNavigate();
@@ -33,7 +35,7 @@ export function PageHeader({
           <div className="flex items-center gap-3">
             {showBackButton && (
               <button 
-                onClick={() => navigate(-1)} 
+                onClick={() => onBack ? onBack() : navigate(-1)} 
                 className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors -ml-2"
               >
                 <ChevronLeft className="h-6 w-6 text-surface-700" />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cn } from '@shared/lib/utils';
 import { SettlementTab } from './tabs/SettlementTab';
 import { OverviewTab } from './tabs/OverviewTab';
 import { EventsTab } from './tabs/EventsTab';
@@ -46,8 +47,9 @@ export const RunDetailSheet = ({
   estimatedRemainingSeconds, 
   runId,
   open = true,
-  onOpenChange
-}: RunDetailSheetProps) => {
+  onOpenChange,
+  className
+}: RunDetailSheetProps & { className?: string }) => {
   const [activeTab, setActiveTab] = useState<TabType>('settlement');
   const [isFull, setIsFull] = useState(false);
 
@@ -55,16 +57,18 @@ export const RunDetailSheet = ({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent 
         hideHandle
-        className={`fixed bottom-0 left-0 right-0 z-50 rounded-t-[32px] bg-white shadow-[0_-8px_30px_rgba(0,0,0,0.12)] transition-all duration-500 ease-in-out border-t border-surface-100 ${
-          isFull ? 'h-[92vh]' : 'h-[600px]'
-        }`}
+        className={cn(
+          "bg-white border-t border-surface-100",
+          isFull ? 'h-[92vh]' : 'h-[600px]',
+          className
+        )}
       >
         {/* 드래그 핸들 및 확장 버튼 */}
         <button 
           onClick={() => setIsFull(!isFull)}
           className="flex w-full flex-col items-center py-4 group"
         >
-          <div className="h-1.5 w-12 rounded-full bg-surface-200 group-hover:bg-surface-300 transition-colors" />
+          <div className="h-1.5 w-12 rounded-full bg-surface-200" />
         </button>
 
         {/* 탭 네비게이션 */}
@@ -75,15 +79,15 @@ export const RunDetailSheet = ({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-1 flex-col items-center gap-1.5 py-4 text-[13px] font-medium transition-all relative ${
+                className={`flex flex-1 flex-col items-center gap-1.5 py-4 text-[13px] font-medium relative ${
                   isActive 
-                    ? 'text-primary-600' 
-                    : 'text-surface-400 hover:text-surface-600'
+                    ? 'text-surface-700' 
+                    : 'text-surface-500'
                 }`}
               >
                 <span className="tracking-tight">{tab.label}</span>
                 {isActive && (
-                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary-500 rounded-full" />
+                  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-surface-600 rounded-full" />
                 )}
               </button>
             );
