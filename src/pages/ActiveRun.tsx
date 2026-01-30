@@ -3,12 +3,16 @@ import Map, { Source, Layer, Marker as MapboxMarker, NavigationControl } from 'r
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useParams, useNavigate } from 'react-router';
-import { Map as MapIcon, List, ArrowLeft, MapPin, TrendingUp, Zap, Loader2 } from 'lucide-react';
+import { 
+  MapPin, TrendingUp, Zap, Loader2, Bot, UserCircle, 
+  Map as MapIcon, CircleCheckBig 
+} from 'lucide-react';
 import { MAPBOX_TOKEN } from '../shared/lib/mockData';
-import { RunSheet } from '../widgets/run/RunSheet';
+import { RunDetailSheet } from '../widgets/run/RunDetailSheet';
+import { RunDashboard } from '../widgets/run/RunDashboard';
+import { RunInfoCard } from '../widgets/run/RunInfoCard';
 import { useGameStore } from '../app/store';
 import { getRunById, completeRun, type RunDetail } from '../entities/run';
-import { formatDuration, formatKSTTime } from '../shared/lib/date';
 import { 
   getSpeedFromSnapshot, 
   applyFuelPenalty, 
@@ -17,6 +21,8 @@ import {
   routeToGeoJSON,
   type RouteCoordinate
 } from '../shared/lib/run';
+
+import { PageHeader } from '../shared/ui/PageHeader';
 
 type ViewMode = 'map' | 'info';
 
@@ -35,6 +41,7 @@ export const ActiveRunPage = () => {
   const [fuel, setFuel] = useState(100);
   const [tick, setTick] = useState(0); // 실시간 갱신용
   const [traveledDistanceKm, setTraveledDistanceKm] = useState(0); // 실제 이동 거리 (누적)
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
 
   // DB에서 운행 데이터 로드
@@ -96,9 +103,6 @@ export const ActiveRunPage = () => {
   // 남은 거리 (숫자)
   const distanceRemainingNum = Math.max(totalDistanceKm - distanceCovered, 0);
   
-  // 거리 정보 계산 (표시용 문자열)
-  const distanceRemaining = distanceRemainingNum.toFixed(2);
-  
   // 현재 속도 기준 도착 예상 시간 (ETA)
   const estimatedRemainingSeconds = useMemo(() => {
     return currentSpeedKmh > 0 
@@ -121,6 +125,7 @@ export const ActiveRunPage = () => {
   }, [runDetail, baseSpeedKmh, currentSpeedKmh, elapsedSeconds, totalDistanceKm, traveledDistanceKm]);
 
   const isOvertime = elapsedSeconds > etaSeconds;
+  const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
   const handleComplete = useCallback(async () => {
     if (!order || !runId || isCompleting) return;
@@ -146,7 +151,7 @@ export const ActiveRunPage = () => {
         return;
       }
 
-      navigate('/settlement', { 
+      navigate(`/settlement/${runId}`, { 
         state: { 
           order, 
           elapsedSeconds, 
@@ -274,13 +279,6 @@ export const ActiveRunPage = () => {
     }
   }, [progress, routeData]);
 
-  const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
-
-  // 도착 예정 시각 (현재 시각 + 남은 예상 초)
-  const arrivalTime = useMemo(() => {
-    return new Date(Date.now() + estimatedRemainingSeconds * 1000);
-  }, [estimatedRemainingSeconds]);
-
   const geojson = useMemo(() => routeToGeoJSON(routeData), [routeData]);
 
   // 로딩 상태
@@ -316,156 +314,98 @@ export const ActiveRunPage = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-surface-50">
-      <div className="mx-auto max-w-2xl bg-white h-full relative shadow-2xl">
+      <div className="mx-auto max-w-[480px] bg-white h-full relative shadow-2xl flex flex-col items-center">
         {/* 상단 헤더 */}
-        <header className="absolute left-0 right-0 top-0 z-30 bg-white px-4 py-4 border-b border-surface-100/50 shadow-soft-xl">
-          <div className="mx-auto max-w-2xl flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => navigate('/')} 
-                className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-soft-sm border border-surface-100 hover:bg-surface-50 active:scale-90"
-              >
-                <ArrowLeft className="h-5 w-5 text-surface-700" />
-              </button>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-2 w-2 rounded-full bg-primary-500 animate-pulse" />
-                  <p className="text-[10px] font-bold text-primary-600 uppercase tracking-[0.2em]">운행 중</p>
-                </div>
-                <h1 className="text-base font-bold text-surface-900 leading-tight tracking-tight mt-0.5">{order.title}</h1>
+        <PageHeader 
+          title={
+            <div className="flex items-center gap-2">
+              <div className={`h-8 w-8 rounded-full flex items-center justify-center overflow-hidden shrink-0 ${
+                runDetail.user.isBot ? 'bg-amber-100' : 'bg-primary-100'
+              }`}>
+                {runDetail.user.avatarUrl ? (
+                  <img 
+                    src={runDetail.user.avatarUrl} 
+                    alt={runDetail.user.nickname} 
+                    className="h-full w-full object-cover" 
+                  />
+                ) : runDetail.user.isBot ? (
+                  <Bot className="h-5 w-5 text-amber-600" />
+                ) : (
+                  <UserCircle className="h-5 w-5 text-primary-600" />
+                )}
               </div>
+              <span className="text-lg font-medium text-surface-900 truncate">
+                {runDetail.user.nickname}
+              </span>
             </div>
+          }
+          rightElement={
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setViewMode(viewMode === 'map' ? 'info' : 'map')}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+                  viewMode === 'map' 
+                    ? 'bg-primary-50 text-primary-600 shadow-soft-sm' 
+                    : 'bg-surface-50 text-surface-400 hover:bg-surface-100'
+                }`}
+              >
+                <MapIcon className="h-5 w-5" />
+              </button>
 
-            <div className="flex items-center gap-3">
-              {/* 뷰 모드 토글 */}
-              <div className="flex rounded-xl bg-surface-100/50 p-1 border border-surface-200/50">
-                <button
-                  onClick={() => setViewMode('map')}
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                    viewMode === 'map' ? 'bg-white text-primary-600 shadow-soft-md' : 'text-surface-400'
-                  }`}
-                >
-                  <MapIcon className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('info')}
-                  className={`flex h-9 w-9 items-center justify-center rounded-lg ${
-                    viewMode === 'info' ? 'bg-white text-primary-600 shadow-soft-md' : 'text-surface-400'
-                  }`}
-                >
-                  <List className="h-4 w-4" />
-                </button>
-              </div>
+              <div className="h-6 w-[1px] bg-surface-100 mx-1" />
+
+              <button
+                onClick={() => setIsOverSpeed(!isSpeeding)}
+                className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
+                  isSpeeding 
+                    ? 'bg-accent-rose text-white animate-pulse shadow-accent-rose/20' 
+                    : 'bg-surface-50 text-surface-400 hover:text-accent-rose'
+                }`}
+              >
+                <TrendingUp className="h-5 w-5" />
+              </button>
+
+              <button
+                onClick={() => setFuel(prev => Math.min(100, prev + 15))}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-50 text-accent-amber hover:bg-accent-amber hover:text-white transition-all"
+              >
+                <Zap className="h-5 w-5" />
+              </button>
+
+              <div className="h-6 w-[1px] bg-surface-100 mx-1" />
+              
               <button 
                 onClick={handleComplete}
                 disabled={isCompleting}
-                className="flex h-11 items-center justify-center rounded-2xl bg-surface-900 px-6 text-sm font-bold text-white shadow-soft-lg hover:bg-black active:scale-95 disabled:opacity-50"
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-surface-900 text-white shadow-soft-lg hover:bg-black active:scale-95 disabled:opacity-50"
               >
-                {isCompleting ? <Loader2 className="h-5 w-5 animate-spin" /> : '도착'}
+                {isCompleting ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <CircleCheckBig className="h-5 w-5" />
+                )}
               </button>
             </div>
-          </div>
-        </header>
+          }
+        />
 
         {/* 대시보드 (상태 바) */}
-        <div className="absolute left-0 right-0 top-[84px] z-20 bg-white px-4 py-4 border-b border-surface-100/30 shadow-soft-sm">
-          <div className="mx-auto max-w-2xl">
-            <div className="flex items-center justify-between gap-6">
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-1">남은 시간</span>
-                <span className={`text-xl font-black tabular-nums tracking-tight ${isOvertime ? 'text-accent-rose' : 'text-surface-900'}`}>
-                  {isOvertime ? '지연 ' : ''}{formatDuration(Math.abs(isOvertime ? elapsedSeconds - etaSeconds : remainingSeconds), true)}
-                </span>
-              </div>
-              
-              <div className="flex flex-col items-center flex-1">
-                <span className="text-[9px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-1">현재 속도</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-black text-primary-600 leading-none tabular-nums tracking-tighter">{currentSpeedKmh.toFixed(1)}</span>
-                  <span className="text-[10px] font-bold text-surface-400 uppercase">km/h</span>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end">
-                <span className="text-[9px] font-bold text-surface-400 uppercase tracking-[0.2em] mb-1">예상 보상</span>
-                <span className={`text-xl font-black tabular-nums tracking-tight ${isOvertime ? 'text-accent-rose' : 'text-primary-600'}`}>
-                  ${isOvertime ? Math.max(order.baseReward * 0.5, order.baseReward - Math.floor((elapsedSeconds - etaSeconds) / 60) * 0.2).toFixed(2) : order.baseReward.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            {/* 하단 프로그레스 & 거리 정보 */}
-            <div className="mt-5 flex items-center gap-4">
-              <span className="text-[10px] font-bold text-primary-600 tabular-nums">{distanceCovered.toFixed(2)}km</span>
-              <div className="relative flex-1 h-2 rounded-full bg-surface-200/30 overflow-hidden shadow-inner">
-                <div 
-                  className={`absolute left-0 top-0 h-full transition-all duration-1000 rounded-full ${isSpeeding ? 'bg-accent-rose shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-primary-500'}`}
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-bold text-surface-400 tabular-nums">-{distanceRemaining}km</span>
-            </div>
-            
-            {/* 도착 예정 시각 & 연료 정보 */}
-            <div className="mt-3 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[9px] font-bold text-surface-400 uppercase tracking-[0.2em]">연료</span>
-                  <div className="w-20 h-1.5 bg-surface-100 rounded-full overflow-hidden border border-surface-200/50">
-                    <div 
-                      className={`h-full transition-all duration-500 ${fuel > 20 ? 'bg-accent-amber' : 'bg-accent-rose animate-pulse'}`}
-                      style={{ width: `${fuel}%` }}
-                    />
-                  </div>
-                </div>
-                <span className={`text-[10px] font-bold tabular-nums ${fuel > 20 ? 'text-surface-600' : 'text-accent-rose'}`}>
-                  {Math.ceil(fuel)}%
-                </span>
-              </div>
-              <div className="flex items-center gap-2 rounded-full bg-primary-50 px-3 py-1 border border-primary-100">
-                <span className="text-[9px] font-bold text-primary-400 uppercase tracking-[0.1em]">도착 예정</span>
-                <span className="text-[10px] font-bold text-primary-700">{formatKSTTime(arrivalTime)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 과속 및 연료 버튼 (우측 하단) */}
-        <div className="absolute right-4 bottom-20 z-40 flex flex-col items-center gap-3">
-          <div className={`text-[10px] font-medium px-2 py-0.5 rounded bg-white shadow-soft-sm border border-surface-100 transition-opacity duration-300 ${isSpeeding ? 'opacity-100 text-accent-rose' : 'opacity-0'}`}>
-            과속 운행 중
-          </div>
-          
-          {/* 과속 버튼 */}
-          <button
-            onClick={() => setIsOverSpeed(!isSpeeding)}
-            className={`flex h-16 w-16 items-center justify-center rounded-full shadow-soft-2xl active:scale-90 border-4 ${
-              isSpeeding 
-                ? 'bg-accent-rose text-white animate-pulse border-white shadow-accent-rose/40 scale-110' 
-                : 'bg-white text-surface-400 hover:text-accent-rose border-surface-50'
-            }`}
-          >
-            <div className="flex flex-col items-center">
-              <TrendingUp className={`h-7 w-7 ${isSpeeding ? 'text-white' : ''}`} />
-              <span className="text-[10px] font-medium uppercase tracking-tighter mt-0.5">가속</span>
-            </div>
-          </button>
-
-          {/* 연료 보충 버튼 */}
-          <button
-            onClick={() => setFuel(prev => Math.min(100, prev + 15))}
-            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white shadow-soft-lg border border-surface-100 text-accent-amber hover:bg-accent-amber hover:text-white active:scale-95 group"
-          >
-            <div className="flex flex-col items-center">
-              <Zap className="h-6 w-6 group-hover:animate-bounce" />
-              <span className="text-[8px] font-medium uppercase mt-0.5">보충</span>
-            </div>
-          </button>
-        </div>
+        <RunDashboard 
+          isCompleted={false}
+          isCancelled={false}
+          isOvertime={isOvertime}
+          elapsedSeconds={elapsedSeconds}
+          etaSeconds={etaSeconds}
+          remainingSeconds={remainingSeconds}
+          currentReward={order.baseReward}
+          progress={progress}
+          currentSpeedKmh={currentSpeedKmh}
+          isSpeeding={isSpeeding}
+        />
 
         {/* 메인 콘텐츠 영역 */}
         {viewMode === 'map' ? (
-          <div className="h-full w-full pt-[220px] pb-72 relative">
+          <div className="h-full w-full pt-[120px] pb-[100px] relative">
             <Map
               ref={mapRef}
               initialViewState={{
@@ -530,7 +470,7 @@ export const ActiveRunPage = () => {
           </div>
         ) : (
           <div 
-            className="h-full overflow-y-auto pt-[220px] pb-72 px-4"
+            className="h-full overflow-y-auto pt-[120px] pb-[100px] px-4"
             style={{ 
               willChange: 'scroll-position',
               WebkitOverflowScrolling: 'touch',
@@ -575,13 +515,24 @@ export const ActiveRunPage = () => {
           </div>
         )}
 
-        {/* 하단 시트 */}
-        <RunSheet 
-          order={order} 
+        {/* 하단 정보 카드 */}
+        <RunInfoCard 
+          title={order.title}
+          cargoName={order.cargoName}
+          distance={order.distance}
+          equipmentName={`${fuel.toFixed(0)}% 연료`}
+          onOpenDetail={() => setIsDetailOpen(true)}
+        />
+
+        {/* 상세 정보 Sheet */}
+        <RunDetailSheet 
+          open={isDetailOpen}
+          onOpenChange={setIsDetailOpen}
+          order={order}
           elapsedSeconds={elapsedSeconds}
           etaSeconds={etaSeconds}
           estimatedRemainingSeconds={estimatedRemainingSeconds}
-          runId={runId || 'temp'}
+          runId={runId || ''}
         />
       </div>
     </div>

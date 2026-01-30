@@ -69,7 +69,7 @@ export const LiveTab = ({
             {!activeRuns.some(run => run.userId === userProfileId) && userProfileId && (
               <div 
                 onClick={() => navigate('/')}
-                className="rounded-xl bg-white border border-surface-200 p-4 flex flex-col gap-4 cursor-pointer hover:border-primary-200 hover:bg-primary-50/30 transition-all shadow-soft-xs"
+                className="rounded-xl bg-white border border-surface-200 p-4 flex flex-col gap-4 cursor-pointer hover:border-primary-200 transition-all shadow-soft-xs"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">

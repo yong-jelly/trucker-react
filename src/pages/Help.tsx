@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router';
 import { useEffect } from 'react';
 
-import { ArrowLeft, Zap, FastForward, Info, Users } from 'lucide-react';
+import { Zap, FastForward, Info, Users } from 'lucide-react';
+
+import { PageHeader } from '../shared/ui/PageHeader';
 
 export const HelpPage = () => {
   const navigate = useNavigate();
@@ -12,18 +14,10 @@ export const HelpPage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white pb-12">
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-white px-4 py-4 border-b border-surface-100">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 text-surface-700" />
-        </button>
-        <h1 className="text-xl font-medium text-surface-900 tracking-tight">도움말 및 가이드</h1>
-      </header>
+    <div className="min-h-screen bg-white pb-12 flex flex-col items-center">
+      <PageHeader title="도움말 및 가이드" />
 
-      <div className="mx-auto max-w-2xl p-4 space-y-10">
+      <div className="mx-auto w-full max-w-2xl p-4 pt-24 space-y-10">
         {/* 1. 경제 시스템 (핵심) */}
         <section className="space-y-4">
           <div className="flex items-center gap-2 px-1">

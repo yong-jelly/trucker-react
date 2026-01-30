@@ -30,8 +30,8 @@ export const ActiveRunCard = ({ run, isMe = false }: { run: ActiveRunEntry; isMe
             isMe 
               ? progressWidth >= 100 
                 ? 'bg-surface-400' 
-                : 'bg-gradient-to-r from-primary-400 to-primary-600' 
-              : 'bg-gradient-to-r from-emerald-400 to-emerald-500'
+                : 'bg-primary-500' 
+              : 'bg-emerald-500'
           }`}
           style={{ width: `${progressWidth}%` }}
         />

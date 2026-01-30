@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { 
-  ArrowLeft, Bot, UserCircle, History, PlayCircle, 
+  Bot, UserCircle, History, PlayCircle, 
   Loader2, Bike, Truck, Car, Plane, MapPin, Clock, RefreshCw
 } from 'lucide-react';
 import { getLeaderboard, type LeaderboardEntry } from '../entities/leaderboard/api';
 import { getActiveRuns, type ActiveRun, getRunHistory, type RunHistory } from '../entities/run';
 import { getTimeDiff, formatRelativeTime } from '../shared/lib/date';
 import { useEquipments } from '../entities/equipment';
+
+import { PageHeader } from '../shared/ui/PageHeader';
 
 export const PublicProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -104,28 +106,21 @@ export const PublicProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white pb-12">
-      <header className="sticky top-0 z-10 bg-white border-b border-surface-100 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="p-1 hover:bg-surface-50 rounded-full transition-colors">
-              <ArrowLeft className="h-5 w-5 text-surface-700" />
-            </button>
-            <h1 className="text-lg font-medium text-surface-900">
-              {profileInfo.isBot ? '봇 프로필' : '유저 프로필'}
-            </h1>
-          </div>
+    <div className="min-h-screen bg-white pb-12 flex flex-col items-center">
+      <PageHeader 
+        title={profileInfo.isBot ? '봇 프로필' : '유저 프로필'}
+        rightElement={
           <button 
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2 hover:bg-surface-50 rounded-full transition-colors disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`h-5 w-5 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
           </button>
-        </div>
-      </header>
+        }
+      />
 
-      <main className="mx-auto max-w-2xl px-4 py-6 space-y-6">
+      <main className="mx-auto w-full max-w-2xl px-4 py-6 pt-24 space-y-6">
         {/* 프로필 헤더 */}
         <section className="bg-white rounded-2xl p-6 border border-surface-100 flex flex-col items-center text-center">
           <div className={`h-20 w-20 rounded-full flex items-center justify-center mb-4 overflow-hidden ${
@@ -157,15 +152,15 @@ export const PublicProfilePage = () => {
           
           <div className="grid grid-cols-3 w-full gap-4 border-t border-surface-50 pt-6">
             <div>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">평판</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest mb-1">평판</p>
               <p className="text-lg font-medium text-surface-900">{profileInfo.reputation.toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">완료</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest mb-1">완료</p>
               <p className="text-lg font-medium text-surface-900">{profileInfo.totalRuns}회</p>
             </div>
             <div>
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">총 수익</p>
+              <p className="text-[10px] font-medium text-surface-400 uppercase tracking-widest mb-1">총 수익</p>
               <p className="text-lg font-medium text-emerald-600">${profileInfo.totalEarnings.toLocaleString()}</p>
             </div>
           </div>

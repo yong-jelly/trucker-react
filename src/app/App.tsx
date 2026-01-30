@@ -29,7 +29,7 @@ export const App = () => {
           <Route path="/profile/edit" element={<ProfileEditPage />} />
           <Route path="/order/:orderId" element={<OrderDetailPage />} />
           <Route path="/run/:runId" element={<ActiveRunPage />} />
-          <Route path="/settlement" element={<SettlementPage />} />
+          <Route path="/settlement/:runId" element={<SettlementPage />} />
           <Route path="/garage" element={<GaragePage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/super/admin/setting" element={<AdminSettingPage />} />

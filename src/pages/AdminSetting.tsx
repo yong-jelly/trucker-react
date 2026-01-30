@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { 
-  ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike 
+  Save, Loader2
 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
 import * as adminApi from '../entities/admin/api.ts';
@@ -12,13 +12,12 @@ import { EnforcementSettingsTab } from '../widgets/admin/ui/EnforcementSettingsT
 import { EquipmentSettingsTab } from '../widgets/admin/ui/EquipmentSettingsTab';
 import { useAllEquipmentsAdmin, updateEquipment } from '../entities/equipment';
 
+import { PageHeader } from '../shared/ui/PageHeader';
+
 type TabType = 'bot' | 'enforcement' | 'equipment';
 
 export const AdminSettingPage = () => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
-  // URL 파라미터에서 탭 읽기 (기본값: bot)
   const tabFromUrl = searchParams.get('tab') as TabType | null;
   const activeTab: TabType = tabFromUrl && ['bot', 'enforcement', 'equipment'].includes(tabFromUrl) 
     ? tabFromUrl 
@@ -205,24 +204,18 @@ export const AdminSettingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
-      <div className="mx-auto max-w-2xl bg-white min-h-screen relative">
-        <header className="sticky top-0 z-50 bg-white border-b border-surface-100">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-            <Button 
-                onClick={() => navigate('/')} 
-                variant="ghost"
-                size="icon"
-                className="rounded-full"
-              >
-                <ArrowLeft className="h-5 w-5 text-surface-700" />
-              </Button>
-              <div>
-                <h1 className="text-lg font-medium text-surface-900">System Admin</h1>
-                <p className="text-xs text-surface-500">시스템 설정 및 관리</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-surface-50 pb-12 flex flex-col items-center">
+      <div className="mx-auto w-full max-w-2xl bg-white min-h-screen relative">
+        <PageHeader 
+          title="System Admin"
+          tabs={[
+            { id: 'bot', label: '봇 설정' },
+            { id: 'enforcement', label: '단속 설정' },
+            { id: 'equipment', label: '장비 설정' },
+          ]}
+          activeTab={activeTab}
+          onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+          rightElement={
             <Button 
               onClick={handleSave}
               disabled={isSaving}
@@ -235,57 +228,10 @@ export const AdminSettingPage = () => {
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {isSaved ? '저장됨!' : '저장'}
             </Button>
-          </div>
+          }
+        />
 
-          {/* 탭 네비게이션 */}
-          <div 
-            className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide"
-            style={{ 
-              willChange: 'scroll-position',
-              WebkitOverflowScrolling: 'touch',
-              transform: 'translateZ(0)',
-            }}
-          >
-            <Button
-              onClick={() => setActiveTab('bot')}
-              variant={activeTab === 'bot' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
-                activeTab === 'bot' 
-                  ? 'bg-primary-600 text-white border-none' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
-              }`}
-            >
-              <Bot className="h-4 w-4" />
-              봇 설정
-            </Button>
-            <Button
-              onClick={() => setActiveTab('enforcement')}
-              variant={activeTab === 'enforcement' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
-                activeTab === 'enforcement' 
-                  ? 'bg-primary-600 text-white border-none' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
-              }`}
-            >
-              <ShieldAlert className="h-4 w-4" />
-              단속 설정
-            </Button>
-            <Button
-              onClick={() => setActiveTab('equipment')}
-              variant={activeTab === 'equipment' ? 'default' : 'outline'}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
-                activeTab === 'equipment' 
-                  ? 'bg-primary-600 text-white border-none' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
-              }`}
-            >
-              <Bike className="h-4 w-4" />
-              장비 설정
-            </Button>
-          </div>
-        </header>
-
-        <main className="px-4 py-6 space-y-6">
+        <main className="px-4 py-6 pt-32 space-y-6">
         {/* 봇 설정 탭 */}
         {activeTab === 'bot' && (
           <BotSettingsTab 

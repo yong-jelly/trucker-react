@@ -3,10 +3,11 @@ import Map, { Source, Layer, Marker as MapboxMarker, NavigationControl } from 'r
 import type { MapRef } from 'react-map-gl/mapbox';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { useParams, useNavigate } from 'react-router';
-import { ArrowLeft, MapPin, Loader2, Package, Clock, Bike, Car, Truck, Plane, RefreshCw, Navigation, Timer } from 'lucide-react';
+import { 
+  MapPin, Loader2, RefreshCw, Bot, UserCircle 
+} from 'lucide-react';
 import { MAPBOX_TOKEN } from '../shared/lib/mockData';
 import { getRunById, type RunDetail } from '../entities/run';
-import { formatDuration } from '../shared/lib/date';
 import { 
   getSpeedFromSnapshot, 
   speedToKmPerSecond, 
@@ -17,6 +18,11 @@ import {
 } from '../shared/lib/run';
 import { useEquipments } from '../entities/equipment';
 
+import { PageHeader } from '../shared/ui/PageHeader';
+import { RunDetailSheet } from '../widgets/run/RunDetailSheet';
+import { RunDashboard } from '../widgets/run/RunDashboard';
+import { RunInfoCard } from '../widgets/run/RunInfoCard';
+
 export const PublicRunPage = () => {
   const { runId } = useParams();
   const navigate = useNavigate();
@@ -26,6 +32,7 @@ export const PublicRunPage = () => {
   const [routeData, setRouteData] = useState<any>(null);
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
   const [tick, setTick] = useState(0);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
 
   // 장비 정보 로드
@@ -105,7 +112,6 @@ export const PublicRunPage = () => {
     return Math.min((distanceCovered / totalDistanceKm) * 100, 100);
   }, [runDetail, distanceCovered, totalDistanceKm]);
 
-  const distanceRemaining = Math.max(totalDistanceKm - distanceCovered, 0);
   const isOvertime = elapsedSeconds > etaSeconds;
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
@@ -113,20 +119,6 @@ export const PublicRunPage = () => {
   const getEquipmentName = (equipmentId: string | null | undefined) => {
     const equipment = equipments.find(e => e.id === equipmentId);
     return equipment?.name || '배달 자전거';
-  };
-
-  // 장비 아이콘
-  const getEquipmentIcon = (equipmentId: string | null | undefined) => {
-    const equipment = equipments.find(e => e.id === equipmentId);
-    const type = equipment?.equipmentType || equipmentId;
-
-    switch (type) {
-      case 'VAN': return <Car className="h-4 w-4" />;
-      case 'TRUCK': return <Truck className="h-4 w-4" />;
-      case 'HEAVY_TRUCK': return <Truck className="h-4 w-4 text-primary-600" />;
-      case 'PLANE': return <Plane className="h-4 w-4" />;
-      default: return <Bike className="h-4 w-4" />;
-    }
   };
 
   // Mapbox 라우팅 데이터 가져오기 (공통 함수 사용)
@@ -205,117 +197,69 @@ export const PublicRunPage = () => {
   const isCancelled = runDetail.run.status === 'CANCELLED';
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-surface-50">
+    <div className="relative h-screen w-full overflow-hidden bg-surface-50 flex flex-col items-center">
       {/* 상단 헤더 */}
-      <header className="absolute left-0 right-0 top-0 z-30 flex items-center justify-between bg-white px-4 py-3 border-b border-surface-100 shadow-soft-sm">
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 text-surface-700" />
-          </button>
-          <div className="flex flex-col">
-            <p className="text-[10px] font-medium text-surface-400 uppercase tracking-tight">
-              {isCompleted ? '완료된 운행' : isCancelled ? '취소된 운행' : '운행 조회'}
-            </p>
-            <p className="text-sm font-medium text-surface-900 leading-tight">{order.title}</p>
+      <PageHeader 
+        title={
+          <div className="flex items-center gap-2">
+            <div className={`h-8 w-8 rounded-full flex items-center justify-center overflow-hidden shrink-0 ${
+              runDetail.user.isBot ? 'bg-amber-100' : 'bg-primary-100'
+            }`}>
+              {runDetail.user.avatarUrl ? (
+                <img 
+                  src={runDetail.user.avatarUrl} 
+                  alt={runDetail.user.nickname} 
+                  className="h-full w-full object-cover" 
+                />
+              ) : runDetail.user.isBot ? (
+                <Bot className="h-5 w-5 text-amber-600" />
+              ) : (
+                <UserCircle className="h-5 w-5 text-primary-600" />
+              )}
+            </div>
+            <span className="text-lg font-medium text-surface-900 truncate">
+              {runDetail.user.nickname}
+            </span>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* 새로고침 버튼 */}
-          {!isCompleted && !isCancelled && (
-            <button 
-              onClick={handleRefresh}
-              disabled={isRefreshing}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`h-4 w-4 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </button>
-          )}
-
-          {/* 상태 뱃지 */}
-          <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-            isCompleted 
-              ? 'bg-emerald-100 text-emerald-700' 
-              : isCancelled 
-                ? 'bg-surface-100 text-surface-500'
-                : 'bg-primary-100 text-primary-700'
-          }`}>
-            {isCompleted ? '완료' : isCancelled ? '취소됨' : '운행 중'}
+        }
+        rightElement={
+          <div className="flex items-center gap-2">
+            {!isCompleted && !isCancelled && (
+              <button 
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-surface-50 hover:bg-surface-100 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`h-4 w-4 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </button>
+            )}
+            <div className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+              isCompleted 
+                ? 'bg-emerald-100 text-emerald-700' 
+                : isCancelled 
+                  ? 'bg-surface-100 text-surface-500'
+                  : 'bg-primary-100 text-primary-700'
+            }`}>
+              {isCompleted ? '완료' : isCancelled ? '취소됨' : '운행 중'}
+            </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       {/* 대시보드 (상태 바) */}
-      <div className="absolute left-0 right-0 top-[60px] z-20 bg-white px-4 py-3 border-b border-surface-100/50 shadow-soft-xs">
-        <div className="mx-auto max-w-2xl flex items-center justify-between gap-4">
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">
-              {isCompleted ? '소요 시간' : isCancelled ? '취소 시각' : '남은 시간'}
-            </span>
-            <div className="flex items-center gap-1">
-              <Timer className={`h-3 w-3 ${isOvertime && !isCompleted ? 'text-accent-rose' : 'text-surface-400'}`} />
-              <span className={`text-base font-medium tabular-nums ${isOvertime && !isCompleted ? 'text-accent-rose' : 'text-surface-900'}`}>
-                {isCompleted 
-                  ? formatDuration(elapsedSeconds, true)
-                  : isCancelled 
-                    ? '취소됨'
-                    : isOvertime 
-                      ? `지연 ${formatDuration(elapsedSeconds - etaSeconds, true)}`
-                      : formatDuration(remainingSeconds, true)
-                }
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">장비</span>
-            <div className="flex items-center gap-1.5 text-sm font-medium text-surface-700">
-              {getEquipmentIcon(runDetail.run.selectedItems?.equipmentId)}
-              <span>{getEquipmentName(runDetail.run.selectedItems?.equipmentId)}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-col items-center">
-            <span className="text-[9px] font-medium text-surface-400 uppercase tracking-widest">보상</span>
-            <span className={`text-base font-medium tabular-nums ${isOvertime && !isCompleted ? 'text-accent-rose' : 'text-primary-600'}`}>
-              ${runDetail.run.currentReward.toLocaleString()}
-            </span>
-          </div>
-        </div>
-
-        {/* 프로그레스 바 */}
-        <div className="mx-auto max-w-2xl mt-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Navigation className="h-3 w-3 text-primary-500" />
-              <span className="text-[10px] font-bold text-primary-600 uppercase">
-                {progress.toFixed(1)}% 완료
-              </span>
-            </div>
-            <span className="text-[10px] font-medium text-surface-400">
-              남은 거리: <span className="text-surface-900 font-bold">{isCompleted ? '0.00' : distanceRemaining.toFixed(2)}km</span> / {totalDistanceKm}km
-            </span>
-          </div>
-          <div className="relative flex-1 h-2 rounded-full bg-surface-100 overflow-hidden">
-            <div 
-              className={`absolute left-0 top-0 h-full transition-all duration-1000 ${
-                isCompleted ? 'bg-emerald-500' : 'bg-primary-500'
-              }`}
-              style={{ width: `${isCompleted ? 100 : progress}%` }}
-            />
-          </div>
-          <div className="flex justify-between mt-1">
-            <span className="text-[9px] font-medium text-surface-400">이동: {distanceCovered.toFixed(2)}km</span>
-            <span className="text-[9px] font-medium text-surface-400">목표: {totalDistanceKm}km</span>
-          </div>
-        </div>
-      </div>
+      <RunDashboard 
+        isCompleted={isCompleted}
+        isCancelled={isCancelled}
+        isOvertime={isOvertime}
+        elapsedSeconds={elapsedSeconds}
+        etaSeconds={etaSeconds}
+        remainingSeconds={remainingSeconds}
+        currentReward={runDetail.run.currentReward}
+        progress={progress}
+      />
 
       {/* 지도 */}
-      <div className="h-full w-full pt-[185px] pb-[180px] relative">
+      <div className="h-full w-full max-w-[480px] pt-[120px] pb-[100px] relative">
         <Map
           ref={mapRef}
           initialViewState={{
@@ -380,37 +324,24 @@ export const PublicRunPage = () => {
       </div>
 
       {/* 하단 정보 카드 */}
-      <div className="absolute bottom-0 left-0 right-0 z-20 bg-white border-t border-surface-100 rounded-t-3xl shadow-soft-lg px-4 py-5 pb-8">
-        <div className="mx-auto max-w-2xl">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary-50">
-              <Package className="h-6 w-6 text-primary-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-base font-medium text-surface-900 truncate">{order.title}</h3>
-              <p className="text-sm text-surface-500 mt-0.5">{order.cargoName} · {order.distance}km</p>
-            </div>
-          </div>
+      <RunInfoCard 
+        title={order.title}
+        cargoName={order.cargoName}
+        distance={order.distance}
+        equipmentName={getEquipmentName(runDetail.run.selectedItems?.equipmentId)}
+        onOpenDetail={() => setIsDetailOpen(true)}
+      />
 
-          <div className="mt-4 grid grid-cols-3 gap-4 pt-4 border-t border-surface-50">
-            <div className="text-center">
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">카테고리</p>
-              <p className="text-sm font-medium text-surface-700">{order.category}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">제한 시간</p>
-              <p className="text-sm font-medium text-surface-700 flex items-center justify-center gap-1">
-                <Clock className="h-3.5 w-3.5" />
-                {order.limitTimeMinutes}분
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-surface-400 uppercase tracking-widest mb-1">보상</p>
-              <p className="text-sm font-medium text-emerald-600">${order.baseReward.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 상세 정보 Sheet */}
+      <RunDetailSheet 
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        order={order}
+        elapsedSeconds={elapsedSeconds}
+        etaSeconds={etaSeconds}
+        estimatedRemainingSeconds={remainingSeconds}
+        runId={runId || ''}
+      />
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, ChevronRight, Check, Truck, Plane, Ship, Car, Loader2 } from 'lucide-react';
+import { MapPin, Clock, Package, DollarSign, AlertTriangle, FileText, Shield, Wrench, Play, Info, Bike, ChevronRight, Check, Truck, Plane, Ship, Car, Loader2 } from 'lucide-react';
 import { useGameStore } from '../app/store';
 import { CATEGORY_LABELS, CATEGORY_COLORS } from '../shared/lib/mockData';
 import { RoutePreviewMap } from '../widgets/order/RoutePreviewMap';
@@ -13,6 +13,7 @@ import { useUserEquipments, type UserEquipment } from '../entities/equipment';
 import { getActiveRuns } from '../entities/run';
 import { Assets } from '../shared/assets';
 import { ContractDialog } from '../features/order/ui/ContractDialog';
+import { PageHeader } from '../shared/ui/PageHeader';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
   BICYCLE: Bike,
@@ -166,36 +167,29 @@ export const OrderDetailPage = () => {
 // ...
     <div className="min-h-screen bg-surface-50">
       {/* 헤더 */}
-      <header className="sticky top-0 z-10 flex items-center justify-between bg-white px-4 py-3 shadow-soft-xs">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50"
-          >
-            <ArrowLeft className="h-5 w-5 text-surface-700" />
-          </button>
-          <h1 className="text-lg font-medium text-surface-900">주문 상세</h1>
-        </div>
+      <PageHeader 
+        title="주문 상세"
+        rightElement={
+          canStartRun ? (
+            <button
+              onClick={handleStartDelivery}
+              className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-soft-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
+            >
+              <Play className="h-4 w-4 fill-current" />
+              운행 시작
+            </button>
+          ) : (
+            <button
+              disabled
+              className="flex items-center gap-1.5 rounded-xl bg-surface-100 px-4 py-2 text-sm font-medium text-surface-400"
+            >
+              {isAlreadyRunning ? '이미 운행 중' : '슬롯 없음'}
+            </button>
+          )
+        }
+      />
 
-        {canStartRun ? (
-          <button
-            onClick={handleStartDelivery}
-            className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-soft-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
-          >
-            <Play className="h-4 w-4 fill-current" />
-            운행 시작
-          </button>
-        ) : (
-          <button
-            disabled
-            className="flex items-center gap-1.5 rounded-xl bg-surface-100 px-4 py-2 text-sm font-medium text-surface-400"
-          >
-            {isAlreadyRunning ? '이미 운행 중' : '슬롯 없음'}
-          </button>
-        )}
-      </header>
-
-      <div className="mx-auto max-w-2xl space-y-4 p-4">
+      <div className="mx-auto max-w-2xl space-y-4 p-4 pt-24">
         {/* 지도 미리보기 */}
         <RoutePreviewMap order={order} />
 

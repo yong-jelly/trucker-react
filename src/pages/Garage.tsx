@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { 
-  Package, Wrench, Shield, FileText, ArrowLeft, Loader2, History,
+  Package, Wrench, Shield, FileText, Loader2, History,
   Lock, CheckCircle2, ShoppingCart, DollarSign, Gauge, Zap
 } from 'lucide-react';
 import { useUserProfile } from '../entities/user';
@@ -25,10 +24,11 @@ import {
   SheetFooter,
 } from '@shared/ui/Sheet';
 
+import { PageHeader } from '../shared/ui/PageHeader';
+
 type TabType = 'EQUIPMENT' | 'DOCUMENT' | 'INSURANCE';
 
 export const GaragePage = () => {
-  const navigate = useNavigate();
   const { data: profile } = useUserProfile();
   const [activeTab, setActiveTab] = useState<TabType>('EQUIPMENT');
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
@@ -162,58 +162,25 @@ export const GaragePage = () => {
   const isLoading = isLoadingRuns || isLoadingEquipments || isLoadingUserEquipments;
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-24">
-      <div className="mx-auto max-w-2xl bg-white min-h-screen relative">
+    <div className="min-h-screen bg-surface-50 pb-24 flex flex-col items-center">
+      <div className="mx-auto w-full max-w-2xl bg-white min-h-screen relative">
         {/* 헤더 */}
-        <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-none border-b border-surface-100 px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => navigate('/')} 
-                className="flex h-10 w-10 items-center justify-center rounded-xl bg-surface-50 hover:bg-surface-100 active:scale-90 transition-transform"
-              >
-                <ArrowLeft className="h-5 w-5 text-surface-700" />
-              </button>
-              <div>
-                <h1 className="text-xl font-medium text-surface-900 tracking-tight">창고 및 상점</h1>
-                <p className="text-[10px] text-surface-400 font-medium uppercase tracking-widest">Garage & Shop</p>
-              </div>
-            </div>
+        <PageHeader 
+          title="창고 및 상점"
+          tabs={categories.map(cat => ({ id: cat.id, label: cat.label }))}
+          activeTab={activeTab}
+          onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+          rightElement={
             <div className="flex items-center gap-2 rounded-2xl bg-primary-50 px-4 py-2 border border-primary-100 shadow-sm">
               <DollarSign className="h-4 w-4 text-primary-600" />
-              <span className="text-sm font-bold text-primary-600">
+              <span className="text-sm font-medium text-primary-600">
                 {profile?.balance.toLocaleString() ?? '0'}
               </span>
             </div>
-          </div>
+          }
+        />
 
-          {/* 카테고리 탭 - GPU 가속 적용 */}
-          <div 
-            className="flex gap-2 mt-6 overflow-x-auto pb-1 scrollbar-hide"
-            style={{ 
-              willChange: 'scroll-position',
-              WebkitOverflowScrolling: 'touch',
-              transform: 'translateZ(0)',
-            }}
-          >
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveTab(cat.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl text-sm font-medium transition-all shrink-0 border ${
-                  activeTab === cat.id 
-                    ? 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-200' 
-                    : 'bg-white text-surface-600 border-surface-200 hover:border-primary-200'
-                }`}
-              >
-                <cat.icon className={`h-4 w-4 ${activeTab === cat.id ? 'text-white' : cat.color}`} />
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        </header>
-
-        <main className="p-4 space-y-8">
+        <main className="p-4 pt-32 space-y-8">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-4">
               <Loader2 className="h-10 w-10 animate-spin text-primary-500" />

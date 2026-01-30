@@ -29,8 +29,9 @@ const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "full"
+    hideHandle?: boolean
   }
->(({ className, children, maxWidth = "2xl", ...props }, ref) => {
+>(({ className, children, maxWidth = "2xl", hideHandle = false, ...props }, ref) => {
   const maxWidthClass = {
     sm: "max-w-sm",
     md: "max-w-md",
@@ -55,7 +56,9 @@ const SheetContent = React.forwardRef<
         )}
         {...props}
       >
-        <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-surface-200 shrink-0" />
+        {!hideHandle && (
+          <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-surface-200 shrink-0" />
+        )}
         {children}
       </DialogPrimitive.Content>
     </SheetPortal>

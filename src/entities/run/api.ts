@@ -75,7 +75,8 @@ export async function getActiveRuns(userId: string): Promise<ActiveRun[]> {
  */
 export interface RunDetail {
   run: Run;
-    order: {
+  order: {
+    id: string;
     title: string;
     category: string;
     cargoName: string;
@@ -86,6 +87,11 @@ export interface RunDetail {
     startPoint: [number, number];
     endPoint: [number, number];
     requiredEquipmentType: string | null;
+  };
+  user: {
+    nickname: string;
+    avatarUrl: string | null;
+    isBot: boolean;
   };
   slotIndex: number;
 }
@@ -140,6 +146,7 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       } : undefined,
     },
     order: {
+      id: row.order_id,
       title: row.order_title,
       category: row.order_category,
       cargoName: row.order_cargo_name,
@@ -150,6 +157,11 @@ export async function getRunById(runId: string): Promise<RunDetail | null> {
       startPoint: [row.order_start_lat, row.order_start_lng],
       endPoint: [row.order_end_lat, row.order_end_lng],
       requiredEquipmentType: row.order_required_equipment_type,
+    },
+    user: {
+      nickname: row.user_nickname,
+      avatarUrl: row.user_avatar_url,
+      isBot: row.user_is_bot,
     },
     slotIndex: row.slot_index,
   };

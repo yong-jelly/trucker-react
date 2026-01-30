@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useUserStore } from '../entities/user';
 import { Navigate } from 'react-router';
 import { TransactionsTab } from '../features/profile/ui/TransactionsTab';
+
+import { PageHeader } from '../shared/ui/PageHeader';
 
 export const TransactionHistoryPage = () => {
   const navigate = useNavigate();
@@ -13,6 +15,17 @@ export const TransactionHistoryPage = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
+
+  const tabs = [
+    { id: "profile", label: "프로필" },
+    { id: "achievements", label: "업적" },
+    { id: "history", label: "운행 기록" },
+    { id: "transactions", label: "거래 내역" },
+  ];
+
+  const handleTabChange = (newTabId: string) => {
+    navigate(`/profile/${newTabId}`);
+  };
 
   if (!isHydrated || isSyncing) {
     return (
@@ -27,18 +40,18 @@ export const TransactionHistoryPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
-      <header className="sticky top-0 z-50 flex items-center gap-3 bg-white px-4 py-4 shadow-soft-sm border-b border-surface-100">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
-        >
-          <ArrowLeft className="h-5 w-5 text-surface-700" />
-        </button>
-        <h1 className="text-xl font-medium text-surface-900 tracking-tight">거래 내역</h1>
-      </header>
+    <div className="flex flex-col min-h-screen bg-surface-50">
+      {/* 상단 헤더 */}
+      <PageHeader 
+        title="마이 페이지"
+        tabs={tabs}
+        activeTab="transactions"
+        onTabChange={handleTabChange}
+        showBackButton
+      />
 
-      <div className="mx-auto max-w-lg pt-6">
+      {/* 컨텐츠 영역 */}
+      <div className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32">
         <TransactionsTab />
       </div>
     </div>

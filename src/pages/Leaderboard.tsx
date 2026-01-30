@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useSearchParams } from 'react-router';
 import { 
-  ArrowLeft, RefreshCw, HelpCircle
+  RefreshCw, HelpCircle
 } from 'lucide-react';
 import { 
   getLeaderboard, 
@@ -28,29 +28,9 @@ import { RankingTab } from '../widgets/leaderboard/RankingTab';
 import { CompetitorsTab } from '../widgets/leaderboard/CompetitorsTab';
 import { ActivityTab } from '../widgets/leaderboard/ActivityTab';
 
-type TabType = 'live' | 'ranking' | 'competitors' | 'activity';
+import { PageHeader } from '../shared/ui/PageHeader';
 
-// 탭 버튼 컴포넌트
-const TabButton = ({ 
-  active, 
-  onClick, 
-  children, 
-}: { 
-  active: boolean; 
-  onClick: () => void; 
-  children: React.ReactNode;
-}) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
-      active 
-        ? 'bg-primary-600 text-white shadow-soft-md' 
-        : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
-    }`}
-  >
-    {children}
-  </button>
-);
+type TabType = 'live' | 'ranking' | 'competitors' | 'activity';
 
 // 통계 카드 컴포넌트
 const StatCard = ({ 
@@ -69,7 +49,7 @@ const StatCard = ({
       {isLoading ? (
         <Skeleton className="h-5 w-16 mt-0.5" />
       ) : (
-        <p className="text-sm font-bold text-surface-900">{value}</p>
+        <p className="text-sm font-medium text-surface-900">{value}</p>
       )}
     </div>
   );
@@ -88,7 +68,6 @@ const StatCardSkeleton = () => (
 
 // 메인 Leaderboard 페이지
 export const LeaderboardPage = () => {
-  const navigate = useNavigate();
   const { data: profile } = useUserProfile();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get('tab') as TabType;
@@ -97,8 +76,16 @@ export const LeaderboardPage = () => {
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const tabs = [
+    { id: 'live', label: '실시간' },
+    { id: 'ranking', label: '랭킹' },
+    { id: 'competitors', label: '경쟁자들' },
+    { id: 'activity', label: '활동' },
+  ];
+
   // 탭 변경 시 URL 업데이트
-  const handleTabChange = (tab: TabType) => {
+  const handleTabChange = (tabId: string) => {
+    const tab = tabId as TabType;
     setActiveTab(tab);
     setSearchParams({ tab }, { replace: true });
   };
@@ -117,6 +104,11 @@ export const LeaderboardPage = () => {
   const [heatmap, setHeatmap] = useState<ActivityDay[]>([]);
   const [transactions, setTransactions] = useState<TransactionEntry[]>([]);
   const [isActivityLoading, setIsActivityLoading] = useState(true);
+
+  // 탭 변경 시 스크롤 최상단 이동
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [activeTab]);
 
   // 통계 요약 로드 (모든 탭에서 공통 사용)
   const fetchStats = useCallback(async () => {
@@ -220,24 +212,15 @@ export const LeaderboardPage = () => {
   }, [activeTab, period, fetchStats, fetchLiveData, fetchRankingData, fetchActivityData]);
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
-      <div className="mx-auto max-w-2xl bg-white min-h-screen shadow-xl relative">
+    <div className="min-h-screen bg-surface-50">
+      <div className="mx-auto max-w-2xl bg-white min-h-screen relative">
         {/* 헤더 */}
-        <header className="sticky top-0 z-50 bg-white border-b border-surface-100 shadow-soft-sm">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => navigate('/')} 
-                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
-              >
-                <ArrowLeft className="h-5 w-5 text-surface-700" />
-              </button>
-              <div>
-                <h1 className="text-lg font-medium text-surface-900">리더보드</h1>
-                <p className="text-xs text-surface-500">실시간 경쟁 현황</p>
-              </div>
-            </div>
-            
+        <PageHeader 
+          title="리더보드"
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+          rightElement={
             <div className="flex gap-1">
               <button
                 onClick={() => setIsHelpOpen(true)}
@@ -253,73 +236,40 @@ export const LeaderboardPage = () => {
                 <RefreshCw className={`h-5 w-5 text-surface-600 ${isRefreshing ? 'animate-spin' : ''}`} />
               </button>
             </div>
-          </div>
+          }
+        />
 
-          <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+        <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 
-          {/* 탭 */}
-          <div 
-            className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide"
-            style={{ 
-              willChange: 'scroll-position',
-              WebkitOverflowScrolling: 'touch',
-              transform: 'translateZ(0)',
-            }}
-          >
-            <TabButton 
-              active={activeTab === 'live'} 
-              onClick={() => handleTabChange('live')}
-            >
-              실시간
-            </TabButton>
-            <TabButton 
-              active={activeTab === 'ranking'} 
-              onClick={() => handleTabChange('ranking')}
-            >
-              랭킹
-            </TabButton>
-            <TabButton 
-              active={activeTab === 'competitors'} 
-              onClick={() => handleTabChange('competitors')}
-            >
-              경쟁자들
-            </TabButton>
-            <TabButton 
-              active={activeTab === 'activity'} 
-              onClick={() => handleTabChange('activity')}
-            >
-              활동
-            </TabButton>
-          </div>
-        </header>
-
-        <main className="px-4 py-4 space-y-6">
-          {/* 통계 요약 */}
-          {isStatsLoading ? (
-            <StatCardSkeleton />
-          ) : (
-            <div className="grid grid-cols-4 gap-2">
-              <StatCard 
-                label="활성 운행" 
-                value={stats?.activeRuns || 0} 
-                color="emerald" 
-              />
-              <StatCard 
-                label="오늘 완료" 
-                value={stats?.completedRunsToday || 0} 
-                color="primary" 
-              />
-              <StatCard 
-                label="참여자" 
-                value={`${stats?.totalUsers || 0} + ${stats?.totalBots || 0}`} 
-                color="amber" 
-              />
-              <StatCard 
-                label="오늘 총 수익" 
-                value={`$${(stats?.totalEarningsToday || 0).toLocaleString()}`} 
-                color="rose" 
-              />
-            </div>
+        <main className="px-4 py-4 pt-32 space-y-6">
+          {/* 통계 요약 - 활동 탭에서만 표시 */}
+          {activeTab === 'activity' && (
+            isStatsLoading ? (
+              <StatCardSkeleton />
+            ) : (
+              <div className="grid grid-cols-4 gap-2">
+                <StatCard 
+                  label="활성 운행" 
+                  value={stats?.activeRuns || 0} 
+                  color="emerald" 
+                />
+                <StatCard 
+                  label="오늘 완료" 
+                  value={stats?.completedRunsToday || 0} 
+                  color="primary" 
+                />
+                <StatCard 
+                  label="참여자" 
+                  value={`${stats?.totalUsers || 0} + ${stats?.totalBots || 0}`} 
+                  color="amber" 
+                />
+                <StatCard 
+                  label="오늘 총 수익" 
+                  value={`$${(stats?.totalEarningsToday || 0).toLocaleString()}`} 
+                  color="rose" 
+                />
+              </div>
+            )
           )}
 
           {/* 탭 콘텐츠 */}

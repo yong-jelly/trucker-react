@@ -203,12 +203,12 @@ export async function updateEquipment(params: {
  * 장비 이미지 경로 생성 유틸리티
  */
 export function getEquipmentImagePath(imageFilename: string): string {
-  return `/src/shared/assets/images/vehicle/${imageFilename}.png`;
+  return new URL(`../../shared/assets/images/vehicle/${imageFilename}.png`, import.meta.url).href;
 }
 
 /**
  * 장비 썸네일 이미지 경로 생성 유틸리티
  */
 export function getEquipmentThumbnailPath(imageFilename: string): string {
-  return `/src/shared/assets/images/vehicle/thumb/${imageFilename}_t.png`;
+  return new URL(`../../shared/assets/images/vehicle/thumb/${imageFilename}_t.png`, import.meta.url).href;
 }

@@ -45,10 +45,10 @@ export const CompetitorCard = ({
       onClick={handleClick}
       className={`relative rounded-xl p-4 transition-all cursor-pointer active:scale-[0.98] ${
         entry.isBot 
-          ? 'bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200' 
+          ? 'bg-white border border-amber-200 shadow-soft-xs' 
           : isMe
-            ? 'bg-gradient-to-br from-primary-50 to-blue-50 border-2 border-primary-500 shadow-soft-md'
-            : 'bg-gradient-to-br from-primary-50 to-blue-50 border border-primary-200'
+            ? 'bg-white border-2 border-primary-500 shadow-soft-md'
+            : 'bg-white border border-surface-100 shadow-soft-xs'
       }`}
     >
       {/* 활성 표시 (운행 중) - 봇과 유저 모두 */}

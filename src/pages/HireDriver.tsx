@@ -1,9 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, Users, UserPlus, DollarSign, Info, AlertCircle, ChevronLeft, ChevronRight, Zap, Target, Shield, Briefcase, Palette, Loader2 } from 'lucide-react';
+import { Users, DollarSign, Info, AlertCircle, ChevronLeft, ChevronRight, Zap, Target, Shield, Briefcase, Palette, Loader2 } from 'lucide-react';
 import { useUserProfile } from '../entities/user';
 import { useDriverPersonas, useHireDriver, getAvatarImageUrl } from '../entities/driver';
 import { useUserStore } from '../entities/user';
+
+import { PageHeader } from '../shared/ui/PageHeader';
 
 type DriverType = 'NPC' | 'USER';
 
@@ -16,6 +18,15 @@ export const HireDriverPage = () => {
   
   const [activeTab, setActiveTab] = useState<DriverType>('NPC');
   const [selectedDriverIndex, setSelectedDriverIndex] = useState(0);
+
+  const tabs = [
+    { id: 'NPC', label: 'NPC 드라이버' },
+    { id: 'USER', label: '유저 드라이버' },
+  ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as DriverType);
+  };
   
   // NPC 드라이버 오퍼 상태 관리 (각 드라이버별 협상 상태 저장)
   const [driverOffers, setDriverOffers] = useState<Record<string, { commission: number; attempts: number }>>({});
@@ -98,47 +109,22 @@ export const HireDriverPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12">
-      <header className="sticky top-0 z-50 flex items-center justify-between bg-white px-4 py-4 shadow-soft-sm">
-        <div className="flex items-center gap-3">
-          <button 
-            onClick={() => navigate(-1)} 
-            className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50"
-          >
-            <ArrowLeft className="h-5 w-5 text-surface-700" />
-          </button>
-          <h1 className="text-xl font-medium text-surface-900">드라이버 고용</h1>
-        </div>
-        <div className="rounded-full bg-primary-50 px-4 py-1.5 border border-primary-100">
-          <span className="text-sm font-medium text-primary-600">
-            ${profile?.balance.toLocaleString() ?? '0'}
-          </span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-surface-50 pb-12 flex flex-col items-center">
+      <PageHeader 
+        title="드라이버 고용"
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        rightElement={
+          <div className="rounded-full bg-primary-50 px-4 py-1.5 border border-primary-100">
+            <span className="text-sm font-medium text-primary-600">
+              ${profile?.balance.toLocaleString() ?? '0'}
+            </span>
+          </div>
+        }
+      />
 
-      <div className="mx-auto max-w-2xl p-4 space-y-6">
-        {/* 탭 네비게이션 */}
-        <div className="flex rounded-2xl bg-white p-1 shadow-soft-sm border border-surface-100">
-          <button
-            onClick={() => setActiveTab('NPC')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
-              activeTab === 'NPC' ? 'bg-primary-600 text-white shadow-soft-md' : 'text-surface-500 hover:bg-surface-50'
-            }`}
-          >
-            <Users className="h-4 w-4" />
-            NPC 드라이버
-          </button>
-          <button
-            onClick={() => setActiveTab('USER')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all ${
-              activeTab === 'USER' ? 'bg-primary-600 text-white shadow-soft-md' : 'text-surface-500 hover:bg-surface-50'
-            }`}
-          >
-            <UserPlus className="h-4 w-4" />
-            유저 드라이버
-          </button>
-        </div>
-
+      <div className="mx-auto w-full max-w-2xl p-4 pt-24 space-y-6">
         {activeTab === 'NPC' ? (
           <div className="space-y-6">
             {/* 로딩 상태 */}

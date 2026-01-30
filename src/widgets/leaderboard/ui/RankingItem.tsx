@@ -32,9 +32,9 @@ export const RankingItem = ({
       onClick={handleClick}
       className={`flex items-center gap-3 rounded-xl p-3 transition-colors cursor-pointer active:scale-[0.98] ${
         isMe 
-          ? 'bg-primary-50 border-2 border-primary-500' 
+          ? 'bg-white border-2 border-primary-500 shadow-soft-sm' 
           : highlight 
-            ? 'bg-primary-50 border border-primary-200' 
+            ? 'bg-white border border-primary-200 shadow-soft-xs' 
             : 'bg-white border border-surface-100'
       }`}
     >

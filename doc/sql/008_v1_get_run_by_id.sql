@@ -44,6 +44,10 @@ RETURNS TABLE (
     order_end_lat float,
     order_end_lng float,
     order_required_equipment_type text,
+    -- 사용자 정보
+    user_nickname text,
+    user_avatar_url text,
+    user_is_bot boolean,
     -- 슬롯 정보
     slot_index integer
 )
@@ -70,15 +74,15 @@ BEGIN
     IF NOT FOUND THEN
         RETURN;
     END IF;
+
+    -- 사용자 정보 조회
+    SELECT u.nickname, u.avatar_url, u.is_bot INTO v_user
+    FROM trucker.tbl_user_profile u
+    WHERE u.public_profile_id = v_run.user_id;
     
     -- 2. 완료 시간이 지났고 아직 IN_TRANSIT 상태인 경우 자동 완료 처리
     IF v_run.status = 'IN_TRANSIT' AND now() >= (v_run.start_at + (v_run.eta_seconds || ' seconds')::interval) THEN
-        -- 사용자 정보 조회 (봇 여부 확인)
-        SELECT u.is_bot INTO v_is_bot
-        FROM trucker.tbl_user_profile u
-        WHERE u.public_profile_id = v_run.user_id;
-        
-        IF v_is_bot THEN
+        IF v_user.is_bot THEN
             -- 봇인 경우: bot_complete_run 호출
             PERFORM trucker.bot_complete_run(p_run_id);
         ELSE
@@ -148,11 +152,16 @@ BEGIN
         o.end_lat as order_end_lat,
         o.end_lng as order_end_lng,
         o.required_equipment_type as order_required_equipment_type,
+        -- 사용자 정보
+        u.nickname as user_nickname,
+        u.avatar_url as user_avatar_url,
+        u.is_bot as user_is_bot,
         -- 슬롯 정보
         s.index as slot_index
     FROM trucker.tbl_runs r
     JOIN trucker.tbl_orders o ON r.order_id = o.id
     JOIN trucker.tbl_slots s ON r.slot_id = s.id
+    JOIN trucker.tbl_user_profile u ON r.user_id = u.public_profile_id
     WHERE r.id = p_run_id;
 END;
 $$;

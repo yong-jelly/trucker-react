@@ -77,7 +77,7 @@ export const CompetitorsTab = ({
         )}
         
         {!isLoading && leaderboard.filter(e => !e.isBot).length === 0 && (
-          <div className="rounded-xl bg-primary-50 border border-primary-200 p-4 text-center">
+          <div className="rounded-xl bg-white border border-primary-200 p-4 text-center shadow-soft-xs">
             <Users className="h-8 w-8 text-primary-400 mx-auto mb-2" />
             <p className="text-sm font-medium text-primary-700">아직 참여한 유저가 없습니다</p>
             <p className="text-xs text-primary-600 mt-1">첫 번째 유저가 되어 봇들과 경쟁하세요!</p>
