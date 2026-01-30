@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router';
+import { useSearchParams, useNavigate } from 'react-router';
 import { 
-  Save, Loader2
+  Loader2
 } from 'lucide-react';
-import { Button } from '@/shared/ui/Button';
+import { TextButton } from '@/shared/ui/TextButton';
 import * as adminApi from '../entities/admin/api.ts';
 import * as leaderboardApi from '../entities/leaderboard/api.ts';
 import { BotStatusCard } from '../widgets/admin/ui/BotStatusCard';
@@ -17,6 +17,7 @@ import { PageHeader } from '../shared/ui/PageHeader';
 type TabType = 'bot' | 'enforcement' | 'equipment';
 
 export const AdminSettingPage = () => {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabType | null;
   const activeTab: TabType = tabFromUrl && ['bot', 'enforcement', 'equipment'].includes(tabFromUrl) 
@@ -209,9 +210,9 @@ export const AdminSettingPage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-surface-50">
+    <div className="flex flex-col min-h-screen bg-white">
       <PageHeader 
-        title="System Admin"
+        title="시스템 관리"
         tabs={[
           { id: 'bot', label: '봇 설정' },
           { id: 'enforcement', label: '단속 설정' },
@@ -219,23 +220,21 @@ export const AdminSettingPage = () => {
         ]}
         activeTab={activeTab}
         onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+        onBack={() => navigate('/')}
         rightElement={
-          <Button 
+          <TextButton 
             onClick={handleSave}
             disabled={isSaving}
-            className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-              isSaved 
-                ? 'bg-accent-emerald text-white hover:bg-accent-emerald/90' 
-                : 'bg-primary-600 text-white hover:bg-primary-700'
-            }`}
+            variant={isSaved ? 'success' : 'primary'}
+            className="text-base"
           >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
             {isSaved ? '저장됨!' : '저장'}
-          </Button>
+          </TextButton>
         }
       />
 
-      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32">
+      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32 bg-white">
         {/* 봇 설정 탭 */}
         {activeTab === 'bot' && (
           <BotSettingsTab 

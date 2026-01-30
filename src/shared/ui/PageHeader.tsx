@@ -66,7 +66,7 @@ export function PageHeader({
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
                 className={cn(
-                  "relative py-3 text-sm font-medium transition-all whitespace-nowrap",
+                  "relative py-3 text-lg font-medium transition-all whitespace-nowrap",
                   activeTab === tab.id
                     ? "text-primary-600"
                     : "text-surface-400 hover:text-surface-600"

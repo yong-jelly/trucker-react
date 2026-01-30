@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { 
   Package, Wrench, Shield, FileText, Loader2, History,
-  Lock, CheckCircle2, ShoppingCart, DollarSign, Gauge, Zap,
+  Lock, DollarSign, Gauge, Zap,
   AlertTriangle, AlertCircle, HelpCircle, RefreshCcw, Clock,
   HeartPulse, Activity, ShieldAlert
 } from 'lucide-react';
@@ -359,7 +359,7 @@ export const GaragePage = () => {
         }
       />
 
-      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32">
+      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32 bg-white">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-4">
             <Loader2 className="h-10 w-10 animate-spin text-primary-500" />
@@ -369,26 +369,21 @@ export const GaragePage = () => {
           <>
             {/* 장비 탭 내용 */}
             {activeTab === 'equipment' && (
-              <div className="space-y-10">
+              <div className="space-y-12">
                 {/* 보유 중인 장비 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-surface-600" />
-                      내 차고 ({userEquipments.length})
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+                    <h2 className="text-base font-medium text-surface-900">
+                      보유 ({userEquipments.length})
                     </h2>
                   </div>
                   
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {/* 보유한 장비들 (기본 자전거 포함) */}
                     {userEquipments.map((ue) => (
                       <div 
                         key={ue.userEquipmentId}
-                        className={`group relative overflow-hidden rounded-[32px] bg-white border-2 cursor-pointer ${
-                          equippedId === ue.equipmentId 
-                            ? 'border-surface-300 ring-2 ring-surface-200' 
-                            : 'border-surface-100'
-                        }`}
+                        className={`group relative overflow-hidden cursor-pointer`}
                         onClick={() => {
                           // 장착 중인 장비는 상세 정보 시트 열기, 아니면 히스토리 열기
                           if (equippedId === ue.equipmentId) {
@@ -401,8 +396,8 @@ export const GaragePage = () => {
                           }
                         }}
                       >
-                        <div className="flex p-5 gap-5">
-                          <div className="relative h-24 w-24 shrink-0 rounded-2xl bg-surface-50 p-2 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#F6F6EC' }}>
+                        <div className="flex p-4 gap-5">
+                          <div className="relative h-20 w-20 shrink-0 rounded-2xl bg-surface-50 p-2 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#F6F6EC' }}>
                             <img 
                               src={getEquipmentThumbnailPath(ue.imageFilename)} 
                               alt={ue.name} 
@@ -463,14 +458,13 @@ export const GaragePage = () => {
 
                 {/* 상점 목록 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5 text-surface-600" />
-                      장비 상점
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+                    <h2 className="text-base font-medium text-surface-900">
+                      상점
                     </h2>
                   </div>
 
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {allEquipments
                       .filter(eq => !eq.isDefault && !ownedEquipmentIds.has(eq.id))
                       .map((eq) => {
@@ -480,10 +474,10 @@ export const GaragePage = () => {
                           <button
                             key={eq.id}
                             onClick={() => setSelectedShopEquipment(eq)}
-                            className="group relative overflow-hidden rounded-[32px] bg-white border border-surface-100 p-5 text-left active:scale-[0.98]"
+                            className="group relative overflow-hidden p-4 text-left active:scale-[0.98]"
                           >
                             <div className="flex gap-5">
-                              <div className="relative h-24 w-24 shrink-0 rounded-2xl bg-surface-50 p-2 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#F6F6EC' }}>
+                              <div className="relative h-20 w-20 shrink-0 rounded-2xl bg-surface-50 p-2 flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#F6F6EC' }}>
                                 <img 
                                   src={getEquipmentThumbnailPath(eq.imageFilename)} 
                                   alt={eq.name} 
@@ -529,14 +523,13 @@ export const GaragePage = () => {
 
             {/* 서류 탭 내용 */}
             {activeTab === 'document' && (
-              <div className="space-y-8">
+              <div className="space-y-12">
                 {/* 내 서류 목록 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-surface-600" />
-                        보유 중인 서류 ({userDocuments.length})
+                      <h2 className="text-base font-medium text-surface-900">
+                        보유 ({userDocuments.length})
                       </h2>
                       <button 
                         onClick={() => setIsHelpOpen(true)}
@@ -546,18 +539,14 @@ export const GaragePage = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {userDocuments.map((doc) => (
                       <div 
                         key={doc.id}
                         onClick={() => setSelectedDocument(doc)}
-                        className={`group relative overflow-hidden rounded-[24px] bg-white border-2 cursor-pointer ${
-                          doc.type === 'VIOLATION' || doc.type === 'CURSE'
-                            ? 'border-surface-200' 
-                            : 'border-surface-100'
-                        }`}
+                        className={`group relative overflow-hidden cursor-pointer`}
                       >
-                        <div className="flex p-5 gap-5">
+                        <div className="flex p-4 gap-5">
                           <div className={`relative h-20 w-20 shrink-0 rounded-2xl ${doc.bgColor} flex flex-col items-center justify-center gap-1`}>
                             <doc.icon className={`h-8 w-8 ${doc.color}`} />
                             {doc.slots > 0 && (
@@ -567,28 +556,27 @@ export const GaragePage = () => {
                             )}
                           </div>
 
-                          <div className="flex-1 flex flex-col justify-center">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="text-base font-medium text-surface-900">{doc.name}</h3>
-                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-lg uppercase tracking-wider ${
-                                doc.status === 'ACTIVE' ? 'bg-surface-100 text-surface-700' :
-                                doc.status === 'PENDING' ? 'bg-surface-100 text-surface-600' :
-                                'bg-surface-50 text-surface-500'
-                              }`}>
-                                {doc.status === 'ACTIVE' ? '유효함' : 
-                                 doc.status === 'PENDING' ? '처리 필요' : '만료됨'}
-                              </span>
+                          <div className="flex-1 flex flex-col justify-between py-1">
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-base font-medium text-surface-900">{doc.name}</h3>
+                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-lg uppercase tracking-wider ${
+                                  doc.status === 'ACTIVE' ? 'bg-surface-100 text-surface-700' :
+                                  doc.status === 'PENDING' ? 'bg-surface-100 text-surface-600' :
+                                  'bg-surface-50 text-surface-500'
+                                }`}>
+                                  {doc.status === 'ACTIVE' ? '유효함' : 
+                                   doc.status === 'PENDING' ? '처리 필요' : '만료됨'}
+                                </span>
+                              </div>
+                              <p className="text-xs text-surface-600 mt-1 line-clamp-1">{doc.effect}</p>
                             </div>
-                            <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium mb-2">
-                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {doc.expiryDate}</span>
-                              <span className="flex items-center gap-1"><RefreshCcw className="h-3 w-3" /> {doc.remainingUses}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[11px] font-medium px-2 py-1 rounded-md ${
-                                doc.type === 'VIOLATION' ? 'bg-surface-100 text-surface-600' : 'bg-surface-50 text-surface-700'
-                              }`}>
-                                {doc.effect}
-                              </span>
+                            
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium">
+                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {doc.expiryDate}</span>
+                                <span className="flex items-center gap-1"><RefreshCcw className="h-3 w-3" /> {doc.remainingUses}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -599,20 +587,19 @@ export const GaragePage = () => {
 
                 {/* 서류 상점 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5 text-surface-600" />
-                      서류 상점
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+                    <h2 className="text-base font-medium text-surface-900">
+                      상점
                     </h2>
                   </div>
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {shopDocuments.map((doc) => {
                       const canAfford = (profile?.balance || 0) >= doc.price;
                       return (
                         <div 
                           key={doc.id}
                           onClick={() => setSelectedDocument(doc)}
-                          className="group relative overflow-hidden rounded-[24px] bg-white border border-surface-100 p-5 cursor-pointer"
+                          className="group relative overflow-hidden p-4 cursor-pointer"
                         >
                           <div className="flex gap-5">
                             <div className={`relative h-20 w-20 shrink-0 rounded-2xl ${doc.bgColor} flex flex-col items-center justify-center gap-1`}>
@@ -624,22 +611,23 @@ export const GaragePage = () => {
                               )}
                             </div>
 
-                            <div className="flex-1 flex flex-col justify-center">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-base font-medium text-surface-900">{doc.name}</h3>
-                                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${canAfford ? 'bg-surface-100 text-surface-700' : 'bg-surface-50 text-surface-500'}`}>
-                                  <DollarSign className="h-3 w-3" />
-                                  <span className="text-xs font-medium">{doc.price.toLocaleString()}</span>
+                            <div className="flex-1 flex flex-col justify-between py-1">
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-base font-medium text-surface-900">{doc.name}</h3>
+                                  <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${canAfford ? 'bg-surface-100 text-surface-700' : 'bg-surface-50 text-surface-500'}`}>
+                                    <DollarSign className="h-3 w-3" />
+                                    <span className="text-xs font-medium">{doc.price.toLocaleString()}</span>
+                                  </div>
                                 </div>
+                                <p className="text-xs text-surface-600 mt-1 line-clamp-1">{doc.effect}</p>
                               </div>
-                              <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium mb-2">
-                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {doc.expiryDate}</span>
-                                <span className="flex items-center gap-1"><RefreshCcw className="h-3 w-3" /> {doc.remainingUses}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-surface-50 text-surface-700">
-                                  {doc.effect}
-                                </span>
+                              
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium">
+                                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {doc.expiryDate}</span>
+                                  <span className="flex items-center gap-1"><RefreshCcw className="h-3 w-3" /> {doc.remainingUses}</span>
+                                </div>
                                 {!canAfford && (
                                   <span className="text-[9px] font-medium text-red-600 uppercase flex items-center gap-1">
                                     <Lock className="h-3 w-3" /> 잔액 부족
@@ -658,14 +646,13 @@ export const GaragePage = () => {
 
             {/* 보험 탭 내용 */}
             {activeTab === 'insurance' && (
-              <div className="space-y-8">
+              <div className="space-y-12">
                 {/* 내 보험 목록 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
                     <div className="flex items-center gap-2">
-                      <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                        <HeartPulse className="h-5 w-5 text-surface-600" />
-                        활성화된 보험 ({userInsurances.length})
+                      <h2 className="text-base font-medium text-surface-900">
+                        보유 ({userInsurances.length})
                       </h2>
                       <button 
                         onClick={() => setIsInsuranceHelpOpen(true)}
@@ -675,35 +662,35 @@ export const GaragePage = () => {
                       </button>
                     </div>
                   </div>
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {userInsurances.map((ins) => (
                       <div 
                         key={ins.id}
                         onClick={() => setSelectedInsurance(ins)}
-                        className="group relative overflow-hidden rounded-[24px] bg-white border-2 border-surface-100 cursor-pointer"
+                        className="group relative overflow-hidden cursor-pointer"
                       >
-                        <div className="flex p-5 gap-5">
+                        <div className="flex p-4 gap-5">
                           <div className={`relative h-20 w-20 shrink-0 rounded-2xl ${ins.bgColor} flex flex-col items-center justify-center gap-1`}>
                             <ins.icon className={`h-8 w-8 ${ins.color}`} />
                           </div>
 
-                          <div className="flex-1 flex flex-col justify-center">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="text-base font-medium text-surface-900">{ins.name}</h3>
-                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-surface-100 text-surface-700 uppercase tracking-wider">
-                                활성
-                              </span>
+                          <div className="flex-1 flex flex-col justify-between py-1">
+                            <div>
+                              <div className="flex items-center justify-between">
+                                <h3 className="text-base font-medium text-surface-900">{ins.name}</h3>
+                                <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg bg-surface-100 text-surface-700 uppercase tracking-wider">
+                                  활성
+                                </span>
+                              </div>
+                              <p className="text-xs text-surface-600 mt-1 line-clamp-1">{ins.effect}</p>
                             </div>
-                            <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium mb-2">
-                              <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {ins.expiryDate}</span>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-surface-50 text-surface-700">
-                                {ins.effect}
-                              </span>
-                              <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-surface-50 text-surface-600">
-                                {ins.sideEffect}
-                              </span>
+                            
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium">
+                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {ins.expiryDate}</span>
+                                <span className="flex items-center gap-1 text-surface-400">/</span>
+                                <span className="text-surface-500">{ins.sideEffect}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -714,42 +701,40 @@ export const GaragePage = () => {
 
                 {/* 보험 상점 */}
                 <section className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h2 className="text-base font-medium text-surface-900 flex items-center gap-2">
-                      <ShoppingCart className="h-5 w-5 text-surface-600" />
-                      항상성 유지 센터 (상점)
+                  <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+                    <h2 className="text-base font-medium text-surface-900">
+                      상점
                     </h2>
                   </div>
-                  <div className="grid gap-4">
+                  <div className="grid gap-4 px-4">
                     {shopInsurances.map((ins) => {
                       const canAfford = (profile?.balance || 0) >= ins.price;
                       return (
                         <div 
                           key={ins.id}
                           onClick={() => setSelectedInsurance(ins)}
-                          className="group relative overflow-hidden rounded-[24px] bg-white border border-surface-100 p-5 cursor-pointer"
+                          className="group relative overflow-hidden p-4 cursor-pointer"
                         >
                           <div className="flex gap-5">
                             <div className={`relative h-20 w-20 shrink-0 rounded-2xl ${ins.bgColor} flex flex-col items-center justify-center gap-1`}>
                               <ins.icon className={`h-8 w-8 ${ins.color}`} />
                             </div>
 
-                            <div className="flex-1 flex flex-col justify-center">
-                              <div className="flex items-center justify-between mb-1">
-                                <h3 className="text-base font-medium text-surface-900">{ins.name}</h3>
-                                <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${canAfford ? 'bg-surface-100 text-surface-700' : 'bg-surface-50 text-surface-500'}`}>
-                                  <DollarSign className="h-3 w-3" />
-                                  <span className="text-xs font-medium">{ins.price.toLocaleString()}</span>
+                            <div className="flex-1 flex flex-col justify-between py-1">
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <h3 className="text-base font-medium text-surface-900">{ins.name}</h3>
+                                  <div className={`flex items-center gap-1 px-2 py-1 rounded-lg ${canAfford ? 'bg-surface-100 text-surface-700' : 'bg-surface-50 text-surface-500'}`}>
+                                    <DollarSign className="h-3 w-3" />
+                                    <span className="text-xs font-medium">{ins.price.toLocaleString()}</span>
+                                  </div>
                                 </div>
+                                <p className="text-xs text-surface-600 mt-1 line-clamp-1">{ins.effect}</p>
                               </div>
-                              <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium mb-2">
-                                <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {ins.expiryDate}</span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <div className="flex flex-wrap gap-2">
-                                  <span className="text-[11px] font-medium px-2 py-1 rounded-md bg-surface-50 text-surface-700">
-                                    {ins.effect}
-                                  </span>
+                              
+                              <div className="flex items-center justify-between mt-2">
+                                <div className="flex items-center gap-3 text-[10px] text-surface-500 font-medium">
+                                  <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {ins.expiryDate}</span>
                                 </div>
                                 {!canAfford && (
                                   <span className="text-[9px] font-medium text-red-600 uppercase flex items-center gap-1">
@@ -874,13 +859,6 @@ export const GaragePage = () => {
                       )}
                     </button>
                   )}
-                  <button 
-                    onClick={() => setSelectedUserEquipment(null)}
-                    disabled={equipMutation.isPending}
-                    className="w-full rounded-[24px] py-4 text-base font-medium text-surface-600 bg-surface-50 disabled:opacity-50"
-                  >
-                    닫기
-                  </button>
                 </SheetFooter>
               </>
             );
@@ -965,13 +943,6 @@ export const GaragePage = () => {
                   ) : (
                     (profile?.balance || 0) >= selectedShopEquipment.price ? '구매하기' : <span className="text-red-600">잔액 부족</span>
                   )}
-                </button>
-                <button 
-                  onClick={() => setSelectedShopEquipment(null)}
-                  disabled={buyMutation.isPending}
-                  className="w-full rounded-[24px] py-4 text-base font-medium text-surface-600 bg-surface-50 disabled:opacity-50"
-                >
-                  닫기
                 </button>
               </SheetFooter>
             </>
@@ -1084,12 +1055,6 @@ export const GaragePage = () => {
                     확인
                   </button>
                 )}
-                <button 
-                  onClick={() => setSelectedDocument(null)}
-                  className="w-full rounded-[24px] py-4 text-base font-medium text-surface-600 bg-surface-50"
-                >
-                  닫기
-                </button>
               </SheetFooter>
             </>
           )}
@@ -1184,12 +1149,6 @@ export const GaragePage = () => {
                     확인
                   </button>
                 )}
-                <button 
-                  onClick={() => setSelectedInsurance(null)}
-                  className="w-full rounded-[24px] py-4 text-base font-medium text-surface-600 bg-surface-50"
-                >
-                  닫기
-                </button>
               </SheetFooter>
             </>
           )}

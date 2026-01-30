@@ -57,6 +57,7 @@ export function ProfilePage() {
         activeTab={activeTab} 
         onTabChange={handleTabChange} 
         title="마이 페이지"
+        onBack={() => navigate('/')}
       />
 
       {/* 컨텐츠 영역 */}

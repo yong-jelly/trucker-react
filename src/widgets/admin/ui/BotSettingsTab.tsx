@@ -1,4 +1,4 @@
-import { Activity } from 'lucide-react';
+import { RefreshCcw as RefreshIcon } from 'lucide-react';
 
 interface BotSettingsTabProps {
   botSettings: {
@@ -23,17 +23,14 @@ export const BotSettingsTab = ({
   renderBotCard
 }: BotSettingsTabProps) => {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-12 animate-fade-in">
       {/* 봇 활동 파라미터 */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-primary-600" />
-            <h2 className="text-base font-medium text-surface-900">봇 활동 파라미터</h2>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+          <h2 className="text-base font-medium text-surface-900">봇 활동 파라미터</h2>
         </div>
 
-        <div className="rounded-3xl bg-white p-6 shadow-soft-md border border-surface-100 space-y-6">
+        <div className="bg-white p-6 space-y-6 px-4">
           <div>
             <div className="flex justify-between mb-2">
               <label className="text-sm font-medium text-surface-700">휴식 시간 범위 (분)</label>
@@ -108,11 +105,8 @@ export const BotSettingsTab = ({
 
       {/* 봇 상태 모니터링 */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <div className="flex items-center gap-2">
-            <BotIcon className="h-5 w-5 text-surface-900" />
-            <h2 className="text-base font-medium text-surface-900">실시간 봇 상태</h2>
-          </div>
+        <div className="flex items-center justify-between px-4 py-3 bg-surface-50 border-y border-surface-100">
+          <h2 className="text-base font-medium text-surface-900">실시간 봇 상태</h2>
           <button 
             onClick={handleResetBots}
             disabled={isResetting}
@@ -123,12 +117,10 @@ export const BotSettingsTab = ({
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-0 px-4">
           {botStatuses.map((bot) => renderBotCard(bot))}
         </div>
       </section>
     </div>
   );
 };
-
-import { Bot as BotIcon, RefreshCcw as RefreshIcon } from 'lucide-react';
