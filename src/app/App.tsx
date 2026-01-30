@@ -31,6 +31,7 @@ export const App = () => {
           <Route path="/run/:runId" element={<ActiveRunPage />} />
           <Route path="/settlement/:runId" element={<SettlementPage />} />
           <Route path="/garage" element={<GaragePage />} />
+          <Route path="/garage/:tab" element={<GaragePage />} />
           <Route path="/help" element={<HelpPage />} />
           <Route path="/super/admin/setting" element={<AdminSettingPage />} />
           <Route path="/hire" element={<HireDriverPage />} />

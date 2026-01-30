@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router';
 import { useQueryClient, useMutation } from '@tanstack/react-query';
 import { 
   Package, Wrench, Shield, FileText, Loader2, History,
@@ -26,11 +27,15 @@ import {
 
 import { PageHeader } from '../shared/ui/PageHeader';
 
-type TabType = 'EQUIPMENT' | 'DOCUMENT' | 'INSURANCE';
+type TabType = 'equipment' | 'document' | 'insurance';
 
 export const GaragePage = () => {
+  const navigate = useNavigate();
+  const { tab } = useParams();
   const { data: profile } = useUserProfile();
-  const [activeTab, setActiveTab] = useState<TabType>('EQUIPMENT');
+  
+  const activeTab = (tab?.toLowerCase() || 'equipment') as TabType;
+  
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [isLoadingRuns, setIsLoadingRuns] = useState(true);
   const [equipmentHistory, setEquipmentHistory] = useState<RunHistory[] | null>(null);
@@ -159,10 +164,14 @@ export const GaragePage = () => {
   }, [activeTab]);
 
   const categories = [
-    { id: 'EQUIPMENT' as TabType, label: '장비', icon: Wrench, color: 'text-accent-blue' },
-    { id: 'DOCUMENT' as TabType, label: '서류', icon: FileText, color: 'text-accent-amber' },
-    { id: 'INSURANCE' as TabType, label: '보험', icon: Shield, color: 'text-accent-rose' },
+    { id: 'equipment' as TabType, label: '장비', icon: Wrench, color: 'text-accent-blue' },
+    { id: 'document' as TabType, label: '서류', icon: FileText, color: 'text-accent-amber' },
+    { id: 'insurance' as TabType, label: '보험', icon: Shield, color: 'text-accent-rose' },
   ];
+
+  const handleTabChange = (tabId: string) => {
+    navigate(`/garage/${tabId}`);
+  };
 
   const isLoading = isLoadingRuns || isLoadingEquipments || isLoadingUserEquipments;
 
@@ -173,7 +182,7 @@ export const GaragePage = () => {
         title="창고 및 상점"
         tabs={categories.map(cat => ({ id: cat.id, label: cat.label }))}
         activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+        onTabChange={handleTabChange}
         rightElement={
           <div className="flex items-center gap-2 rounded-2xl bg-primary-50 px-4 py-2 border border-primary-100 shadow-sm">
             <DollarSign className="h-4 w-4 text-primary-600" />
@@ -193,7 +202,7 @@ export const GaragePage = () => {
         ) : (
           <>
             {/* 장비 탭 내용 */}
-            {activeTab === 'EQUIPMENT' && (
+            {activeTab === 'equipment' && (
               <div className="space-y-10">
                 {/* 보유 중인 장비 */}
                 <section className="space-y-4">
@@ -343,10 +352,10 @@ export const GaragePage = () => {
             )}
 
             {/* 기타 탭 (준비중) */}
-            {(activeTab === 'DOCUMENT' || activeTab === 'INSURANCE') && (
+            {(activeTab === 'document' || activeTab === 'insurance') && (
               <div className="flex flex-col items-center justify-center py-20 space-y-6">
                 <div className="h-32 w-32 rounded-full bg-surface-50 flex items-center justify-center">
-                  {activeTab === 'DOCUMENT' ? (
+                  {activeTab === 'document' ? (
                     <FileText className="h-16 w-16 text-surface-200" />
                   ) : (
                     <Shield className="h-16 w-16 text-surface-200" />
