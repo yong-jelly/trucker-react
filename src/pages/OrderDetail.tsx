@@ -16,6 +16,7 @@ import { ContractDialog } from '../features/order/ui/ContractDialog';
 
 const EQUIPMENT_ICONS: Record<string, any> = {
   BICYCLE: Bike,
+  'basic-bicycle': Bike,
   VAN: Car,
   TRUCK: Truck,
   HEAVY_TRUCK: Truck,
@@ -25,6 +26,7 @@ const EQUIPMENT_ICONS: Record<string, any> = {
 
 const EQUIPMENT_LABELS: Record<string, string> = {
   BICYCLE: '자전거',
+  'basic-bicycle': '자전거',
   VAN: '밴',
   TRUCK: '트럭',
   HEAVY_TRUCK: '대형 트럭',

@@ -1,14 +1,33 @@
-import { History, Loader2, Package, TrendingUp, MapPin, CheckCircle2, XCircle } from 'lucide-react';
-import { CATEGORY_LABELS, CATEGORY_COLORS } from '../../../shared/lib/mockData';
-import { formatDate, formatKSTTime } from '../../../shared/lib/date';
+import { 
+  History, 
+  Loader2, 
+  Package, 
+  TrendingUp, 
+  MapPin, 
+  CheckCircle2, 
+  XCircle 
+} from 'lucide-react';
+import { CATEGORY_LABELS, CATEGORY_COLORS } from '@shared/lib/mockData';
+import { formatDate, formatKSTTimeShort } from '@shared/lib/date';
+import { cn } from '@shared/lib/utils';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@shared/ui/Sheet';
 import type { RunHistory } from '../../run/api';
-import { cn } from '../../../shared/lib/utils';
 
 interface EquipmentHistorySheetProps {
   isOpen: boolean;
   onClose: () => void;
   isLoading: boolean;
   history: RunHistory[] | null;
+  isEquipped?: boolean;
+  onEquip?: () => void;
+  isEquipPending?: boolean;
 }
 
 export const EquipmentHistorySheet = ({
@@ -16,43 +35,29 @@ export const EquipmentHistorySheet = ({
   onClose,
   isLoading,
   history,
+  isEquipped,
+  onEquip,
+  isEquipPending,
 }: EquipmentHistorySheetProps) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4" onClick={onClose}>
-      <div 
-        className="w-full max-w-lg rounded-t-[32px] bg-white p-6 animate-slide-up max-h-[85vh] flex flex-col shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* 핸들바 */}
-        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-surface-200 shrink-0" />
-        
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="flex flex-col p-0">
         {/* 헤더 */}
-        <div className="flex items-center justify-between mb-6 shrink-0">
+        <SheetHeader className="px-6 pt-6 pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-50 text-primary-600">
               <History className="h-6 w-6" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-surface-900 tracking-tight">운영 히스토리</h2>
-              <p className="text-xs text-surface-500 font-medium">최근 20건의 운행 기록</p>
+            <div className="text-left">
+              <SheetTitle>운영 히스토리</SheetTitle>
+              <SheetDescription>최근 20건의 운행 기록</SheetDescription>
             </div>
           </div>
-          <button 
-            onClick={onClose}
-            className="h-10 w-10 flex items-center justify-center rounded-full bg-surface-50 text-surface-400 hover:text-surface-600 active:scale-90 transition-transform"
-          >
-            <span className="sr-only">닫기</span>
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        </SheetHeader>
 
-        {/* 요약 정보 (간단하게 추가) */}
+        {/* 요약 정보 */}
         {!isLoading && history && history.length > 0 && (
-          <div className="mb-6 grid grid-cols-2 gap-3 shrink-0">
+          <div className="px-6 mb-6 grid grid-cols-2 gap-3 shrink-0">
             <div className="rounded-2xl bg-accent-emerald/5 p-4 border border-accent-emerald/10">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="h-3.5 w-3.5 text-accent-emerald" />
@@ -76,7 +81,7 @@ export const EquipmentHistorySheet = ({
 
         {/* 목록 영역 */}
         <div 
-          className="overflow-y-auto flex-1 space-y-4 pr-1 scrollbar-hide pb-4"
+          className="flex-1 overflow-y-auto px-6 space-y-4 pr-1 scrollbar-hide pb-4"
           style={{ 
             willChange: 'scroll-position',
             WebkitOverflowScrolling: 'touch',
@@ -94,22 +99,22 @@ export const EquipmentHistorySheet = ({
                 className="group relative overflow-hidden rounded-[24px] border border-surface-100 bg-white p-5 hover:border-primary-200 transition-colors shadow-sm"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
+                  <div className="space-y-1.5 min-w-0 flex-1 pr-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={cn(
                         "rounded-lg px-2 py-0.5 text-[10px] font-bold uppercase tracking-tight",
                         CATEGORY_COLORS[h.orderCategory] || "bg-surface-100 text-surface-600"
                       )}>
                         {CATEGORY_LABELS[h.orderCategory] || h.orderCategory}
                       </span>
-                      <span className="text-[10px] font-medium text-surface-400">
-                        {formatDate(h.completedAt || h.startAt)} {formatKSTTime(h.completedAt || h.startAt)}
+                      <span className="text-[10px] font-medium text-surface-400 whitespace-nowrap">
+                        {formatDate(h.completedAt || h.startAt)} {formatKSTTimeShort(h.completedAt || h.startAt)}
                       </span>
                     </div>
-                    <h4 className="text-sm font-bold text-surface-900 line-clamp-1">{h.orderTitle}</h4>
+                    <h4 className="text-sm font-bold text-surface-900 truncate">{h.orderTitle}</h4>
                   </div>
                   <div className={cn(
-                    "flex h-8 w-8 items-center justify-center rounded-full",
+                    "flex h-8 w-8 items-center justify-center rounded-full shrink-0",
                     h.status === 'COMPLETED' ? "bg-accent-emerald/10 text-accent-emerald" : "bg-accent-rose/10 text-accent-rose"
                   )}>
                     {h.status === 'COMPLETED' ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
@@ -158,7 +163,25 @@ export const EquipmentHistorySheet = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+
+        <SheetFooter className="p-6 flex-col gap-3">
+          {!isEquipped && onEquip && (
+            <button 
+              onClick={onEquip}
+              disabled={isEquipPending}
+              className="w-full rounded-2xl bg-primary-600 py-4 text-sm font-bold text-white shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            >
+              {isEquipPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '장비 장착하기'}
+            </button>
+          )}
+          <button 
+            onClick={onClose}
+            className="w-full rounded-2xl bg-surface-100 py-4 text-sm font-bold text-surface-600 active:scale-[0.98] transition-all"
+          >
+            닫기
+          </button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 };

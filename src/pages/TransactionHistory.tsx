@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { ArrowLeft, History, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useUserStore } from '../entities/user';
 import { Navigate } from 'react-router';
+import { TransactionsTab } from '../features/profile/ui/TransactionsTab';
 
 export const TransactionHistoryPage = () => {
   const navigate = useNavigate();
@@ -37,14 +38,8 @@ export const TransactionHistoryPage = () => {
         <h1 className="text-xl font-medium text-surface-900 tracking-tight">거래 내역</h1>
       </header>
 
-      <div className="mx-auto max-w-2xl p-4">
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-100 mb-4">
-            <History className="h-8 w-8 text-surface-400" />
-          </div>
-          <p className="text-surface-400 font-medium">거래 내역이 없습니다.</p>
-          <p className="text-sm text-surface-300 mt-2">고용, 해고, 수수료, 예치금 등 모든 금전적 흐름이 여기에 표시됩니다.</p>
-        </div>
+      <div className="mx-auto max-w-lg pt-6">
+        <TransactionsTab />
       </div>
     </div>
   );

@@ -8,20 +8,11 @@ import { MAPBOX_TOKEN } from './mockData';
 // 1. 장비 관련
 // ============================================
 
-/** 장비별 기본 속도 (km/h) */
-export const EQUIPMENT_SPEEDS: Record<string, number> = {
-  'BICYCLE': 15,
-  'basic-bicycle': 15,
-  'VAN': 60,
-  'TRUCK': 80,
-  'HEAVY_TRUCK': 70,
-  'PLANE': 500,
-};
-
 /** 장비 ID로 기본 속도 조회 */
 export function getEquipmentBaseSpeed(equipmentId?: string | null): number {
   if (!equipmentId) return 15;
-  return EQUIPMENT_SPEEDS[equipmentId] || 15;
+  // 하드코딩된 속도 대신 15를 기본값으로 반환 (실제 속도는 DB 스냅샷이나 API 데이터를 우선 사용해야 함)
+  return 15;
 }
 
 /** 장비 스냅샷에서 속도 정보 추출 */
@@ -30,7 +21,7 @@ export function getSpeedFromSnapshot(
   fallbackEquipmentId?: string | null
 ): { baseSpeed: number; maxSpeed: number } {
   const baseSpeed = snapshot?.base_speed || getEquipmentBaseSpeed(fallbackEquipmentId);
-  const maxSpeed = snapshot?.max_speed || baseSpeed * 1.5;
+  const maxSpeed = snapshot?.max_speed || (snapshot?.base_speed ? snapshot.base_speed * 1.5 : baseSpeed * 1.5);
   return { baseSpeed, maxSpeed };
 }
 
@@ -40,16 +31,14 @@ export function applyFuelPenalty(speed: number, fuel: number): number {
   return speed * multiplier;
 }
 
-/** 장비 이름 조회 */
+/** 장비 이름 조회 (하드코딩 제거, DB 데이터 사용 권장) */
 export function getEquipmentName(equipmentId?: string | null): string {
   switch (equipmentId) {
-    case 'VAN': return '소형 밴';
-    case 'TRUCK': return '대형 트럭';
-    case 'HEAVY_TRUCK': return '헤비 트럭';
-    case 'PLANE': return '화물기';
     case 'basic-bicycle':
     case 'BICYCLE':
-    default: return '배달 자전거';
+      return '배달 자전거';
+    default: 
+      return equipmentId || '알 수 없는 장비';
   }
 }
 

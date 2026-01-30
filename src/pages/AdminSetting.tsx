@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { 
   ArrowLeft, Save, Bot, ShieldAlert, Loader2, Bike 
 } from 'lucide-react';
+import { Button } from '@/shared/ui/Button';
 import * as adminApi from '../entities/admin/api.ts';
 import * as leaderboardApi from '../entities/leaderboard/api.ts';
 import { BotStatusCard } from '../widgets/admin/ui/BotStatusCard';
@@ -209,29 +210,31 @@ export const AdminSettingPage = () => {
         <header className="sticky top-0 z-50 bg-white border-b border-surface-100">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
-              <button 
+            <Button 
                 onClick={() => navigate('/')} 
-                className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-surface-50 transition-colors"
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
               >
                 <ArrowLeft className="h-5 w-5 text-surface-700" />
-              </button>
+              </Button>
               <div>
                 <h1 className="text-lg font-medium text-surface-900">System Admin</h1>
                 <p className="text-xs text-surface-500">시스템 설정 및 관리</p>
               </div>
             </div>
-            <button 
+            <Button 
               onClick={handleSave}
               disabled={isSaving}
-              className={`flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
                 isSaved 
-                  ? 'bg-accent-emerald text-white' 
+                  ? 'bg-accent-emerald text-white hover:bg-accent-emerald/90' 
                   : 'bg-primary-600 text-white hover:bg-primary-700'
-              } ${isSaving ? 'opacity-70 cursor-not-allowed' : ''}`}
+              }`}
             >
               {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               {isSaved ? '저장됨!' : '저장'}
-            </button>
+            </Button>
           </div>
 
           {/* 탭 네비게이션 */}
@@ -243,39 +246,42 @@ export const AdminSettingPage = () => {
               transform: 'translateZ(0)',
             }}
           >
-            <button
+            <Button
               onClick={() => setActiveTab('bot')}
+              variant={activeTab === 'bot' ? 'default' : 'outline'}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
                 activeTab === 'bot' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+                  ? 'bg-primary-600 text-white border-none' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
               }`}
             >
               <Bot className="h-4 w-4" />
               봇 설정
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('enforcement')}
+              variant={activeTab === 'enforcement' ? 'default' : 'outline'}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
                 activeTab === 'enforcement' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+                  ? 'bg-primary-600 text-white border-none' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
               }`}
             >
               <ShieldAlert className="h-4 w-4" />
               단속 설정
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={() => setActiveTab('equipment')}
+              variant={activeTab === 'equipment' ? 'default' : 'outline'}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all shrink-0 ${
                 activeTab === 'equipment' 
-                  ? 'bg-primary-600 text-white' 
-                  : 'bg-white text-surface-600 hover:bg-surface-50 border border-surface-200'
+                  ? 'bg-primary-600 text-white border-none' 
+                  : 'bg-white text-surface-600 hover:bg-surface-50 border-surface-200'
               }`}
             >
               <Bike className="h-4 w-4" />
               장비 설정
-            </button>
+            </Button>
           </div>
         </header>
 

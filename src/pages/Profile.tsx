@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { ProfileHeader } from "../features/profile/ui/ProfileHeader";
 import { AchievementsTab } from "../features/profile/ui/AchievementsTab";
+import { TransactionsTab } from "../features/profile/ui/TransactionsTab";
 import { useUserProfile } from "../entities/user/queries";
 import { useUserStore } from "../entities/user";
 import { Loader2 } from "lucide-react";
@@ -67,11 +68,7 @@ export function ProfilePage() {
             <p className="text-surface-400 font-medium">운행 기록이 없습니다.</p>
           </div>
         )}
-        {activeTab === "transactions" && (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <p className="text-surface-400 font-medium">거래 내역이 없습니다.</p>
-          </div>
-        )}
+        {activeTab === "transactions" && <TransactionsTab />}
       </div>
     </div>
   );

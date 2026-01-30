@@ -13,9 +13,9 @@ import {
   interpolatePositionOnRoute,
   fetchMapboxRoute,
   routeToGeoJSON,
-  getEquipmentName,
   type RouteCoordinate
 } from '../shared/lib/run';
+import { useEquipments } from '../entities/equipment';
 
 export const PublicRunPage = () => {
   const { runId } = useParams();
@@ -27,6 +27,9 @@ export const PublicRunPage = () => {
   const [currentPos, setCurrentPos] = useState<[number, number] | null>(null);
   const [tick, setTick] = useState(0);
   const mapRef = useRef<MapRef>(null);
+
+  // 장비 정보 로드
+  const { data: equipments = [] } = useEquipments();
 
   // DB에서 운행 데이터 로드
   const fetchRunDetail = async (silent = false) => {
@@ -106,9 +109,18 @@ export const PublicRunPage = () => {
   const isOvertime = elapsedSeconds > etaSeconds;
   const remainingSeconds = Math.max(etaSeconds - elapsedSeconds, 0);
 
+  // 장비 정보 조회
+  const getEquipmentName = (equipmentId: string | null | undefined) => {
+    const equipment = equipments.find(e => e.id === equipmentId);
+    return equipment?.name || '배달 자전거';
+  };
+
   // 장비 아이콘
   const getEquipmentIcon = (equipmentId: string | null | undefined) => {
-    switch (equipmentId) {
+    const equipment = equipments.find(e => e.id === equipmentId);
+    const type = equipment?.equipmentType || equipmentId;
+
+    switch (type) {
       case 'VAN': return <Car className="h-4 w-4" />;
       case 'TRUCK': return <Truck className="h-4 w-4" />;
       case 'HEAVY_TRUCK': return <Truck className="h-4 w-4 text-primary-600" />;

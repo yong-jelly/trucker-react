@@ -1,0 +1,20 @@
+# CLI Commands
+
+## Storybook
+
+### 실행
+```bash
+bun storybook
+```
+- 로컬 개발 서버를 6006 포트에서 실행합니다.
+
+### 빌드
+```bash
+bun build-storybook
+```
+- Storybook을 정적 파일로 빌드합니다. (배포용)
+
+### 초기화 (이미 완료됨)
+```bash
+npx storybook@latest init
+```

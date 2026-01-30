@@ -7,6 +7,7 @@ import {
 import { getLeaderboard, type LeaderboardEntry } from '../entities/leaderboard/api';
 import { getActiveRuns, type ActiveRun, getRunHistory, type RunHistory } from '../entities/run';
 import { getTimeDiff, formatRelativeTime } from '../shared/lib/date';
+import { useEquipments } from '../entities/equipment';
 
 export const PublicProfilePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,6 +17,9 @@ export const PublicProfilePage = () => {
   const [profileInfo, setProfileInfo] = useState<LeaderboardEntry | null>(null);
   const [activeRuns, setActiveRuns] = useState<ActiveRun[]>([]);
   const [history, setHistory] = useState<RunHistory[]>([]);
+
+  // 장비 정보 로드
+  const { data: equipments = [] } = useEquipments();
 
   const fetchProfileData = async (silent = false) => {
     if (!id) return;
@@ -65,7 +69,10 @@ export const PublicProfilePage = () => {
   };
 
   const getEquipmentIcon = (equipmentId: string | null | undefined) => {
-    switch (equipmentId) {
+    const equipment = equipments.find(e => e.id === equipmentId);
+    const type = equipment?.equipmentType || equipmentId;
+
+    switch (type) {
       case 'VAN': return <Car className="h-4 w-4" />;
       case 'TRUCK': return <Truck className="h-4 w-4" />;
       case 'HEAVY_TRUCK': return <Truck className="h-4 w-4 text-primary-600" />;
@@ -75,13 +82,8 @@ export const PublicProfilePage = () => {
   };
 
   const getEquipmentName = (equipmentId: string | null | undefined) => {
-    switch (equipmentId) {
-      case 'VAN': return '소형 밴';
-      case 'TRUCK': return '대형 트럭';
-      case 'HEAVY_TRUCK': return '헤비 트럭';
-      case 'PLANE': return '화물기';
-      default: return '배달 자전거';
-    }
+    const equipment = equipments.find(e => e.id === equipmentId);
+    return equipment?.name || '배달 자전거';
   };
 
   if (isLoading) {

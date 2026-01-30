@@ -76,11 +76,21 @@ export const formatKSTTime = (timestamp: number | string | Date): string => {
 };
 
 /**
+ * KST 기준 시간 포맷팅 (HH:mm)
+ */
+export const formatKSTTimeShort = (timestamp: number | string | Date): string => {
+  const date = new Date(timestamp);
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+/**
  * KST 기준 전체 일시 포맷팅 (YYYY. MM. DD. HH:mm)
  */
 export const formatDateTime = (timestamp: number | string | Date): string => {
   const date = new Date(timestamp);
-  return `${formatDate(date)} ${formatKSTTime(date)}`;
+  return `${formatDate(date)} ${formatKSTTimeShort(date)}`;
 };
 
 /**
