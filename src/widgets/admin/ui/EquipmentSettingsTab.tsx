@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Bike, Edit2, Check, X, Info, DollarSign, Gauge, Package, Zap, Loader2 } from 'lucide-react';
+import { Edit2, Check, X, Info, DollarSign, Gauge, Package, Zap, Loader2 } from 'lucide-react';
 import type { Equipment } from '../../../entities/equipment';
+import { getEquipmentThumbnailPath } from '../../../entities/equipment';
 
 interface EquipmentSettingsTabProps {
   equipments: Equipment[];
@@ -117,8 +118,16 @@ export const EquipmentSettingsTab = ({
               {/* 헤더 */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50">
-                    <Bike className="h-5 w-5 text-primary-600" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl overflow-hidden border border-surface-100" style={{ backgroundColor: '#F6F6EC' }}>
+                    <img 
+                      src={getEquipmentThumbnailPath(eq.imageFilename)} 
+                      alt={eq.name}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '';
+                        (e.target as HTMLImageElement).parentElement!.innerHTML = '<div class="flex items-center justify-center w-full h-full text-primary-600"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bike"><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg></div>';
+                      }}
+                    />
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
