@@ -15,6 +15,8 @@ import { TransactionHistoryPage } from '../pages/TransactionHistory';
 import { LeaderboardPage } from '../pages/Leaderboard';
 import { PublicProfilePage } from '../pages/PublicProfile';
 import { PublicRunPage } from '../pages/PublicRun';
+import { HomePage as HomePage2 } from '../pages/Home2';
+import { HomePage as HomePage3 } from '../pages/Home3';
 
 export const App = () => {
   return (
@@ -22,6 +24,8 @@ export const App = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/home2" element={<HomePage2 />} />
+          <Route path="/home3" element={<HomePage3 />} />
           <Route path="/onboarding" element={<OnboardingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/profile" element={<ProfilePage />} />

@@ -142,6 +142,16 @@ const Dashboard = ({ profile }: { profile: UserProfile }) => {
             {/* 상단: 프로필 정보 */}
             <div className="flex items-center justify-between gap-3">
               <button 
+                onClick={() => navigate('/home2')}
+                className="flex items-center gap-2 bg-primary-50 px-3 py-1.5 text-[10px] font-bold text-primary-600 border border-primary-100 rounded-lg hover:bg-primary-100 transition-colors"
+              >
+                Home2 이동
+                <ChevronRight className="h-3 w-3" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <button 
                 onClick={() => navigate('/profile')}
                 className="flex items-center gap-4 flex-1 min-w-0 hover:opacity-80 transition-opacity"
               >
