@@ -108,8 +108,13 @@ export const HireDriverPage = () => {
     }
   };
 
+  // 탭 변경 시 스크롤 최상단 이동
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [activeTab]);
+
   return (
-    <div className="min-h-screen bg-surface-50 pb-12 flex flex-col items-center">
+    <div className="flex flex-col min-h-screen bg-surface-50">
       <PageHeader 
         title="드라이버 고용"
         tabs={tabs}
@@ -124,7 +129,7 @@ export const HireDriverPage = () => {
         }
       />
 
-      <div className="mx-auto w-full max-w-2xl p-4 pt-24 space-y-6">
+      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32">
         {activeTab === 'NPC' ? (
           <div className="space-y-6">
             {/* 로딩 상태 */}
@@ -144,44 +149,37 @@ export const HireDriverPage = () => {
 
             {/* 드라이버 선택 UI 개선 - 게임 캐릭터 선택 스타일 */}
             {!isLoadingPersonas && !personasError && currentPersona && currentOffer && (
-            <div className="relative rounded-3xl bg-white shadow-soft-2xl border border-surface-100 overflow-hidden min-h-[600px] flex flex-col">
-              {/* 상단 배경 데코 및 그라데이션 */}
-              <div className="absolute inset-0 bg-gradient-to-br from-surface-50 to-white z-0" />
-              <div className="absolute top-0 left-0 right-0 h-48 bg-gradient-to-b from-primary-600/10 to-transparent z-0" />
-              
+            <div className="relative rounded-3xl bg-white border border-surface-100 overflow-hidden min-h-[600px] flex flex-col shadow-soft-sm">
               <div className="relative z-10 flex flex-col h-full">
-                {/* 메인 콘텐츠 영역: 좌측 이미지, 우측 정보 */}
-                <div className="flex flex-col md:flex-row flex-1 p-6 gap-8">
-                  {/* 좌측: 캐릭터 이미지 섹션 */}
-                  <div className="w-full md:w-1/2 flex flex-col items-center justify-center space-y-6">
+                {/* 메인 콘텐츠 영역: 캐릭터 이미지 및 정보 */}
+                <div className="flex flex-col flex-1 p-6 gap-8">
+                  {/* 캐릭터 이미지 섹션 */}
+                  <div className="w-full flex flex-col items-center justify-center space-y-6">
                     <div className="relative group">
-                      {/* 이미지 배경 장식 */}
-                      <div className="absolute -inset-4 bg-primary-500/5 rounded-[40px] blur-2xl group-hover:bg-primary-500/10 transition-all duration-500" />
-                      
-                      <div className="relative h-[320px] w-[240px] md:h-[400px] md:w-[300px] rounded-[32px] bg-white p-2 shadow-soft-2xl border border-surface-100 overflow-hidden transform transition-transform duration-500 hover:scale-[1.02]">
+                      <div className="relative h-[320px] w-[240px] rounded-[32px] bg-white p-2 shadow-soft-md border border-surface-100 overflow-hidden">
                         <img 
                           src={getAvatarImageUrl(currentPersona.avatarFilename)} 
                           alt={currentPersona.name} 
                           className="h-full w-full object-cover rounded-[24px]" 
                         />
                         {/* 이미지 위 오버레이 정보 */}
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/60 to-transparent text-white">
+                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-surface-900/60 text-white">
                           <p className="text-[10px] font-medium uppercase tracking-[0.2em] opacity-80 mb-1">유형</p>
                           <p className="text-lg font-medium">{currentPersona.archetype}</p>
                         </div>
                       </div>
 
-                      {/* 네비게이션 버튼 - 이미지 주변 배치 */}
+                      {/* 네비게이션 버튼 */}
                       <button 
                         onClick={handlePrevDriver}
-                        className="absolute top-1/2 -left-6 -translate-y-1/2 h-12 w-12 flex items-center justify-center rounded-full bg-white shadow-soft-xl border border-surface-100 text-surface-600 hover:text-primary-600 hover:scale-110 transition-all active:scale-90 z-20"
+                        className="absolute top-1/2 -left-6 -translate-y-1/2 h-12 w-12 flex items-center justify-center rounded-full bg-white shadow-soft-xl border border-surface-100 text-surface-600 hover:text-primary-600 active:scale-90 z-20"
                       >
                         <ChevronLeft className="h-6 w-6" />
                       </button>
                       
                       <button 
                         onClick={handleNextDriver}
-                        className="absolute top-1/2 -right-6 -translate-y-1/2 h-12 w-12 flex items-center justify-center rounded-full bg-white shadow-soft-xl border border-surface-100 text-surface-600 hover:text-primary-600 hover:scale-110 transition-all active:scale-90 z-20"
+                        className="absolute top-1/2 -right-6 -translate-y-1/2 h-12 w-12 flex items-center justify-center rounded-full bg-white shadow-soft-xl border border-surface-100 text-surface-600 hover:text-primary-600 active:scale-90 z-20"
                       >
                         <ChevronRight className="h-6 w-6" />
                       </button>
@@ -192,14 +190,14 @@ export const HireDriverPage = () => {
                       <span className="px-4 py-1.5 rounded-full bg-surface-900 text-white text-[10px] font-medium uppercase tracking-wider shadow-soft-md">
                         {currentPersona.age}
                       </span>
-                      <span className="px-4 py-1.5 rounded-full bg-primary-50 text-primary-700 border border-primary-100 text-[10px] font-medium uppercase tracking-wider shadow-soft-sm">
+                      <span className="px-4 py-1.5 rounded-full bg-white text-primary-700 border border-primary-100 text-[10px] font-medium uppercase tracking-wider shadow-soft-sm">
                         {currentPersona.mood}
                       </span>
                     </div>
                   </div>
 
-                  {/* 우측: 상세 정보 섹션 */}
-                  <div className="w-full md:w-1/2 flex flex-col space-y-6 py-4">
+                  {/* 상세 정보 섹션 */}
+                  <div className="w-full flex flex-col space-y-6 py-4">
                     <div className="space-y-1">
                       <h2 className="text-4xl font-medium text-surface-900 tracking-tight leading-none">
                         {currentPersona.name.split(' ')[0]}
@@ -215,7 +213,7 @@ export const HireDriverPage = () => {
                       </p>
                     </div>
 
-                    {/* 능력치 보너스 - 그리드 레이아웃 */}
+                    {/* 능력치 보너스 */}
                     <div className="space-y-3">
                       <h3 className="text-[10px] font-medium text-surface-400 uppercase tracking-[0.2em] flex items-center gap-2">
                         <Zap className="h-3 w-3" />
@@ -223,9 +221,9 @@ export const HireDriverPage = () => {
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
                         {currentPersona.stats.map((stat, idx) => (
-                          <div key={idx} className="group flex items-center justify-between p-3 rounded-2xl bg-white border border-surface-100 hover:border-primary-200 hover:shadow-soft-md transition-all">
+                          <div key={idx} className="group flex items-center justify-between p-3 rounded-2xl bg-white border border-surface-100 hover:border-primary-200 transition-all shadow-soft-xs">
                             <div className="flex items-center gap-3">
-                              <div className="h-10 w-10 rounded-xl bg-surface-50 flex items-center justify-center group-hover:bg-primary-50 transition-colors">
+                              <div className="h-10 w-10 rounded-xl bg-surface-50 flex items-center justify-center">
                                 {idx === 0 ? <Zap className="h-5 w-5 text-primary-600" /> : 
                                  idx === 1 ? <Target className="h-5 w-5 text-primary-600" /> : 
                                  <Shield className="h-5 w-5 text-primary-600" />}
@@ -240,23 +238,12 @@ export const HireDriverPage = () => {
                         ))}
                       </div>
                     </div>
-
-                    {/* 외모 및 복장 상세 */}
-                    {/* <div className="grid grid-cols-1 gap-3">
-                      <div className="p-4 rounded-2xl bg-surface-50/50 border border-surface-100">
-                        <div className="flex items-center gap-2 mb-2">
-                          <User className="h-3.5 w-3.5 text-surface-400" />
-                          <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Appearance</span>
-                        </div>
-                        <p className="text-xs text-surface-700 leading-relaxed">{currentPersona.appearance}</p>
-                      </div>
-                    </div> */}
                   </div>
                 </div>
 
-                {/* 하단: 협상 및 고용 액션 영역 (고정) */}
-                <div className="p-6 bg-surface-900 text-white rounded-t-[32px] shadow-2xl-up mt-auto">
-                  <div className="max-w-xl mx-auto">
+                {/* 하단: 협상 및 고용 액션 영역 */}
+                <div className="p-6 bg-surface-900 text-white rounded-t-[32px] mt-auto">
+                  <div className="w-full">
                     <div className="flex items-center justify-between mb-6">
                       <div className="space-y-1">
                         <p className="text-[10px] font-medium text-surface-400 uppercase tracking-[0.2em]">현재 제안</p>
@@ -272,7 +259,7 @@ export const HireDriverPage = () => {
                             <div 
                               key={i} 
                               className={`h-2 w-8 rounded-full transition-all duration-500 ${
-                                i < (3 - currentOffer.attempts) ? 'bg-primary-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-surface-700'
+                                i < (3 - currentOffer.attempts) ? 'bg-primary-500' : 'bg-surface-700'
                               }`} 
                             />
                           ))}
@@ -281,7 +268,7 @@ export const HireDriverPage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3">
                       {currentOffer.attempts < 3 ? (
                         <button 
                           onClick={handleNegotiate}
@@ -300,7 +287,7 @@ export const HireDriverPage = () => {
                       <button 
                         onClick={handleHire}
                         disabled={hireDriverMutation.isPending}
-                        className="py-4 rounded-2xl bg-primary-500 text-surface-900 font-medium text-base shadow-lg shadow-primary-500/20 hover:bg-primary-400 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="py-4 rounded-2xl bg-primary-500 text-surface-900 font-medium text-base shadow-lg hover:bg-primary-400 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {hireDriverMutation.isPending ? (
                           <Loader2 className="h-5 w-5 animate-spin" />
@@ -377,7 +364,7 @@ export const HireDriverPage = () => {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 };

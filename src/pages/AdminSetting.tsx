@@ -181,13 +181,18 @@ export const AdminSettingPage = () => {
       await leaderboardApi.triggerBotActivities();
       const bots = await adminApi.getBotStatuses();
       setBotStatuses(bots);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to trigger bots:', error);
       alert('봇 활동 트리거 중 오류가 발생했습니다.');
     } finally {
       setIsTriggering(false);
     }
   };
+
+  // 탭 변경 시 스크롤 최상단 이동
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [activeTab]);
 
   // 장비 업데이트 핸들러
   const handleUpdateEquipment = async (params: Parameters<typeof updateEquipment>[0]) => {
@@ -204,34 +209,33 @@ export const AdminSettingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface-50 pb-12 flex flex-col items-center">
-      <div className="mx-auto w-full max-w-2xl bg-white min-h-screen relative">
-        <PageHeader 
-          title="System Admin"
-          tabs={[
-            { id: 'bot', label: '봇 설정' },
-            { id: 'enforcement', label: '단속 설정' },
-            { id: 'equipment', label: '장비 설정' },
-          ]}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as TabType)}
-          rightElement={
-            <Button 
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
-                isSaved 
-                  ? 'bg-accent-emerald text-white hover:bg-accent-emerald/90' 
-                  : 'bg-primary-600 text-white hover:bg-primary-700'
-              }`}
-            >
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {isSaved ? '저장됨!' : '저장'}
-            </Button>
-          }
-        />
+    <div className="flex flex-col min-h-screen bg-surface-50">
+      <PageHeader 
+        title="System Admin"
+        tabs={[
+          { id: 'bot', label: '봇 설정' },
+          { id: 'enforcement', label: '단속 설정' },
+          { id: 'equipment', label: '장비 설정' },
+        ]}
+        activeTab={activeTab}
+        onTabChange={(tabId) => setActiveTab(tabId as TabType)}
+        rightElement={
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving}
+            className={`rounded-xl px-4 py-2 text-xs font-medium transition-all ${
+              isSaved 
+                ? 'bg-accent-emerald text-white hover:bg-accent-emerald/90' 
+                : 'bg-primary-600 text-white hover:bg-primary-700'
+            }`}
+          >
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {isSaved ? '저장됨!' : '저장'}
+          </Button>
+        }
+      />
 
-        <main className="px-4 py-6 pt-32 space-y-6">
+      <main className="flex-1 w-full max-w-lg mx-auto pt-32 pb-32">
         {/* 봇 설정 탭 */}
         {activeTab === 'bot' && (
           <BotSettingsTab 
@@ -267,8 +271,7 @@ export const AdminSettingPage = () => {
             onUpdateEquipment={handleUpdateEquipment}
           />
         )}
-        </main>
-      </div>
+      </main>
     </div>
   );
 };
